@@ -121,7 +121,7 @@ properties([
                     classpath: [],
                     sandbox: false,
                     script:
-                        'return["KVM","PowerVM:selected"]'
+                        'return["PowerVM"]'
                 ]
             ]
         ],
@@ -144,10 +144,7 @@ properties([
                     classpath: [],
                     sandbox: false,
                     script:
-                        ''' if (Virtualization.equals("KVM")){
-                                return["P9","P8:selected"]
-                            }
-                            else if(Virtualization.equals("PowerVM")){
+                        ''' if(Virtualization.equals("PowerVM")){
                                 return["P8:selected","P9"]
                             }
                         '''
@@ -173,12 +170,32 @@ properties([
                     classpath: [],
                     sandbox: false,
                     script:
-                        ''' if (Release.equals("4.3")){
-                                return["rhcos-43"]
+                        ''' import groovy.util.XmlSlurper
+                            import java.util.Map
+                            import jenkins.*
+                            import jenkins.model.*
+                            import hudson.*
+                            import hudson.model.*
+                            def ls =''
+
+                            try{
+                                def jenkins = Jenkins.instance
+                                def item = jenkins.getItemByFullName("poll-powervc-images")
+                                println item
+                                last_sucessful_build_number=item.getLastSuccessfulBuild().getNumber()
+                                println last_sucessful_build_number
+                                def file = new File("/var/lib/jenkins/jobs/poll-powervc-images"+ "/builds/" + last_sucessful_build_number.toInteger() + "/archive/" +"rhcos-${Release}.txt")
+                                file.eachLine{
+                                if (it.contains ("rhcos")) {
+                                    ls = ls + " " + it
+                                }
                             }
-                            else if(Release.equals("4.4")){
-                                return["rhcos-44"]
+                            bld = ls.split() as List
+                            return bld
+                            } catch (Exception ex){
+                                println ex.message
                             }
+
                         '''
                 ]
             ]
@@ -188,7 +205,7 @@ properties([
             description: 'Select the Bastion OS from the Dropdown List',
             filterLength: 1,
             filterable: false,
-            name: 'BashonOs',
+            name: 'BastionOs',
             referencedParameters: 'Release',
             script: [
                 $class: 'GroovyScript',
@@ -317,6 +334,7 @@ pipeline {
         OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Tarball}"
         ENABLE_E2E_TEST = "${params.Rune2e}"
         CS_INSTALL = "${params.DeployCS}"
+        RHCOS_IMAGE_NAME="${params.rhcos}"
 
 
         VCPUS_REQ_BASTION = "2"
@@ -335,7 +353,7 @@ pipeline {
         VIR_CHOSE = "${params.Virtualization}"
         HARDWARE_CHOSE = "${params.Hardware}"
         NODE_OS = "${params.rhcos}"
-        BASTION_OS  = "${params.BashonOs}"
+        BASTION_OS  = "${params.BastionOs}"
         TIMEOUT = "${params.KeepFor}"
         OS_NETWORK = "${params.Network}"
         OS_PRIVATE_NETWORK = "${params.Network}"
@@ -424,9 +442,7 @@ pipeline {
                             echo "Requested image could not find in ${env.AUTH_URL}"
                             error('Requested image could not find')
                         }
-                        env.RHCOS_IMAGE_NAME=getTheImage(env.AUTH_URL, env.NODE_OS, env.IMAGE_FILTER )
-                        env.IMAGE_DISTRO = "${env.DISTRO}"
-                        env.RHCOS_IMAGE_ID = getTheImageId(env.AUTH_URL, env.RHCOS_IMAGE_NAME)
+                        env.RHCOS_IMAGE_ID = getTheImageId(env.AUTH_URL, RHCOS_IMAGE_NAME)
                         if ("${RHCOS_IMAGE_ID}" == "")
                         {
                             echo "Requested image could not find in ${env.AUTH_URL}"
