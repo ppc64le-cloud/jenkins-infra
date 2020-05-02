@@ -1,0 +1,109 @@
+@Library('pcloud-jenkins-library') _
+//Define global variables
+env.DISTRO = ""
+def TIMEOUT_SEC
+def TIMEOUT_MIN
+def TRIGGER
+def BUILD
+def E2E_SUMMARY
+
+pipeline {
+    agent {
+        dockerfile {
+            dir 'images/terraform'
+            additionalBuildArgs '--force-rm	--no-cache'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'daily-x86_64'
+        }
+    }
+    triggers {
+        cron('H H * * *')
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        TF_VAR_user_name = credentials('GITHUB_USER')
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        TF_VAR_repo_user = credentials('GITHUB_USER')
+        TF_VAR_password = credentials('TF_VAR_password')
+        OS_USERNAME = credentials('GITHUB_USER')
+        OS_PASSWORD = credentials('TF_VAR_password')
+        OS_INSECURE = true
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        FVD_USERNAME = credentials('FVD_USERNAME')
+        FVD_PASSWORD = credentials('FVD_PASSWORD')
+
+
+        VIR_CHOSE = "PowerVM"
+        HARDWARE_CHOSE = "P9"
+        NODE_OS = "rhcos-44"
+        BASTION_OS  = "RHEL8.0"
+        TIMEOUT = "0"
+        RELEASE="4.4"
+        OS_AUTH_URL = "https://9.114.192.193:5000/v3/"
+
+        FUNCTIONAL_TEST_REPO = "icp-sanity-bats"
+        TERRAFORM_VER = "0.11.13"
+        TEST_SUITE = "ppc64le-edge"
+        OS = "linux"
+        OS_IDENTITY_API_VERSION='3'
+        OS_TENANT_NAME="ibm-default"
+        OS_USER_DOMAIN_NAME="default"
+        OS_PROJECT_DOMAIN_NAME="Default"
+        OS_COMPUTE_API_VERSION=2.37
+        OS_NETWORK_API_VERSION=2.0
+        OS_IMAGE_API_VERSION=2
+        OS_VOLUME_API_VERSION=2
+        OS_PRIVATE_NETWORK = "icp_network2"
+        OS_NETWORK = "icp_network2"
+
+
+	 }
+    stages {
+        stage('Prepare Teraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                    sh '''
+                    openstack image list --insecure --format value -c Name > images.all.txt
+                    cat images.all.txt| grep rhcos | grep '4\\.3\\|43' > rhcos-4.3.txt
+                    cat images.all.txt| grep rhcos | grep '4\\.4\\|44' > rhcos-4.4.txt
+                    cat images.all.txt  | grep rhcos-43 | tail -n 1  > rhcos-4.3-nightly-latest.txt
+                    cat images.all.txt| grep 'rhel8\\.0'  > rhel-8.0.txt
+                    cat images.all.txt| grep 'rhel8\\.1'  > rhel-8.1.txt
+                    cat images.all.txt| grep 'rhel7\\.6'  > rhel-7.6.txt
+                    cat images.all.txt| grep 'rhel7\\.7'  > rhel-7.7.txt
+                    
+                    '''
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template prepration failed !'
+                        throw err
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'images.all.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.3.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.4.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.0.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.1.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.6.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.7.txt', fingerprint: true, onlyIfSuccessful: false
+            cleanWs()
+        }
+    }
+}
