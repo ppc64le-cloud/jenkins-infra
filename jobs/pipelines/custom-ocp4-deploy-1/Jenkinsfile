@@ -5,7 +5,7 @@ properties([
     parameters([
         [$class: 'ChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Type of Build from the Dropdown List',
+            description: 'Select the Type of OpenShift Build from the Dropdown List',
             filterLength: 1,
             filterable: false,
             name: 'OCPBuild',
@@ -21,14 +21,14 @@ properties([
                     classpath: [],
                     sandbox: false,
                     script:
-                        'return["Nightly:selected","Other"]'
+                        'return["Nightly:selected","Released"]'
                 ]
             ]
         ],
 
         [$class: 'ChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Release from the Dropdown List',
+            description: 'Select the OpenShift Release from the Dropdown List',
             filterLength: 1,
             filterable: false,
             name: 'Release',
@@ -51,10 +51,10 @@ properties([
 
         [$class: 'CascadeChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the OCP Tarball from the List',
+            description: 'Select the OpenShift Build from the List',
             filterLength: 1,
             filterable: false,
-            name: 'Tarball',
+            name: 'Build',
             referencedParameters: 'OCPBuild, Release',
             script: [
                 $class: 'GroovyScript',
@@ -82,10 +82,12 @@ properties([
                                 if (it =~ /<td/) {
                                     String lst = it.findAll(/<a class="text-success" href=".*/)
                                     if (lst.contains (Release)) {
+                                        if (lst.contains("nightly")){
                                             ls = ls + " " + (lst - min4)
                                             ls = ls - min5
                                             ls = ls - min2
                                             ls = ls - min3
+                                        }
                                     }
 
                                 }
@@ -94,6 +96,35 @@ properties([
                             bld = bld.sort()
                             bld = bld.reverse()
                             return bld
+                        }
+                        else if (OCPBuild.equals("Released")) {
+                            def command = """ wget  --output-document  -  https://openshift-release-ppc64le.svc.ci.openshift.org/"""
+                            build = command.execute().text
+                            def min1 = ~/<a class="text-success" href="/
+                            def min2 = ~/\\[/
+                            def min3 = ~/\\]/
+                            def min4 = ~/<a.*">/
+                            def min5 = ~/<\\/a><\\/td>/
+                            def ls =''
+                            build.eachLine{
+                                if (it =~ /<td/) {
+                                    String lst = it.findAll(/<a class="text-success" href=".*/)
+                                    if (lst.contains (Release)) {
+                                        if ( ! lst.contains("nightly")){
+                                            ls = ls + " " + (lst - min4)
+                                            ls = ls - min5
+                                            ls = ls - min2
+                                            ls = ls - min3
+                                        }
+                                    }
+
+                                }
+                            }
+                            bld = ls.split() as List
+                            bld = bld.sort()
+                            bld = bld.reverse()
+                            return bld
+                        
                         }
                         else
                         {
@@ -105,7 +136,7 @@ properties([
         ],
         [$class: 'ChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Operating System from the Dropdown List',
+            description: 'Select the Virtualization environment from the Dropdown List',
             filterLength: 1,
             filterable: false,
             name: 'Virtualization',
@@ -127,7 +158,7 @@ properties([
         ],
         [$class: 'CascadeChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Server from the Dropdown List',
+            description: 'Select the Server type from the Dropdown List',
             filterLength: 1,
             filterable: false,
             name: 'Hardware',
@@ -153,7 +184,7 @@ properties([
         ],
         [$class: 'CascadeChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Server from the Dropdown List',
+            description: 'Select the RHCOS image needed from the Dropdown List',
             filterLength: 1,
             filterable: false,
             name: 'rhcos',
@@ -226,7 +257,7 @@ properties([
         ],
         [$class: 'CascadeChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the network from the Dropdown List(preferably icp_network1..(icp_network:181(VLAN=2079))icp_network1:64(VLAND:2230))',
+            description: 'Select the network from the Dropdown List(preferably icp_network2..(icp_network:181(VLAN=2079))icp_network1:64(VLAND:2230))',
             filterLength: 1,
             filterable: false,
             name: 'Network',
@@ -247,7 +278,7 @@ properties([
                                 return["icp_network"]
                             }
                             else if(Virtualization.equals("PowerVM")){
-                                return["icp_network2", "icp_network1", "icp_network"]
+                                return["icp_network2:selected", "icp_network1", "icp_network"]
                             }
                         '''
                 ]
@@ -284,7 +315,7 @@ pipeline {
         string(defaultValue: '1', description: 'Enter Number of workers needed', name: 'NumOfWorkers')
 
         string(defaultValue: '0', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
-        //string(defaultValue: '', description: 'Enter Registry link for the OCP Build. This will override the Tarball', name: 'Ocpimage')
+        string(defaultValue: '', description: 'Enter Registry link for the OCP Build. This will override the Build', name: 'Ocpimage')
         booleanParam(defaultValue: false, name: 'Rune2e', description: 'Select if you want to run e2e')
         booleanParam(defaultValue: false, name: 'DeployCS', description: 'Select if you want to install Common Services')
 
@@ -331,11 +362,10 @@ pipeline {
         VCPUS_REQ_WORKER = "${params.VcpusWorker}"
         MEM_REQ_WORKER = "${params.MemWorker}"
         PRO_UNIT_REQ_WORKER = "${params.ProUnitWorker}"
-        OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Tarball}"
+        //OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Build}"
         ENABLE_E2E_TEST = "${params.Rune2e}"
         CS_INSTALL = "${params.DeployCS}"
         RHCOS_IMAGE_NAME="${params.rhcos}"
-
 
         VCPUS_REQ_BASTION = "2"
         MEM_REQ_BASTION = "8"
@@ -411,12 +441,21 @@ pipeline {
                         MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
                         MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
 
+                        if (params.Ocpimage == "")
+                        {
+                            env.OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Build}"
+                        }
+                        else
+                        {
+                            env.OPENSHIFT_IMAGE = "${params.Ocpimage}"
+                        }
                         if (env.DEPLOY_MASTER == "false")
                         {
                             echo "Cluster cant deploy without master"
                             throw err
 
                         }
+                        echo env.OPENSHIFT_IMAGE
                         if ( env.VIR_CHOSE == "KVM" )
                         {
                             echo 'Setting-up terraform template file for KVM!'
