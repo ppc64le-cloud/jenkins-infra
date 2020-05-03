@@ -75,7 +75,6 @@ pipeline {
         BOOTSTRAP_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bootstrap"
         BASTION_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bastion"
 
-
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P8"
         NODE_OS = "rhcos-43"
@@ -126,6 +125,13 @@ pipeline {
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
+                    step([  $class: 'CopyArtifact',
+                    filter: 'cicd-rhcos-4.3.latest.txt',
+                    fingerprintArtifacts: true,
+                    projectName: 'poll-powervc-images',
+                    target: 'artifactory',
+                    selector: lastSuccessful()
+                    ])
                 }
             }
         }
@@ -154,6 +160,10 @@ pipeline {
                             env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.3-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
+                        if (fileExists('artifactory/cicd-rhcos-4.3.latest.txt')) {
+                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.3.latest.txt'
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        }
                         if (env.DEPLOY_MASTER == "false")
                         {
                             echo "Cluster cant deploy without master"
@@ -168,7 +178,6 @@ pipeline {
                         {
                             echo 'Setting-up terraform template file for PowerVM!'
                             env.AUTH_URL="https://9.114.192.168:5000/v3/"
-                            //env.AUTH_URL="https://9.114.192.168:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(RELEASE)
@@ -186,8 +195,6 @@ pipeline {
                             echo "Requested image could not find in ${env.AUTH_URL}"
                             error('Requested image could not find')
                         }
-                        env.RHCOS_IMAGE_NAME=getTheImage(env.AUTH_URL, env.NODE_OS, env.IMAGE_FILTER )
-                        env.IMAGE_DISTRO = "${env.DISTRO}"
                         env.RHCOS_IMAGE_ID = getTheImageId(env.AUTH_URL, env.RHCOS_IMAGE_NAME)
                         if ("${RHCOS_IMAGE_ID}" == "")
                         {
