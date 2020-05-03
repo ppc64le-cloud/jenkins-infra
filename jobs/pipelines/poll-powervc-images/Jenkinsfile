@@ -82,6 +82,10 @@ pipeline {
                     cat images.all.txt| grep 'rhel8\\.1'  > rhel-8.1.txt
                     cat images.all.txt| grep 'rhel7\\.6'  > rhel-7.6.txt
                     cat images.all.txt| grep 'rhel7\\.7'  > rhel-7.7.txt
+                    for i in `cat images.all.txt`; do  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $i" " >> images.all.date.txt; echo $create_date >> images.all.date.txt ;done
+                    cat images.all.date.txt | sort -k2 -r > images.all.date.sorted.txt
+                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.3\\|cicd-rhcos-43' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.3.latest.txt
+                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.4\\|cicd-rhcos-44' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.4.latest.txt
                     
                     '''
                     }
@@ -97,8 +101,11 @@ pipeline {
     post {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'images.all.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'images.all.date.sorted.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.3.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.4.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.3.latest.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.4.latest.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.0.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.1.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.6.txt', fingerprint: true, onlyIfSuccessful: false
