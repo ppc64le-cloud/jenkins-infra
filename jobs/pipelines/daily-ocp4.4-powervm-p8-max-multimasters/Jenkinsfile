@@ -17,7 +17,7 @@ pipeline {
         }
     }
     triggers {
-        cron('1 8 * * *')
+        cron('1  11 * * * ')
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
@@ -103,7 +103,8 @@ pipeline {
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH = "release-4.4"
-        E2E_EXCLUDE_LIST = "https://gist.githubusercontent.com/sudeeshjohn/2888f911f2a955a1282e338995c94813/raw/4eada90a4a30de2e26d02af13403c7884bf6efdd/ocp43_power_blacklist.txt"
+        //E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.4-powervm/ocp44_power_blacklist.txt\\\\\\\\\\"'
+        E2E_EXCLUDE_LIST = ""
         CS_INSTALL = "false"
 
         OCP4_ENV = true
