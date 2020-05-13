@@ -102,8 +102,8 @@ pipeline {
         INSTANCE_NAME = "ltccci"
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
-        E2E_BRANCH = "release-4.4"
-        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.4-powervm/ocp44_power_blacklist.txt\\\\\\\\\\"'
+        E2E_BRANCH="release-${RELEASE}"
+        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${RELEASE}-powervm/ocp${RELEASE}_power_blacklist.txt\\\\\\\\\\"'
         CS_INSTALL = "false"
 
         OCP4_ENV = true
