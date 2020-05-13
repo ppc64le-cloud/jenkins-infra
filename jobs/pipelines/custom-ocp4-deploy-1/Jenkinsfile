@@ -366,7 +366,7 @@ pipeline {
         ENABLE_E2E_TEST = "${params.Rune2e}"
         CS_INSTALL = "${params.DeployCS}"
         RHCOS_IMAGE_NAME="${params.rhcos}"
-        RELEASE="${params.Release}"
+        OCP_RELEASE="${params.Release}"
 
         VCPUS_REQ_BASTION = "2"
         MEM_REQ_BASTION = "8"
@@ -405,8 +405,8 @@ pipeline {
         PULL_SECRET_FILE = "data/pull-secret.txt"
         CLUSTER_DOMAIN = "redhat.com"
         E2E_GIT = "https://github.com/openshift/origin"
-        E2E_BRANCH="release-${RELEASE}"
-        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${RELEASE}-powervm/ocp${RELEASE}_power_blacklist.txt\\\\\\\\\\"'
+        E2E_BRANCH="release-${OCP_RELEASE}"
+        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt\\\\\\\\\\"'
 
 
         OCP4_ENV = true
@@ -467,7 +467,7 @@ pipeline {
                             echo 'Setting-up terraform template file for PowerVM!'
                             env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
-                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(RELEASE)
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
