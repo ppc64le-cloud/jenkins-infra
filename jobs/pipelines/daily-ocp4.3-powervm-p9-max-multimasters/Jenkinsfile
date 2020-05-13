@@ -82,7 +82,7 @@ pipeline {
         TIMEOUT = "0"
         OS_NETWORK = "icp_network2"
         OS_PRIVATE_NETWORK = "icp_network2"
-        RELEASE="4.3"
+        OCP_RELEASE="4.3"
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
@@ -102,8 +102,8 @@ pipeline {
         INSTANCE_NAME = "ltccci"
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
-        E2E_BRANCH="release-${RELEASE}"
-        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${RELEASE}-powervm/ocp${RELEASE}_power_blacklist.txt\\\\\\\\\\"'
+        E2E_BRANCH="release-${OCP_RELEASE}"
+        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt\\\\\\\\\\"'
         CS_INSTALL = "false"
 
         OCP4_ENV = true
@@ -179,7 +179,7 @@ pipeline {
                             env.AUTH_URL="https://9.114.192.168:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
-                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(RELEASE)
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
