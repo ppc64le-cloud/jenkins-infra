@@ -1,0 +1,341 @@
+@Library('pcloud-jenkins-library') _
+//Define global variables
+env.DISTRO = ""
+def TIMEOUT_SEC
+def TIMEOUT_MIN
+def E2E_SUMMARY
+def clusterInfoFields = [:]
+def clusterInfo = [:]
+
+pipeline {
+    agent {
+        dockerfile {
+            dir 'images/terraform'
+            additionalBuildArgs '--force-rm	--no-cache'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'daily-x86_64'
+        }
+    }
+    triggers {
+        cron('30 6 * * * ')
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        TF_VAR_user_name = credentials('GITHUB_USER')
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        TF_VAR_repo_user = credentials('GITHUB_USER')
+        TF_VAR_password = credentials('TF_VAR_password')
+        OS_USERNAME = credentials('GITHUB_USER')
+        OS_PASSWORD = credentials('TF_VAR_password')
+        OS_INSECURE = true
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        FVD_USERNAME = credentials('FVD_USERNAME')
+        FVD_PASSWORD = credentials('FVD_PASSWORD')
+
+
+        //Env constants
+        TERRAFORM_VER = "0.12.13"
+        TEST_SUITE = "ppc64le-edge"
+        OS = "linux"
+        OS_IDENTITY_API_VERSION='3'
+        OS_TENANT_NAME="ibm-default"
+        OS_USER_DOMAIN_NAME="default"
+        OS_PROJECT_DOMAIN_NAME="Default"
+        OS_COMPUTE_API_VERSION=2.37
+        OS_NETWORK_API_VERSION=2.0
+        OS_IMAGE_API_VERSION=2
+        OS_VOLUME_API_VERSION=2
+
+
+        // Node Configuration
+        VCPUS_REQ_MASTER = "2"
+        MEM_REQ_MASTER = "16"
+        PRO_UNIT_REQ_MASTER = ".2"
+
+        VCPUS_REQ_WORKER = "2"
+        MEM_REQ_WORKER = "16"
+        PRO_UNIT_REQ_WORKER = ".2"
+
+        VCPUS_REQ_BOOTSTRAP = "2"
+        MEM_REQ_BOOTSTRAP = "16"
+        PRO_UNIT_REQ_BOOTSTRAP = ".2"
+
+        VCPUS_REQ_BASTION = "2"
+        MEM_REQ_BASTION = "8"
+        PRO_UNIT_REQ_BASTION = ".1"
+
+        MASTER_TEMPLATE = "${env.BUILD_TAG}" + "-" + "master"
+        WORKER_TEMPLATE = "${env.BUILD_TAG}" + "-" + "worker"
+        BOOTSTRAP_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bootstrap"
+        BASTION_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bastion"
+
+        VIR_CHOSE = "PowerVM"
+        HARDWARE_CHOSE = "P8"
+        NODE_OS = "rhcos-44"
+        BASTION_OS  = "RHEL8.0"
+        TIMEOUT = "0"
+        OS_NETWORK = "icp_network2"
+        OS_PRIVATE_NETWORK = "icp_network2"
+        OCP_RELEASE="4.4"
+
+        //Makefile variables
+        TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.4" //The downlod branch
+
+        NUM_OF_WORKERS = "3"
+        NUM_OF_MASTERS = "3"
+
+        TARGET = "deploy-openshift4-powervc"
+        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        //OPENSHIFT_INSTALL_TARBALL = " https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-$Release/$Tarball"
+
+        REDHAT_RELEASE = "7.6"
+        RHEL_USERNAME = "root"
+        PULL_SECRET_FILE = "data/pull-secret.txt"
+        CLUSTER_DOMAIN = "redhat.com"
+        INSTANCE_NAME = "ltccci"
+        ENABLE_E2E_TEST = "true"
+        E2E_GIT = "https://github.com/openshift/origin"
+        E2E_BRANCH="release-${OCP_RELEASE}"
+        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt\\\\\\\\\\"'
+        CS_INSTALL = "false"
+
+        OCP4_ENV = true
+        //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
+
+        //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
+        BUILD_HARNESS_ORG="sudeeshjohn"
+	 }
+
+    stages {
+        stage('pull artifact') {
+            steps {
+                script {
+                    step([  $class: 'CopyArtifact',
+                    filter: 'latest-4.4-build.txt',
+                    fingerprintArtifacts: true,
+                    projectName: 'poll-artifactory',
+                    target: 'artifactory',
+                    selector: lastSuccessful()
+                    ])
+                    step([  $class: 'CopyArtifact',
+                    filter: 'cicd-rhcos-4.4.latest.txt',
+                    fingerprintArtifacts: true,
+                    projectName: 'poll-powervc-images',
+                    target: 'artifactory',
+                    selector: lastSuccessful()
+                    ])
+                }
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Teraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        MEM_WORKER_GB = MEM_REQ_WORKER.toInteger()
+                        MEM_REQ_WORKER_MB = MEM_WORKER_GB * 1024
+
+                        MEM_MASTER_GB = MEM_REQ_MASTER.toInteger()
+                        MEM_REQ_MASTER_MB = MEM_MASTER_GB * 1024
+
+                        MEM_BASTION_GB = MEM_REQ_BASTION.toInteger()
+                        MEM_REQ_BASTION_MB = MEM_BASTION_GB * 1024
+
+                        MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
+                        MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
+                        env.OPENSHIFT_IMAGE = ""
+                        if (fileExists('artifactory/latest-4.4-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.4-build.txt'
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                        }
+                        if (fileExists('artifactory/cicd-rhcos-4.4.latest.txt')) {
+                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.4.latest.txt'
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        }
+                        if (env.DEPLOY_MASTER == "false")
+                        {
+                            echo "Cluster cant deploy without master"
+                            throw err
+                        }
+                        if ( env.VIR_CHOSE == "KVM" )
+                        {
+                            echo 'Setting-up terraform template file for KVM!'
+                            env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/kvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
+                        }
+                        else if ( env.VIR_CHOSE == "PowerVM" )
+                        {
+                            echo 'Setting-up terraform template file for PowerVM!'
+                            env.AUTH_URL="https://9.114.192.168:5000/v3/"
+                            //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
+                        }
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        if ("${AVAILABILITY_ZONE}" == null)
+                        {
+                            echo "Requested zone could not find in ${env.AUTH_URL}"
+                            error('Requested zone could not find')
+                        }
+                        env.BASTION_IMAGE_NAME=getTheImage(env.AUTH_URL, env.BASTION_OS, env.IMAGE_FILTER )
+                        env.IMAGE_DISTRO = "${env.DISTRO}"
+                        env.BASTION_IMAGE_ID = getTheImageId(env.AUTH_URL, env.BASTION_IMAGE_NAME)
+                        if ("${BASTION_IMAGE_ID}" == "")
+                        {
+                            echo "Requested image could not find in ${env.AUTH_URL}"
+                            error('Requested image could not find')
+                        }
+                        env.RHCOS_IMAGE_ID = getTheImageId(env.AUTH_URL, env.RHCOS_IMAGE_NAME)
+                        if ("${RHCOS_IMAGE_ID}" == "")
+                        {
+                            echo "Requested image could not find in ${env.AUTH_URL}"
+                            error('Requested image could not find')
+                        }
+                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_MASTER, "${MEM_REQ_MASTER_MB}", env.PRO_UNIT_REQ_MASTER, env.MASTER_TEMPLATE)
+                        if ( status != 0)
+                        {
+                            echo "Unable to create template ${env.MASTER_TEMPLATE}"
+                        }
+                        status=createTemplate(env.AUTH_URL, VCPUS_REQ_WORKER, "${MEM_REQ_WORKER_MB}", PRO_UNIT_REQ_WORKER, WORKER_TEMPLATE)
+                        if ( status != 0)
+                        {
+                            echo "Unable to create template ${env.WORKER_TEMPLATE}"
+                        }
+                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_BASTION, "${MEM_REQ_BASTION_MB}", env.PRO_UNIT_REQ_BASTION, env.BASTION_TEMPLATE)
+                        if ( status != 0)
+                        {
+                            echo "Unable to create template ${env.BASTION_TEMPLATE}"
+                        }
+                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_BOOTSTRAP, "${MEM_REQ_BOOTSTRAP_MB}", env.PRO_UNIT_REQ_BOOTSTRAP, env.BOOTSTRAP_TEMPLATE)
+                        if ( status != 0)
+                        {
+                            echo "Unable to create template ${env.BOOTSTRAP_TEMPLATE}"
+                        }
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template prepration failed !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initilize Environment') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo 'Initializing supporting repos and keys !'
+
+                        cd ${WORKSPACE}/deploy
+                        make init
+                        make keys
+                        make setup-dependencies
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo 'Deploying Cluster!'
+                        export TF_VAR_offline_remote_password=$TF_VAR_password
+                        cd ${WORKSPACE}/deploy
+                        make $TARGET
+                        sleep 60
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
+        stage('Waiting to timeout') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        TIMEOUT_MIN = TIMEOUT.toInteger()
+                        if ( TIMEOUT_MIN != 0 )
+                        {
+                            TIMEOUT_SEC=TIMEOUT_MIN*60
+                        }
+                        echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
+                        sleep TIMEOUT_SEC
+                        }
+                    finally {
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            script {
+                if (fileExists('deploy/summary.txt')) {
+                    E2E_SUMMARY = readFile 'deploy/summary.txt'
+                    E2E_SUMMARY = E2E_SUMMARY.trim()
+                }
+                if ( env.OPENSHIFT_IMAGE != ""  ) {
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                }
+                if ( fileExists('deploy/junit_e2e.xml')) {
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
+                }
+                else
+                {
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    currentBuild.result = 'FAILURE'
+                }
+                clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
+                clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
+                clusterInfo['master_node_mem'] = "${MEM_REQ_MASTER}"
+                clusterInfo['worker_node_cpu'] = "${VCPUS_REQ_WORKER}"
+                clusterInfo['worker_node_mem'] = "${MEM_REQ_WORKER}"
+                clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
+                clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
+                clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
+                clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
+
+                clusterInfoFields['clusterinfo'] = clusterInfo
+            }
+            //step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+            cleanWs()
+            //notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+        }
+    }
+}
