@@ -181,6 +181,7 @@ pipeline {
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
                         if ("${AVAILABILITY_ZONE}" == null)
                         {

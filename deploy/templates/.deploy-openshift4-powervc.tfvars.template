@@ -27,6 +27,7 @@ rhel_subscription_password = "__REDHAT_PASSWORD__"
 rhel_username = "__RHEL_USERNAME__"
 
 openshift_install_tarball =  "__OPENSHIFT_INSTALL_TARBALL__"
+openshift_client_tarball = "__OPENSHIFT_CLIENT_TARBALL__"
 release_image_override = "__OPENSHIFT_IMAGE__"
 pull_secret_file = "__PULL_SECRET_FILE__"
 cluster_domain = "__CLUSTER_DOMAIN__"
