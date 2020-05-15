@@ -86,7 +86,7 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.3" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The downlod branch
 
         NUM_OF_WORKERS = "3"
         NUM_OF_MASTERS = "3"
