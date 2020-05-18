@@ -302,9 +302,9 @@ pipeline {
         }
     }
     parameters {
-        string(defaultValue: '4', description: 'Required Number of VCPUs', name: 'VcpusMaster')
+        string(defaultValue: '1', description: 'Required Number of VCPUs', name: 'VcpusMaster')
         string(defaultValue: '16', description: 'Required amount Memory', name: 'MemMaster')
-        string(defaultValue: '.4', description: 'Required Processing Units Specify a value of processor units that is not greater than the value of virtual processors or less than five percent of the value of virtual processors.', name: 'ProUnitMaster')
+        string(defaultValue: '.2', description: 'Required Processing Units Specify a value of processor units that is not greater than the value of virtual processors or less than five percent of the value of virtual processors.', name: 'ProUnitMaster')
         booleanParam(defaultValue: true, name: 'DeployMaster', description: 'Select if you want to Deploy Master node')
         string(defaultValue: '3', description: 'Enter Number of Masters needed', name: 'NumOfMasters')
 

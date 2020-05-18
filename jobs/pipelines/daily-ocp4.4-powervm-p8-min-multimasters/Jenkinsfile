@@ -54,7 +54,7 @@ pipeline {
 
 
         // Node Configuration
-        VCPUS_REQ_MASTER = "2"
+        VCPUS_REQ_MASTER = "1"
         MEM_REQ_MASTER = "16"
         PRO_UNIT_REQ_MASTER = ".2"
 
