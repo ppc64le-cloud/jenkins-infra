@@ -368,7 +368,7 @@ pipeline {
         RHCOS_IMAGE_NAME="${params.rhcos}"
         OCP_RELEASE="${params.Release}"
 
-        VCPUS_REQ_BASTION = "`"
+        VCPUS_REQ_BASTION = "1"
         MEM_REQ_BASTION = "8"
         PRO_UNIT_REQ_BASTION = ".1"
         VCPUS_REQ_BOOTSTRAP = "4"
