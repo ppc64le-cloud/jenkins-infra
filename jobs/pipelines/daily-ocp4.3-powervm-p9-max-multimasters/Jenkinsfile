@@ -66,7 +66,7 @@ pipeline {
         MEM_REQ_BOOTSTRAP = "16"
         PRO_UNIT_REQ_BOOTSTRAP = ".2"
 
-        VCPUS_REQ_BASTION = "2"
+        VCPUS_REQ_BASTION = "1"
         MEM_REQ_BASTION = "8"
         PRO_UNIT_REQ_BASTION = ".1"
 
