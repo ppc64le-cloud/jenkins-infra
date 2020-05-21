@@ -470,9 +470,9 @@ pipeline {
                     echo "Preparing power config file"
                     if ( BUILD_TYPE == "offline")
                     {
-                        TAG = sh(returnStdout: true, script: "echo ${OFFLINE_TARBALL} | awk 'BEGIN{FS=\"-\"}{print \$5}' | awk 'BEGIN{FS=\".\"}{print \"v\" \$1 \".\" \$2 \".\" \$3}'|tr '\n' ' '").trim()
+                        TAG = sh(returnStdout: true, script: "echo ${OFFLINE_TARBALL} | awk 'BEGIN{FS=\"-\"}{print \$5}' | awk 'BEGIN{FS=\".\"}{print \"release-\" \$1 \".\" \$2 \".\" \$3}'|tr '\n' ' '").trim()
                         echo "${TAG}"
-                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout tags/${TAG}")
+                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout ${TAG}")
                     }
 
                     if ( BUILD_TYPE == "Online")
