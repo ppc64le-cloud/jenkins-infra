@@ -415,7 +415,7 @@ deploy-openshift-aws\:clean:
 ## Create power build on powervc tenant
 deploy-openshift-powervc: %deploy-openshift-powervc:
 	@$(shell sed -e "s|__AUTH_URL__|$(AUTH_URL)|g" -e "s|__OS_TENANT_NAME__|$(OS_TENANT_NAME)|g" \
-        -e "s|__AVAILABILITY_ZONE__|$(AVAILABILITY_ZONE)|g" \
+        -e "s|__AVAILABILITY_ZONE__|$(AVAILABILITY_ZONE)|g" -e "s|__SUBSCRIPTION_POOL_LIST__|$(SUBSCRIPTION_POOL_LIST)|g" \
         -e "s|__OS_IMAGE__|$(OS_IMAGE)|g" -e "s|__OS_NETWORK__|$(OS_NETWORK)|g" \
 		-e "s|__ROOK_DISK_SIZE__|$(ROOK_DISK_SIZE)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \
 		-e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" -e "s|__WORKER_TEMPLATE__|$(WORKER_TEMPLATE)|g"  \
@@ -513,7 +513,7 @@ deploy-openshift-powervc-offline: %deploy-openshift-powervc-offline:
 		-e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" -e "s|__MASTER_TEMPLATE__|$(MASTER_TEMPLATE)|g" \
 		-e "s|__NUM_OF_MANAGERS__|$(NUM_OF_MANAGERS)|g" -e "s|__MANAGER_TEMPLATE__|$(MANAGER_TEMPLATE)|g" \
 		-e "s|__NUM_OF_PROXIES__|$(NUM_OF_PROXIES)|g" -e "s|__PROXY_TEMPLATE__|$(PROXY_TEMPLATE)|g" \
-		-e "s|__NUM_OF_VA__|$(NUM_OF_VA)|g" -e "s|__VA_TEMPLATE__|$(VA_TEMPLATE)|g" \
+		-e "s|__NUM_OF_VA__|$(NUM_OF_VA)|g" -e "s|__VA_TEMPLATE__|$(VA_TEMPLATE)|g" -e "s|__SUBSCRIPTION_POOL_LIST__|$(SUBSCRIPTION_POOL_LIST)|g" \
         -e "s|__ENABLED_MANAGEMENT_SERVICES__|$(ENABLED_MANAGEMENT_SERVICES)|g" -e "s|__ICP_INSTALLER_TAG__|$(ICP_INSTALLER_TAG)|g" \
 		-e "s|__ICP_CONFIG_FILE__|$(ICP_CONFIG_FILE)|g"  -e "s|__STORAGE__|$(STORAGE)|g" \
 		-e "s|__SKIP_ICP_INSTALL__|$(SKIP_ICP_INSTALL)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \

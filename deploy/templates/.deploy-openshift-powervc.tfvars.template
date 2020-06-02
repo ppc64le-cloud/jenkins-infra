@@ -32,6 +32,7 @@ __ICP_ADDITIONAL_CONFIG__
 ## RedHat Subscription credentials
 rhel_subscription_username = "__REDHAT_USERNAME__"
 rhel_subscription_password = "__REDHAT_PASSWORD__"
+subscription_pool_list = ["__SUBSCRIPTION_POOL_LIST__"]
 
 redhat_release = "__REDHAT_RELEASE__"
 
