@@ -533,6 +533,7 @@ pipeline {
         TARGET = "${params.Build == 'Online' ? "deploy-openshift-powervc" : "deploy-openshift-powervc-offline"}"
 
         
+        SUBSCRIPTION_POOL_LIST="8a85f9996f0fa058016f7deedc4d3046"
         TIMEOUT = "${params.KeepFor}"
         OS_NETWORK = "${params.Network}"
         OS_PRIVATE_NETWORK = "${params.Network}"
