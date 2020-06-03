@@ -44,6 +44,10 @@ e2e_tests_exclude_list_url = "__E2E_EXCLUDE_LIST__"
 
 e2e_tests_enabled = "__ENABLE_E2E_TEST__"
 
+e2e_upgrade_enabled = "__ENABLE_E2E_UPGRADE__"
+
+e2e_upgrade_image = "__OPENSHIFT_UPGRADE_IMAGE__"
+
 cs_install                  = __CS_INSTALL__
 cs_project_name             = "ibm-common-services"
 cs_subscription_channel     = "stable-v1"

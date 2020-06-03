@@ -474,10 +474,10 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 		-e "s|__BASTION_IMAGE_ID__|$(BASTION_IMAGE_ID)|g" -e "s|__RHCOS_IMAGE_ID__|$(RHCOS_IMAGE_ID)|g" \
 		-e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__OPENSHIFT_INSTALL_TARBALL__|$(OPENSHIFT_INSTALL_TARBALL)|g" \
 		-e "s|__OPENSHIFT_IMAGE__|$(OPENSHIFT_IMAGE)|g" -e "s|__PULL_SECRET_FILE__|$(PULL_SECRET_FILE)|g" \
-		-e "s|__OPENSHIFT_CLIENT_TARBALL__|$(OPENSHIFT_CLIENT_TARBALL)|g" \
+		-e "s|__OPENSHIFT_CLIENT_TARBALL__|$(OPENSHIFT_CLIENT_TARBALL)|g" -e "s|__OPENSHIFT_UPGRADE_IMAGE__|$(OPENSHIFT_UPGRADE_IMAGE)|g" \
 		-e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__CLUSTER_ID__|$(CLUSTER_ID)|g" \
 		-e "s|__E2E_GIT__|$(E2E_GIT)|g" -e "s|__E2E_BRANCH__|$(E2E_BRANCH)|g"  -e "s|__E2E_EXCLUDE_LIST__|$(E2E_EXCLUDE_LIST)|g"\
-		-e "s|__CS_INSTALL__|$(CS_INSTALL)|g" \
+		-e "s|__CS_INSTALL__|$(CS_INSTALL)|g" -e "s|__ENABLE_E2E_UPGRADE__|$(ENABLE_E2E_UPGRADE)|g" \
         -e "s|__REPO__|$(DEPLOY_REPO)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
 ##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
