@@ -329,6 +329,9 @@ pipeline {
                 if ( fileExists('deploy/junit_e2e.xml')) {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
                 }
+                else if ( fileExists('deploy/junit_e2e_upgrade.xml')) {
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e_upgrade.xml'])
+                }
                 else
                 {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
