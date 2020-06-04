@@ -105,6 +105,7 @@ pipeline {
         E2E_BRANCH="release-${OCP_RELEASE}"
         E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt\\\\\\\\\\"'
         CS_INSTALL = "false"
+        ENABLE_E2E_UPGRADE = "false"
 
 
         OCP4_ENV = true
