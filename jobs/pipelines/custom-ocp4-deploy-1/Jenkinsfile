@@ -5,7 +5,7 @@ properties([
     parameters([
         [$class: 'ChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the Type of OpenShift Build from the Dropdown List',
+            description: 'Select the Type of OpenShift Build',
             filterLength: 1,
             filterable: false,
             name: 'OCPBuild',
@@ -28,7 +28,7 @@ properties([
 
         [$class: 'ChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the OpenShift Release from the Dropdown List',
+            description: 'Select the OpenShift Release',
             filterLength: 1,
             filterable: false,
             name: 'Release',
@@ -51,7 +51,7 @@ properties([
 
         [$class: 'CascadeChoiceParameter',
             choiceType: 'PT_SINGLE_SELECT',
-            description: 'Select the OpenShift Build from the List',
+            description: 'Select the OpenShift Build',
             filterLength: 1,
             filterable: false,
             name: 'Build',
@@ -129,6 +129,158 @@ properties([
                         else
                         {
                             return["NOT REQUIRED"]
+                        }
+                        '''
+                ]
+            ]
+        ],
+        [$class: 'CascadeChoiceParameter',
+            choiceType: 'PT_SINGLE_SELECT',
+            description: 'Select the Type of OpenShift Build',
+            filterLength: 1,
+            filterable: false,
+            name: 'OCPBuildUpgrade',
+            referencedParameters: 'e2eUpgrade',
+            script: [
+                $class: 'GroovyScript',
+                fallbackScript: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                        'return[\'Could not get Env\']'
+                ],
+                script: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                    '''
+                    if (e2eUpgrade) {
+                        return["Nightly:selected","Released"]
+                        }
+                        else {
+                            return[\'NOT REQUIRED\']
+                        }
+
+                    '''
+                ]
+            ]
+        ],
+
+        [$class: 'CascadeChoiceParameter',
+            choiceType: 'PT_SINGLE_SELECT',
+            description: 'Select the OpenShift Release to which the cluster to be upgraded',
+            filterLength: 1,
+            filterable: false,
+            name: 'ReleaseUpgrade',
+            referencedParameters: 'e2eUpgrade',
+            script: [
+                $class: 'GroovyScript',
+                fallbackScript: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                        'return[\'Could not get Env\']'
+                ],
+                script: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                    '''
+                    if (e2eUpgrade) {
+                        return["4.3","4.4:selected","4.5","4.6", "4.7"]
+                    }
+                    else {
+                            return[\'NOT REQUIRED\']
+                    }
+                    '''
+                ]
+            ]
+        ],
+
+        [$class: 'CascadeChoiceParameter',
+            choiceType: 'PT_SINGLE_SELECT',
+            description: 'Select the OpenShift Build to which the cluster to be Upgraded',
+            filterLength: 1,
+            filterable: false,
+            name: 'BuildUpgrade',
+            referencedParameters: 'OCPBuildUpgrade, ReleaseUpgrade, e2eUpgrade',
+            script: [
+                $class: 'GroovyScript',
+                fallbackScript: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                        'return[\'Could not get Environment from Env Param\']'
+                ],
+                script: [
+                    classpath: [],
+                    sandbox: false,
+                    script:
+                        '''
+                        if (e2eUpgrade) {
+                            if (OCPBuildUpgrade.equals("Nightly")) {
+                                def command = """ wget  --output-document  -  https://openshift-release-ppc64le.svc.ci.openshift.org/"""
+                                build = command.execute().text
+                                def min1 = ~/<a class="text-success" href="/
+                                def min2 = ~/\\[/
+                                def min3 = ~/\\]/
+                                def min4 = ~/<a.*">/
+                                def min5 = ~/<\\/a><\\/td>/
+                                def ls =''
+                                build.eachLine{
+                                    if (it =~ /<td/) {
+                                        String lst = it.findAll(/<a class="text-success" href=".*/)
+                                        if (lst.contains (ReleaseUpgrade)) {
+                                            if (lst.contains("nightly")){
+                                                ls = ls + " " + (lst - min4)
+                                                ls = ls - min5
+                                                ls = ls - min2
+                                                ls = ls - min3
+                                            }
+                                        }
+
+                                    }
+                                }
+                                bld = ls.split() as List
+                                bld = bld.sort()
+                                bld = bld.reverse()
+                                return bld
+                            }
+                            else if (OCPBuildUpgrade.equals("Released")) {
+                                def command = """ wget  --output-document  -  https://openshift-release-ppc64le.svc.ci.openshift.org/"""
+                                build = command.execute().text
+                                def min1 = ~/<a class="text-success" href="/
+                                def min2 = ~/\\[/
+                                def min3 = ~/\\]/
+                                def min4 = ~/<a.*">/
+                                def min5 = ~/<\\/a><\\/td>/
+                                def ls =''
+                                build.eachLine{
+                                    if (it =~ /<td/) {
+                                        String lst = it.findAll(/<a class="text-success" href=".*/)
+                                        if (lst.contains (ReleaseUpgrade)) {
+                                            if ( ! lst.contains("nightly")){
+                                                ls = ls + " " + (lst - min4)
+                                                ls = ls - min5
+                                                ls = ls - min2
+                                                ls = ls - min3
+                                            }
+                                        }
+
+                                    }
+                                }
+                                bld = ls.split() as List
+                                bld = bld.sort()
+                                bld = bld.reverse()
+                                return bld
+                            }
+                            else
+                            {
+                                return["NOT REQUIRED"]
+                            }
+                        }
+                        else {
+                            return[\'NOT REQUIRED\']
                         }
                         '''
                 ]
@@ -316,7 +468,8 @@ pipeline {
 
         string(defaultValue: '0', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
         string(defaultValue: '', description: 'Enter Registry link for the OCP Build. This will override the Build', name: 'Ocpimage')
-        booleanParam(defaultValue: false, name: 'Rune2e', description: 'Select if you want to run e2e')
+        booleanParam(defaultValue: false, name: 'Rune2e', description: 'Select if you want to run e2e tests. e2e runs before upgrade, if e2eUpgrade is enabled')
+        booleanParam(defaultValue: false, name: 'e2eUpgrade', description: 'Select if you want to run e2eUpgrade')
         booleanParam(defaultValue: false, name: 'DeployCS', description: 'Select if you want to install Common Services')
 
 
@@ -367,6 +520,9 @@ pipeline {
         CS_INSTALL = "${params.DeployCS}"
         RHCOS_IMAGE_NAME="${params.rhcos}"
         OCP_RELEASE="${params.Release}"
+        ENABLE_E2E_UPGRADE = "${params.e2eUpgrade}"
+        OPENSHIFT_UPGRADE_IMAGE = "${params.BuildUpgrade}"
+        
 
         VCPUS_REQ_BASTION = "1"
         MEM_REQ_BASTION = "8"
