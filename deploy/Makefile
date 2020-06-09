@@ -478,6 +478,8 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 		-e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__CLUSTER_ID__|$(CLUSTER_ID)|g" \
 		-e "s|__E2E_GIT__|$(E2E_GIT)|g" -e "s|__E2E_BRANCH__|$(E2E_BRANCH)|g"  -e "s|__E2E_EXCLUDE_LIST__|$(E2E_EXCLUDE_LIST)|g"\
 		-e "s|__CS_INSTALL__|$(CS_INSTALL)|g" -e "s|__ENABLE_E2E_UPGRADE__|$(ENABLE_E2E_UPGRADE)|g" \
+		-e "s|__GITHUB_USER__|$(GITHUB_USER)|g" -e "s|__GITHUB_TOKEN__|$(GITHUB_TOKEN)|g" \
+		-e "s|__ENABLE_SCALE_TEST__|$(ENABLE_SCALE_TEST)|g" \
         -e "s|__REPO__|$(DEPLOY_REPO)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
 ##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")

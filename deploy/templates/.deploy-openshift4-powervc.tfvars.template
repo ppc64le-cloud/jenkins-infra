@@ -48,6 +48,12 @@ e2e_upgrade_enabled = "__ENABLE_E2E_UPGRADE__"
 
 e2e_upgrade_image = "__OPENSHIFT_UPGRADE_IMAGE__"
 
+github_username = "__GITHUB_USER__"
+
+github_token = "__GITHUB_TOKEN__"
+
+scale_test_enabled = "__ENABLE_SCALE_TEST__"
+
 cs_install                  = __CS_INSTALL__
 cs_project_name             = "ibm-common-services"
 cs_subscription_channel     = "stable-v1"
