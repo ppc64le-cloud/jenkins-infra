@@ -4,6 +4,9 @@ env.DISTRO = ""
 def TIMEOUT_SEC
 def TIMEOUT_MIN
 def E2E_SUMMARY
+def E2E_UPGRADE_SUMMARY
+def JUNIT_E2E
+def JUNIT_E2E_UPGRADE
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 
@@ -317,23 +320,30 @@ pipeline {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/e2e-upgrade-summary.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
                     E2E_SUMMARY = E2E_SUMMARY.trim()
                 }
+                if (fileExists('deploy/e2e-upgrade-summary.txt')) {
+                    E2E_UPGRADE_SUMMARY = readFile 'deploy/e2e-upgrade-summary.txt'
+                    E2E_UPGRADE_SUMMARY = E2E_UPGRADE_SUMMARY.trim()
+                }
+                E2E_SUMMARY = "e2e: " + E2E_SUMMARY + "   e2eUpgrade: " + E2E_UPGRADE_SUMMARY
                 if ( env.OPENSHIFT_IMAGE != ""  ) {
                     env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
                 }
-                if ( fileExists('deploy/junit_e2e.xml')) {
+                JUNIT_E2E = fileExists 'deploy/junit_e2e.xml'
+                JUNIT_E2E_UPGRADE = fileExists 'deploy/junit_e2e_upgrade.xml'
+                if ( JUNIT_E2E ) {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
                 }
-                else if ( fileExists('deploy/junit_e2e_upgrade.xml')) {
+                if ( JUNIT_E2E_UPGRADE ) {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e_upgrade.xml'])
                 }
-                else
-                {
+                if ( JUNIT_E2E == false &&  JUNIT_E2E_UPGRADE == false ) {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                 }
