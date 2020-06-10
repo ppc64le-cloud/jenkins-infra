@@ -19,7 +19,6 @@
         sed -i "s|password.*=.*$|password = ************|g" ${TARGET}.tfvars
         sed -i "s|rhel_subscription_password.*=.*$|rhel_subscription_password = ************|g" ${TARGET}.tfvars
         sed -i "s|github_token.*=.*$|github_token = ************|g" ${TARGET}.tfvars
-        sed -i "s|Authorization: token.*-H|Authorization: token = ************|g" ${TARGET}.tfvars
         cp ${TARGET}.tfvars powervc.tfvars
     fi
     pwd
