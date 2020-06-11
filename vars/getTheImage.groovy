@@ -9,6 +9,14 @@ def call(String auth_url, String distro, String filter){
             IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i rhcos-44 | tail -n 1|tr '\n' ' ' ").trim()
             env.DISTRO="rhel"
             break
+        case "rhcos-45":
+            IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i rhcos-45 | tail -n 1|tr '\n' ' ' ").trim()
+            env.DISTRO="rhel"
+            break
+        case "rhcos-46":
+            IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i rhcos-46 | tail -n 1|tr '\n' ' ' ").trim()
+            env.DISTRO="rhel"
+            break
         case "RHEL8.0":
             IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i rhel8.0| tail -n 1|tr '\n' ' ' ").trim()
             env.DISTRO="rhel"
