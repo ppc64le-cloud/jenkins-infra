@@ -25,11 +25,15 @@ def call(String auth_url, String distro, String filter){
             IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i rhel8.1| tail -n 1|tr '\n' ' ' ").trim()
             env.DISTRO="rhel"
             break
+        case "RHEL7.8":
+            IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i \"${filter}\" | grep -i rhel7.8| tail -n 1|tr '\n' ' ' ").trim()
+            env.DISTRO="rhel"
+            break
         case "RHEL7.7":
             IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i \"${filter}\" | grep -i rhel7.7| tail -n 1|tr '\n' ' ' ").trim()
             env.DISTRO="rhel"
             break
-	    case "RHEL7.6":
+        case "RHEL7.6":
             IMAGE=sh(returnStdout: true, script: "openstack --os-auth-url \"${auth_url}\" --insecure image list  --format value -c Name | grep -i \"${filter}\" | grep -i rhel7.6| grep -i -v  rhel7.6-alt|tail -n 1|tr '\n' ' ' ").trim()
             env.DISTRO="rhel"
             break
