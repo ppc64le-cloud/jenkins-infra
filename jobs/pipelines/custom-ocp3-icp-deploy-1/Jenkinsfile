@@ -335,7 +335,7 @@ properties([
                                 return["RHEL7.6-ALT","RHEL7.6","RHEL7.5-ALT","RHEL7.5"]
                             }
                             else if(Hardware.equals("P8") && Virtualization.equals("PowerVM")){
-                                return["RHEL7.6","RHEL7.5"]
+                                return["RHEL7.8","RHEL7.6","RHEL7.5"]
                             }
                         '''
                 ]
