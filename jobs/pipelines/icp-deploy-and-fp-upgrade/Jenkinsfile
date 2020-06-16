@@ -692,7 +692,7 @@ properties([
                                 return["RHEL7.6","RHEL7.5","UBUNTU18.04","UBUNTU16.04","SLES12SP4","SLES12SP3"]
                             }
                             else if(Hardware.equals("P9") && Virtualization.equals("PowerVM")){
-                                return["RHEL7.7","RHEL7.6-ALT","RHEL7.6","RHEL7.5-ALT","RHEL7.5","SLES12SP4","SLES12SP3","UBUNTU16.04"]
+                                return["RHEL7.8","RHEL7.7","RHEL7.6-ALT","RHEL7.6","RHEL7.5-ALT","RHEL7.5","SLES12SP4","SLES12SP3","UBUNTU16.04"]
                             }
                             else if(Hardware.equals("P9") && Virtualization.equals("KVM")){
                                 return["RHEL7.6-ALT","RHEL7.6","RHEL7.5-ALT","RHEL7.5","SLES12SP4","SLES12SP3","UBUNTU18.04","UBUNTU16.04"]
