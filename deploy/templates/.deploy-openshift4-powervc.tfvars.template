@@ -52,6 +52,8 @@ github_username = "__GITHUB_USER__"
 
 github_token = "__GITHUB_TOKEN__"
 
+golang_tarball = "__GOLANG_TARBALL__"
+
 scale_test_enabled = "__ENABLE_SCALE_TEST__"
 
 cs_install                  = __CS_INSTALL__
