@@ -6,6 +6,9 @@ def TIMEOUT_MIN
 def E2E_SUMMARY
 def clusterInfoFields = [:]
 def clusterInfo = [:]
+int FAILS_PER_THRESHOLD
+int UNSTALE_PER_THRESHOLD
+boolean INFRA_ISSUE = false
 
 pipeline {
     agent {
@@ -313,12 +316,31 @@ pipeline {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
                     E2E_SUMMARY = E2E_SUMMARY.trim()
+                    STR = E2E_SUMMARY.split(',')
+                    FAILS = STR[0].split()
+                    PASS = STR[1].split()
+                    SKIP = STR[2].split()
+                    TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
+                    FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                }
+                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+                def infra_errors = readFile 'files/infra-issues.txt'
+                infra_errors.split('\n').each { line ->
+                    if ( line  != null) {
+                        if ( logContent.contains(line) ){
+                            INFRA_ISSUE = true
+                        }
+                    }
                 }
                 if ( env.OPENSHIFT_IMAGE != ""  ) {
                     env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
                 }
                 if ( fileExists('deploy/junit_e2e.xml')) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
+                    sh '''
+                    sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
+                    '''
+                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '1' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
                 }
                 else
                 {
@@ -336,10 +358,16 @@ pipeline {
                 clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
-            }
-            step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+
+                if ( ! INFRA_ISSUE ) {
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+                    notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+                }
+                else{
+                    echo "Skipping this run, as this is an infra related issue"
+                }
             cleanWs()
-            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+            }
         }
     }
 }

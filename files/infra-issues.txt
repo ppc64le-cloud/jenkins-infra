@@ -1,0 +1,6 @@
+Error: timeout - last error: dial tcp
+Error: Error waiting for instance
+Error: Invalid power_state for instance
+Error: Error creating OpenStack server: Internal Server Error
+Error: Invalid value for input variable
+
