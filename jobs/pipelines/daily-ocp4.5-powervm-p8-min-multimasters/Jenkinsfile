@@ -20,7 +20,7 @@ pipeline {
         }
     }
     triggers {
-        cron('1  20  * * *')
+        cron('30  21  * * *')
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
