@@ -325,7 +325,7 @@ pipeline {
                     UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
-                def logContent_modified=sh(returnStdout: true, script: "echo \"${logContent}\" | sed 's/\\[[0-9]*m //g'| sed 's/\\[[0-9]*m//g' | sed 's/ //g' ")
+                def logContent_modified=logContent.replaceAll(/\[[0-9]+m/,"").replaceAll("\\s*","")
                 def infra_errors = readFile 'files/infra-issues.txt'
                 infra_errors.split('\n').each { line ->
                     if ( line  != null) {

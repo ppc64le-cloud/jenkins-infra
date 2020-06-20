@@ -5,3 +5,4 @@ Error:Errorwaitingforinstance
 Error:Invalidpower_stateforinstance
 Error:ErrorcreatingOpenStackserver:InternalServerError
 Error:Invalidvalueforinputvariable
+ssh:Couldnotresolvehostname
