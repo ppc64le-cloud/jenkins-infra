@@ -1,6 +1,7 @@
-Error: timeout - last error: dial tcp
-Error: Error waiting for instance
-Error: Invalid power_state for instance
-Error: Error creating OpenStack server: Internal Server Error
-Error: Invalid value for input variable
-Error: timeout - last error: dial tcp
+# -_- Remove all white spaces in the pattern. -_-
+# -_- Add only common pattern. -_-
+Error:timeout-lasterror:dialtcp
+Error:Errorwaitingforinstance
+Error:Invalidpower_stateforinstance
+Error:ErrorcreatingOpenStackserver:InternalServerError
+Error:Invalidvalueforinputvariable
