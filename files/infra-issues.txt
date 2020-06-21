@@ -1,8 +1,7 @@
-# -_- Remove all white spaces in the pattern. -_-
-# -_- Add only common pattern. -_-
-Error:timeout-lasterror:dialtcp
-Error:Errorwaitingforinstance
-Error:Invalidpower_stateforinstance
-Error:ErrorcreatingOpenStackserver:InternalServerError
-Error:Invalidvalueforinputvariable
-ssh:Couldnotresolvehostname
+timeout - last error: dial tcp
+Error waiting for instance
+Invalid power_state for instance
+Error creating OpenStack server
+Invalid value for input variable
+Could not resolve hostname
+Resource not found
