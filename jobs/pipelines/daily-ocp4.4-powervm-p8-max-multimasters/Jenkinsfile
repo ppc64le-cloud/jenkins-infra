@@ -321,7 +321,7 @@ pipeline {
                     PASS = STR[1].split()
                     SKIP = STR[2].split()
                     TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
-                    FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
                     UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
