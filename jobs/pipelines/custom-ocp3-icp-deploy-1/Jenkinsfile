@@ -390,6 +390,7 @@ def ICP_CONFIG_FILE
 def MASTER_TEMPLATE
 def IMAGE_DISTRO
 env.DISTRO = ""
+env.REDHAT_RELEASE = ""
 
 pipeline {
     agent {
@@ -543,7 +544,7 @@ pipeline {
         IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
         ICP_CONFIG_FILE="power.openshift.config.yaml"
         ICP_INSTALLER_TAG="${ICP_VERSION}"
-        REDHAT_RELEASE = "7.6"
+        //REDHAT_RELEASE = "7.6"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         //BUILD_HARNESS_ORG="sudeeshjohn"
