@@ -361,7 +361,7 @@ pipeline {
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
 
-                iif ( ! INFRA_ISSUE ) {
+                if ( ! INFRA_ISSUE ) {
                     step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
                 }
                 else{
