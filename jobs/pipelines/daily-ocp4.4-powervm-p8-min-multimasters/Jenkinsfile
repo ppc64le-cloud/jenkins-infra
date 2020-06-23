@@ -364,11 +364,12 @@ pipeline {
 
                 if ( ! INFRA_ISSUE ) {
                     step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
-                    notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
                 }
                 else{
-                    echo "Skipping this run, as this is an infra related issue"
+                    echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
+                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
                 }
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
             }
         }
