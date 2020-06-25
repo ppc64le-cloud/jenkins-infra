@@ -3,5 +3,6 @@ Error waiting for instance
 Invalid power_state for instance
 Error creating OpenStack server
 Invalid value for input variable
-Could not resolve hostname
 Resource not found
+Error trying to get network information from the Network API
+OpenStack connection error
