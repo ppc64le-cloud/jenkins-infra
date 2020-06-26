@@ -343,7 +343,7 @@ pipeline {
                     sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
                     sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
                     '''
-                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '1' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
+                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
                 }
                 else
                 {
