@@ -182,7 +182,7 @@ pipeline {
                         else if ( env.VIR_CHOSE == "PowerVM" )
                         {
                             echo 'Setting-up terraform template file for PowerVM!'
-                            env.AUTH_URL="https://9.114.192.168:5000/v3/"
+                            env.AUTH_URL="https://9.114.192.193:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
