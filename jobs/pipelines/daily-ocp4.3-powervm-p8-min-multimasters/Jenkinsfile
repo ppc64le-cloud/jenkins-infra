@@ -89,7 +89,7 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.3" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The downlod branch
 
         NUM_OF_WORKERS = "3"
         NUM_OF_MASTERS = "3"
@@ -110,6 +110,7 @@ pipeline {
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
