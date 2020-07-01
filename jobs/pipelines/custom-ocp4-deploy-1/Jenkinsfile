@@ -471,6 +471,7 @@ pipeline {
         booleanParam(defaultValue: false, name: 'Rune2e', description: 'Select if you want to run e2e tests. e2e runs before upgrade, if e2eUpgrade is enabled')
         booleanParam(defaultValue: false, name: 'e2eUpgrade', description: 'Select if you want to run e2eUpgrade')
         booleanParam(defaultValue: false, name: 'DeployCS', description: 'Select if you want to install Common Services')
+        booleanParam(defaultValue: false, name: 'RunAcmeair', description: 'Select if you want to run Acmeair deployment')
 
 
     }
@@ -518,6 +519,7 @@ pipeline {
         //OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Build}"
         ENABLE_E2E_TEST = "${params.Rune2e}"
         CS_INSTALL = "${params.DeployCS}"
+        RUN_ACMEAIR = "${params.RunAcmeair}"
         RHCOS_IMAGE_NAME="${params.rhcos}"
         OCP_RELEASE="${params.Release}"
         ENABLE_E2E_UPGRADE = "${params.e2eUpgrade}"
@@ -626,6 +628,7 @@ pipeline {
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${AUTH_URL}"
@@ -722,6 +725,71 @@ pipeline {
                 }
             }
         }
+
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
+        stage('Clone and Run Acmeair'){
+            when {
+                expression {
+                          return env.RUN_ACMEAIR == "true";
+                }
+            }
+            steps{
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                         // Run the script for Acmeair installation
+                         sh '''
+                         TAG="ppc64le"
+                         git clone https://${GITHUB_TOKEN}@github.ibm.com/powercloud/acmeair.git
+                         cd acmeair
+                         git checkout ${TAG}
+                         ./deploy.sh
+
+                         #Time to get the pods deployment in running state
+                         sleep 60
+                         echo "Acmeair deployed resources"
+                         oc get all
+
+                         #Pods Verification
+                         total_pods_created=`oc get pods|wc -l`
+                         actual_pods_running=`oc get pods|grep -i "running"|wc -l`
+                         echo "Total pods in running state $actual_pods_running out of $total_pods_created"
+                         '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster. Failed to install acmeair !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
         stage('Waiting to timeout') {
             steps {
                 script {

@@ -5,6 +5,17 @@
     else
         exit 1 
     fi
+    # setup oc client
+    if [ ! -z "${OPENSHIFT_CLIENT_TARBALL_AMD64}" ]; then
+    	wget "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+	    if [ $? -eq 0 ] ; then
+	        cp kubectl oc /usr/bin/
+	    else
+		    echo "Unable to get ${OPENSHIFT_CLIENT_TARBALL_AMD64} tar file"
+		    exit 1
+	    fi
+
+    fi
     # Capturing Teraform template
     BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip || true)
     [ $? -ne 0 ] && exit 1;
