@@ -35,7 +35,7 @@ cluster_id_prefix = "__INSTANCE_NAME__"
 
 storage_type    = "nfs"
 volume_size = "300"
-mount_etcd_ramdisk  = __MOUNT_ETCD_RAMDISK__
+mount_etcd_ramdisk  = "__MOUNT_ETCD_RAMDISK__"
 
 e2e_tests_git = "__E2E_GIT__"
 
