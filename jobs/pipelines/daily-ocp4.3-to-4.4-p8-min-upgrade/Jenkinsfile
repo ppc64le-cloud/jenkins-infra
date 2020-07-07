@@ -110,13 +110,14 @@ pipeline {
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "true"
         ENABLE_SCALE_TEST = "false"
+        MOUNT_ETCD_RAMDISK = "true"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
-        BUILD_HARNESS_BRANCH="devel"
+        //BUILD_HARNESS_BRANCH="devel"
 	 }
 
     stages {
