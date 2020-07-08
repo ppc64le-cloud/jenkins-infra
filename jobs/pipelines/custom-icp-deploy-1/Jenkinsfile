@@ -486,7 +486,7 @@ pipeline {
                         }
                         echo "${TAG}"
 
-                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout tags/${TAG}")
+                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout ${TAG}")
                     }
 
                     exists = fileExists "${WORKSPACE}/installer/cluster/power.config.yaml"
