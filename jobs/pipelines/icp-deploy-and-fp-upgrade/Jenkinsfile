@@ -110,10 +110,10 @@ properties([
                         import com.cloudbees.plugins.credentials.CredentialsProvider
                         import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials
                         if ( Build.equals("Online") && Repo.equals("edge") || Build.equals("Online") && Repo.equals("stash")){
-                                return["3.2.0","3.2.1","latest:selected"]
+                                return["3.2.1.2006","3.2.2.2006","latest:selected"]
                             }
                             else if(Build.equals("Online") && Repo.equals("release")){
-                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected"]
+                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected","3.2.0.2001","3.2.1.2001","3.2.0.2003","3.2.1.2003"]
                             }
                             else if (Build.equals("offline")){
                                 instance = Jenkins.getInstance()
@@ -469,10 +469,10 @@ properties([
                         }
                         else {
                             if ( UpgradeBuild.equals("Online") && UpgradeRepo.equals("edge") || UpgradeBuild.equals("Online") && UpgradeRepo.equals("stash")){
-                                    return["3.2.0","3.2.1","latest:selected"]
+                                    return["3.2.1.2006","3.2.2.2006","latest:selected"]
                             }
                             else if(UpgradeBuild.equals("Online") && UpgradeRepo.equals("release")){
-                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected"]
+                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected","3.2.0.2001","3.2.1.2001","3.2.0.2003","3.2.1.2003"]
                             }
                             else if (UpgradeBuild.equals("offline")){
                                 instance = Jenkins.getInstance()
