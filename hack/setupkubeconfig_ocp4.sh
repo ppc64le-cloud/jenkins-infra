@@ -1,9 +1,14 @@
-    #!/bin/bash -x
+#!/bin/bash -x
     echo "Capturing the System Information"
     if [ -d ${WORKSPACE}/deploy ];then
         cd ${WORKSPACE}/deploy
     else
         exit 1 
+    fi
+    # setup oc client
+    if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
+        wget "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+        cp kubectl oc /usr/bin/
     fi
     # Capturing Teraform template
     BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip || true)
