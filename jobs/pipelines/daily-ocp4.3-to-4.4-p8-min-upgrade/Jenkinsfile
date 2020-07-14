@@ -111,6 +111,7 @@ pipeline {
         ENABLE_E2E_UPGRADE = "true"
         ENABLE_SCALE_TEST = "false"
         MOUNT_ETCD_RAMDISK = "true"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
