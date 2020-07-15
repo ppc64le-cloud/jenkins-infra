@@ -78,10 +78,10 @@ properties([
                         import com.cloudbees.plugins.credentials.CredentialsProvider
                         import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials
                         if ( Build.equals("Online") && Repo.equals("edge") || Build.equals("Online") && Repo.equals("stash")){
-                                return["3.2.0","3.2.1","latest:selected"]
+                                return["3.2.0","3.2.1","3.2.1.2006","3.2.2.2006","latest:selected"]
                             }
                             else if(Build.equals("Online") && Repo.equals("release")){
-                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected"]
+                                return["3.1.0","3.1.1","3.1.2","3.2.0","3.2.1:selected","3.2.0.2001","3.2.0.2003","3.2.1.2001","3.2.1.2003"]
                             }
                             else if (Build.equals("offline")){
                                 instance = Jenkins.getInstance()
@@ -486,7 +486,7 @@ pipeline {
                         }
                         echo "${TAG}"
 
-                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout tags/${TAG}")
+                        sh(returnStdout: false, script: "cd ${WORKSPACE}/installer/ && git checkout ${TAG}")
                     }
 
                     exists = fileExists "${WORKSPACE}/installer/cluster/power.config.yaml"

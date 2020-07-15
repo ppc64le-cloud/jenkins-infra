@@ -83,8 +83,8 @@ pipeline {
         NODE_OS = "rhcos-45"
         BASTION_OS  = "RHEL8.0"
         TIMEOUT = "0"
-        OS_NETWORK = "icp_network2"
-        OS_PRIVATE_NETWORK = "icp_network2"
+        OS_NETWORK = "icp_network4"
+        OS_PRIVATE_NETWORK = "icp_network4"
         OCP_RELEASE="4.5"
 
         //Makefile variables
@@ -110,12 +110,14 @@ pipeline {
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
+        MOUNT_ETCD_RAMDISK = "true"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
+        BUILD_HARNESS_BRANCH="devel"
 	 }
 
     stages {
@@ -181,12 +183,13 @@ pipeline {
                         else if ( env.VIR_CHOSE == "PowerVM" )
                         {
                             echo 'Setting-up terraform template file for PowerVM!'
-                            env.AUTH_URL="https://9.114.192.168:5000/v3/"
+                            env.AUTH_URL="https://9.114.192.193:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"
@@ -283,7 +286,51 @@ pipeline {
                 }
             }
         }
-
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
+                           oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        
         stage('Waiting to timeout') {
             steps {
                 script {
@@ -311,6 +358,9 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
@@ -342,7 +392,7 @@ pipeline {
                     sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
                     sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
                     '''
-                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '1' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
+                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
                 }
                 else
                 {

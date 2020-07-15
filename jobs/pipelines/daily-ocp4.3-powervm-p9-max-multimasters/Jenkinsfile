@@ -89,7 +89,7 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.3" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The downlod branch
 
         NUM_OF_WORKERS = "1"
         NUM_OF_MASTERS = "3"
@@ -106,16 +106,19 @@ pipeline {
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH="release-${OCP_RELEASE}"
-        E2E_EXCLUDE_LIST = '-H \\\\\\\\\\"Authorization: token ${GITHUB_TOKEN}\\\\\\\\\\" -H \\\\\\\\\\"Accept: application/vnd.github.v3.raw\\\\\\\\\\" \\\\\\\\\\"https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt\\\\\\\\\\"'
+        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.3-powervm/ocp4.3_power_blacklist.txt"
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
+        MOUNT_ETCD_RAMDISK = "true"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
+        BUILD_HARNESS_BRANCH="devel"
 	 }
 
     stages {
@@ -181,7 +184,7 @@ pipeline {
                         else if ( env.VIR_CHOSE == "PowerVM" )
                         {
                             echo 'Setting-up terraform template file for PowerVM!'
-                            env.AUTH_URL="https://9.114.192.168:5000/v3/"
+                            env.AUTH_URL="https://9.114.192.193:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
@@ -342,7 +345,7 @@ pipeline {
                     sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
                     sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
                     '''
-                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '1' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
+                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
                 }
                 else
                 {
