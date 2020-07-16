@@ -9,6 +9,9 @@ def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
+def REAL_TIME
+def USER_TIME
+def SYSTEM_TIME
 
 pipeline {
     agent {
