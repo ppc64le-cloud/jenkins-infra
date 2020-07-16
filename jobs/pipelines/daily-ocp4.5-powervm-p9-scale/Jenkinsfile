@@ -3,6 +3,12 @@
 env.DISTRO = ""
 def TIMEOUT_SEC
 def TIMEOUT_MIN
+def SCALE_SUMMARY
+def clusterInfoFields = [:]
+def clusterInfo = [:]
+int FAILS_PER_THRESHOLD
+int UNSTALE_PER_THRESHOLD
+boolean INFRA_ISSUE = false
 
 pipeline {
     agent {
@@ -105,6 +111,7 @@ pipeline {
         ENABLE_SCALE_TEST = "true"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
+        SCALE_NUM_OF_DEPLOYMENTS = "100"
 
         OCP4_ENV = true
 
@@ -181,6 +188,7 @@ pipeline {
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"
@@ -276,6 +284,50 @@ pipeline {
                 }
             }
         }
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
+                           oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
         stage('Waiting to timeout') {
             steps {
                 script {
@@ -301,10 +353,79 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            script {
+                if (fileExists('deploy/time_taken')) {
+                    E2E_SUMMARY = readFile 'deploy/time_taken'
+                    E2E_SUMMARY = E2E_SUMMARY.trim()
+                    sh '''
+                       cat deploy/time_taken | grep '[^[:blank:]]' | tail -n 3 > deploy/time || true
+                    '''
+                    SCALE_SUMMARY = readFile 'deploy/time'
+                    echo SCALE_SUMMARY
+                    SCALE_SUMMARY.split('\n').each { line ->
+                        if ( line  != null) {
+                            if (line.contains('real')){
+                                REAL_TIME = line.split()[1]
+                            }
+                            if (line.contains('user')){
+                                USER_TIME = line.split()[1]
+                            }
+                            if (line.contains('sys')){
+                                SYSTEM_TIME = line.split()[1]
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    currentBuild.result = 'FAILURE'
+                }
+                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+                def logContent_modified=logContent.toLowerCase()
+                def infra_errors = readFile 'files/infra-issues.txt'
+                infra_errors.split('\n').each { line ->
+                   line1=line.toLowerCase()
+                    if ( line1  != null) {
+                        if (logContent_modified.contains(line1)){
+                            INFRA_ISSUE = true
+                        }
+                    }
+                }
+                if ( env.OPENSHIFT_IMAGE != ""  ) {
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                }
+                clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
+                clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
+                clusterInfo['master_node_mem'] = "${MEM_REQ_MASTER}"
+                clusterInfo['worker_node_cpu'] = "${VCPUS_REQ_WORKER}"
+                clusterInfo['worker_node_mem'] = "${MEM_REQ_WORKER}"
+                clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
+                clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
+                clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
+                clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
+                clusterInfo['real_time'] = REAL_TIME
+                clusterInfo['user_time'] = USER_TIME
+                clusterInfo['system_time'] = SYSTEM_TIME
+                clusterInfo['deployments'] = "${SCALE_NUM_OF_DEPLOYMENTS}"
+
+                clusterInfoFields['clusterinfo'] = clusterInfo
+
+                if ( ! INFRA_ISSUE ) {
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+                }
+                else{
+                    echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
+                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
+                }
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
+            }
         }
     }
 }
