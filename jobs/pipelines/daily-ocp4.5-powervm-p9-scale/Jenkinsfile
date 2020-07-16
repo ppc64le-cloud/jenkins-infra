@@ -189,7 +189,7 @@ pipeline {
                             env.AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == null)
+                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
                             env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-13-172606/openshift-install-linux.tar.gz"
