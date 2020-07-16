@@ -93,14 +93,14 @@ pipeline {
                     '''
                     env.OS_AUTH_URL = "https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
                     sh '''
-                    openstack image list --insecure --format value -c Name > images.all.txt
-                    for i in `cat images.all.txt`; do  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $i" " >> images.all.date.txt; echo $create_date >> images.all.date.txt ;done
-                    cat images.all.date.txt | sort -k2 -r > images.all.date.sorted.txt
+                    openstack image list --insecure --format value -c Name > images.scnlcicdcloud.all.txt
+                    for i in `cat images.scnlcicdcloud.all.txt`; do  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $i" " >> images.scnlcicdcloud.all.date.txt; echo $create_date >> images.scnlcicdcloud.all.date.txt ;done
+                    cat images.scnlcicdcloud.all.date.txt | sort -k2 -r > images.scnlcicdcloud.all.date.sorted.txt
 
-                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.3\\|cicd-rhcos-43' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.3.latest.txt || true
-                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.4\\|cicd-rhcos-44' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.4.latest.txt || true
-                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.5\\|cicd-rhcos-45' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.5.latest.txt || true
-                    cat images.all.date.sorted.txt | grep 'cicd-rhcos-4\\.6\\|cicd-rhcos-46' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.6.latest.txt || true
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.3\\|cicd-rhcos-43' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.3.latest.txt || true
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.4\\|cicd-rhcos-44' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.4.latest.txt || true
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.5\\|cicd-rhcos-45' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.5.latest.txt || true
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.6\\|cicd-rhcos-46' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.6.latest.txt || true
                     
                     '''
                     }
