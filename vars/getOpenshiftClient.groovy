@@ -22,5 +22,10 @@ def call(release){
     }
     //bld = ls.split() as List
     def lsnew = ls.trim()
-    return "https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-$release/$lsnew"
+    if ( lsnew != "") {
+        return "https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-$release/$lsnew"
+    }
+    else {
+        return null
+    }
 }
