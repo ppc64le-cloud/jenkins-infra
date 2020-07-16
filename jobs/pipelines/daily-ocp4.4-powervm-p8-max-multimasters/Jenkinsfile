@@ -112,6 +112,7 @@ pipeline {
         ENABLE_SCALE_TEST = "false"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
+        SCALE_NUM_OF_DEPLOYMENTS = "100"
 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
