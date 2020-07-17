@@ -1,0 +1,327 @@
+@Library('pcloud-jenkins-library') _
+//Define global variables
+env.DISTRO = ""
+def TIMEOUT_SEC
+def TIMEOUT_MIN
+def E2E_SUMMARY
+def clusterInfoFields = [:]
+def clusterInfo = [:]
+int FAILS_PER_THRESHOLD
+int UNSTALE_PER_THRESHOLD
+boolean INFRA_ISSUE = false
+
+pipeline {
+    agent {
+        dockerfile {
+            dir 'images/powervs'
+            additionalBuildArgs '--force-rm	--no-cache'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'daily-x86_64'
+        }
+    }
+    triggers {
+        cron('1 10 * * *')
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        TF_VAR_user_name = credentials('GITHUB_USER')
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        TF_VAR_repo_user = credentials('GITHUB_USER')
+        TF_VAR_password = credentials('TF_VAR_password')
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+
+
+        //Env constants
+        TERRAFORM_VER = "0.12.23"
+        IBM_CLOUD_REGION = "lon"
+        IBM_CLOUD_ZOME = "lon06"
+        SERVICE_INSTANCE_ID = "729b4527-6709-4ecb-8803-e0f1709ea945"
+
+        BASTION_MEMORY = "8"
+        BASTION_PROCESSORS = "1"
+
+        BOOTSTRAP_MEMORY = "16"
+        BOOTSTRAP_PROCESSORS = "2"
+
+        MASTER_MEMORY = "16"
+        MASTER_PROCESSORS = "2"
+        NUM_OF_MASTERS = "3"
+
+        WORKER_MEMORY = "16"
+        WORKER_PROCESSORS = "2"
+        NUM_OF_WORKERS = "2"
+
+        BASTION_IMAGE_NAME = "rhel-8.2"
+        RHCOS_IMAGE_NAME = "rhcos-4.5"
+
+        SYSTEM_TYPE = "s922"
+        NETWORK_NAME = "ocp-net"
+        RHEL_USERNAME = "root"
+        CLUSTER_DOMAIN = "redhat.com"
+        INSTANCE_NAME = "ltccci"
+
+        ENABLE_LOCAL_REGISTRY = "true"
+        LOCAL_REGISTRY_IMAGE = "docker.io/ibmcom/registry-ppc64le:2.6.2.5"
+
+        // Bellow 4 variables are not used. Disabled in template
+        HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
+        HELPERNODE_TAG = "5eab3db53976bb16be582f2edc2de02f7510050d"
+        INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+        INSTALL_PLAYBOOT_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
+
+        UPGRADE_IMAGE = ""
+        UPGRADE_PAUSE_TIME = ""
+        UPGRADE_DELAY_TIME = ""
+
+        TIMEOUT = "0"
+        OCP_RELEASE = "4.5"
+
+        //Makefile variables
+        TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The downlod branch
+
+        TARGET = "deploy-openshift4-powervs"
+        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+
+        //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
+        BUILD_HARNESS_ORG="sudeeshjohn"
+        //BUILD_HARNESS_BRANCH="devel"
+        POWERVS = true
+	 }
+
+    stages {
+        stage('pull artifact') {
+            steps {
+                script {
+                    step([  $class: 'CopyArtifact',
+                    filter: 'latest-4.5-build.txt',
+                    fingerprintArtifacts: true,
+                    projectName: 'poll-artifactory',
+                    target: 'artifactory',
+                    selector: lastSuccessful()
+                    ])
+                }
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Teraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
+                        if (fileExists('artifactory/latest-4.5-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.5-build.txt'
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        }
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
+                        {
+                            echo "Unable to find openshift install tarball. falling back to default"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-17-091818/openshift-install-linux-4.5.0-0.nightly-ppc64le-2020-07-17-091818.tar.gz"
+                        }
+                        env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null" )
+                        {
+                            echo "Unable to find openshift install tarball. falling back to default"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-17-091818/openshift-client-linux-4.5.0-0.nightly-ppc64le-2020-07-17-091818.tar.gz"
+                        }
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null" )
+                        {
+                            echo "Unable to find openshift install tarball. falling back to default"
+                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.5.0-0.nightly-2020-06-05-214616/openshift-client-linux-4.5.0-0.nightly-2020-06-05-214616.tar.gz"
+                        }
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template prepration failed !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initilize Environment') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo 'Initializing supporting repos and keys !'
+
+                        cd ${WORKSPACE}/deploy
+                        make init
+                        make keys
+                        make setup-dependencies
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo 'Deploying Cluster!'
+                        export TF_VAR_offline_remote_password=$TF_VAR_password
+                        cd ${WORKSPACE}/deploy
+                        make $TARGET
+                        sleep 60
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        // stage('Setup Kubectl') {
+        //     steps {
+        //         script {
+        //             ansiColor('xterm') {
+        //                 echo ""
+        //             }
+        //             try {
+        //                 setupKubeconfigOcp4()
+        //                 sh '''
+        //                 echo 'Setting up kubectl!'
+        //                 oc get nodes
+        //                 echo 'Get the Cluster Operators'
+        //                 oc get co
+        //                 '''
+        //                 }
+        //             catch (err) {
+        //                 echo 'Error ! Tearing off the cluster !'
+        //                 getArtifactsAndCleanOcp4(env.AUTH_URL)
+        //                 throw err
+        //             }
+        //         }
+        //     }
+        // }
+        // stage('Gather pprof and prometheus data') {
+        //     steps {
+        //         script {
+        //             ansiColor('xterm') {
+        //                 echo ""
+        //             }
+        //             try {
+        //                 sh '''
+        //                    oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
+        //                    oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
+        //                    oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+        //                 '''
+        //                 }
+        //             catch (err) {
+        //                 echo 'Error ! Tearing off the cluster !'
+        //                 getArtifactsAndCleanOcp4(env.AUTH_URL)
+        //                 throw err
+        //             }
+        //         }
+        //     }
+        // }x
+
+        stage('Waiting to timeout') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        TIMEOUT_MIN = TIMEOUT.toInteger()
+                        if ( TIMEOUT_MIN != 0 )
+                        {
+                            TIMEOUT_SEC=TIMEOUT_MIN*60
+                        }
+                        echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
+                        sleep TIMEOUT_SEC
+                        }
+                    finally {
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            //archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            //archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            //archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            script {
+                if (fileExists('deploy/summary.txt')) {
+                    E2E_SUMMARY = readFile 'deploy/summary.txt'
+                    E2E_SUMMARY = E2E_SUMMARY.trim()
+                    STR = E2E_SUMMARY.split(',')
+                    FAILS = STR[0].split()
+                    PASS = STR[1].split()
+                    SKIP = STR[2].split()
+                    TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
+                    FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                    UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                }
+                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+                def logContent_modified=logContent.toLowerCase()
+                def infra_errors = readFile 'files/infra-issues.txt'
+                infra_errors.split('\n').each { line ->
+                   line1=line.toLowerCase()
+                    if ( line1  != null) {
+                        if (logContent_modified.contains(line1)){
+                            INFRA_ISSUE = true
+                        }
+                    }
+                }
+                if ( env.OPENSHIFT_IMAGE != ""  ) {
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                }
+                clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
+                clusterInfo['master_node_cpu'] = "${MASTER_PROCESSORS}"
+                clusterInfo['master_node_mem'] = "${MASTER_MEMORY}"
+                clusterInfo['worker_node_cpu'] = "${WORKER_PROCESSORS}"
+                clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
+                clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
+                clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
+
+                clusterInfoFields['clusterinfo'] = clusterInfo
+
+                if ( ! INFRA_ISSUE ) {
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervs', customDataMap: clusterInfoFields])
+                }
+                else{
+                    echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
+                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
+                }
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+            cleanWs()
+            }
+        }
+    }
+}
