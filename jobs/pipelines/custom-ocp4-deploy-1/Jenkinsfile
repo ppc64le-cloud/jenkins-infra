@@ -471,6 +471,7 @@ pipeline {
         booleanParam(defaultValue: false, name: 'Rune2e', description: 'Select if you want to run e2e tests. e2e runs before upgrade, if e2eUpgrade is enabled')
         booleanParam(defaultValue: false, name: 'e2eUpgrade', description: 'Select if you want to run e2eUpgrade')
         booleanParam(defaultValue: false, name: 'DeployCS', description: 'Select if you want to install Common Services')
+        booleanParam(defaultValue: false, name: 'RunAcmeair', description: 'Select if you want to run Acmeair deployment')
 
 
     }
@@ -518,6 +519,7 @@ pipeline {
         //OPENSHIFT_IMAGE = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${params.Build}"
         ENABLE_E2E_TEST = "${params.Rune2e}"
         CS_INSTALL = "${params.DeployCS}"
+        RUN_ACMEAIR = "${params.RunAcmeair}"
         RHCOS_IMAGE_NAME="${params.rhcos}"
         OCP_RELEASE="${params.Release}"
         ENABLE_E2E_UPGRADE = "${params.e2eUpgrade}"
@@ -624,8 +626,14 @@ pipeline {
                             env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
+                        {
+                            echo "Unable to find openshift install tarball. falling back to default"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-13-172606/openshift-install-linux.tar.gz"
+                        }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${AUTH_URL}"
@@ -722,6 +730,81 @@ pipeline {
                 }
             }
         }
+
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
+        stage('Clone and Run Acmeair'){
+            when {
+                expression {
+                          return env.RUN_ACMEAIR == "true";
+                }
+            }
+            steps{
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                         // Run the script for Acmeair installation
+                         sh '''
+                         TAG="ppc64le"
+                         git clone https://${GITHUB_TOKEN}@github.ibm.com/powercloud/acmeair.git
+                         cd acmeair
+                         git checkout ${TAG}
+                         ./deploy.sh
+
+                         echo "Acmeair deployed resources"
+                         oc get all
+                         total_pods_created=`oc get pods|tail -n +2|wc -l`
+                         #Time to get the pods deployment in running state
+                         timeout=300
+                         time_taken=0
+                         #Pods Verification
+                         while [ "$time_taken" -le "$timeout" ]
+                         do
+                              actual_pods_running=`oc get pods|grep -i "running"|wc -l`
+                              if [ "$total_pods_created" -eq "$actual_pods_running" ];then
+                                  break
+                              else
+                                  time_taken=`expr $time_taken + 60`
+                                  sleep 60
+                              fi
+                         done
+                         echo "Total pods in running state $actual_pods_running out of $total_pods_created"
+                         oc get pods
+                         '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster. Failed to install acmeair !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
         stage('Waiting to timeout') {
             steps {
                 script {
