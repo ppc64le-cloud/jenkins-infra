@@ -368,13 +368,10 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/time_taken')) {
-                    E2E_SUMMARY = readFile 'deploy/time_taken'
-                    E2E_SUMMARY = E2E_SUMMARY.trim()
                     sh '''
                        cat deploy/time_taken | grep '[^[:blank:]]' | tail -n 3 > deploy/time || true
                     '''
                     SCALE_SUMMARY = readFile 'deploy/time'
-                    echo SCALE_SUMMARY
                     SCALE_SUMMARY.split('\n').each { line ->
                         if ( line  != null) {
                             if (line.contains('real')){
@@ -429,9 +426,9 @@ pipeline {
                 }
                 else{
                     echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
-                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
+                    SCALE_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
                 }
-            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, SCALE_SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
             }
         }
