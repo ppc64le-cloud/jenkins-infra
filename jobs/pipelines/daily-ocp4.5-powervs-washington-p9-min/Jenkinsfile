@@ -45,23 +45,23 @@ pipeline {
         SERVICE_INSTANCE_ID = "8aec6256-b197-4fe5-afcf-7507be7aa77b"
 
         BASTION_MEMORY = "8"
-        BASTION_PROCESSORS = "1"
+        BASTION_PROCESSORS = ".25"
 
         BOOTSTRAP_MEMORY = "16"
-        BOOTSTRAP_PROCESSORS = "2"
+        BOOTSTRAP_PROCESSORS = ".25"
 
         MASTER_MEMORY = "16"
-        MASTER_PROCESSORS = "2"
+        MASTER_PROCESSORS = ".25"
         NUM_OF_MASTERS = "3"
 
         WORKER_MEMORY = "16"
-        WORKER_PROCESSORS = "2"
+        WORKER_PROCESSORS = ".25"
         NUM_OF_WORKERS = "2"
 
         BASTION_IMAGE_NAME = "rhel-8.2"
         RHCOS_IMAGE_NAME = "rhcos-4.5"
 
-        SYSTEM_TYPE = "s922"
+        SYSTEM_TYPE = "e880"
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         CLUSTER_DOMAIN = "redhat.com"
@@ -309,6 +309,7 @@ pipeline {
                 clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
                 clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
                 clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
+                clusterinfo['system_type']     = "${SYSTEM_TYPE}"
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
 
