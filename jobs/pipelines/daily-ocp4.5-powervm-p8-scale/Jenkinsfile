@@ -3,12 +3,15 @@
 env.DISTRO = ""
 def TIMEOUT_SEC
 def TIMEOUT_MIN
-def E2E_SUMMARY
-def E2E_UPGRADE_SUMMARY
-def JUNIT_E2E
-def JUNIT_E2E_UPGRADE
+def SCALE_SUMMARY
 def clusterInfoFields = [:]
 def clusterInfo = [:]
+int FAILS_PER_THRESHOLD
+int UNSTALE_PER_THRESHOLD
+boolean INFRA_ISSUE = false
+def REAL_TIME
+def USER_TIME
+def SYSTEM_TIME
 
 pipeline {
     agent {
@@ -19,8 +22,8 @@ pipeline {
             label 'daily-x86_64'
         }
     }
-    triggers {
-        cron('1  1 * * *')
+     triggers {
+        cron('1 2 * * *')
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
@@ -43,7 +46,7 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.13"
+        TERRAFORM_VER = "0.12.23"
         TEST_SUITE = "ppc64le-edge"
         OS = "linux"
         OS_IDENTITY_API_VERSION='3'
@@ -57,7 +60,7 @@ pipeline {
 
 
         // Node Configuration
-        VCPUS_REQ_MASTER = "1"
+        VCPUS_REQ_MASTER = "2"
         MEM_REQ_MASTER = "16"
         PRO_UNIT_REQ_MASTER = ".2"
 
@@ -65,11 +68,11 @@ pipeline {
         MEM_REQ_WORKER = "16"
         PRO_UNIT_REQ_WORKER = ".2"
 
-        VCPUS_REQ_BOOTSTRAP = "1"
+        VCPUS_REQ_BOOTSTRAP = "2"
         MEM_REQ_BOOTSTRAP = "16"
         PRO_UNIT_REQ_BOOTSTRAP = ".2"
 
-        VCPUS_REQ_BASTION = "1"
+        VCPUS_REQ_BASTION = "2"
         MEM_REQ_BASTION = "8"
         PRO_UNIT_REQ_BASTION = ".1"
 
@@ -80,23 +83,22 @@ pipeline {
 
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P8"
-        NODE_OS = "rhcos-43"
+        NODE_OS = "rhcos-45"
         BASTION_OS  = "RHEL8.0"
         TIMEOUT = "0"
         OS_NETWORK = "icp_network4"
         OS_PRIVATE_NETWORK = "icp_network4"
-        OCP_RELEASE="4.3"
+        OCP_RELEASE="4.5"
 
         //Makefile variables
-        TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The downlod branch
+        TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-harness
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The download branch
 
         NUM_OF_WORKERS = "2"
         NUM_OF_MASTERS = "3"
 
         TARGET = "deploy-openshift4-powervc"
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"
-        //OPENSHIFT_INSTALL_TARBALL = " https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-$Release/$Tarball"
 
         REDHAT_RELEASE = "7.6"
         RHEL_USERNAME = "root"
@@ -106,41 +108,33 @@ pipeline {
         ENABLE_E2E_TEST = "false"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH="release-${OCP_RELEASE}"
-        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.3-powervm/ocp4.3_power_blacklist.txt"
+        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.5-powervm/ocp4.5_power_blacklist.txt"
         CS_INSTALL = "false"
-        ENABLE_E2E_UPGRADE = "true"
-        ENABLE_SCALE_TEST = "false"
+        ENABLE_E2E_UPGRADE = "false"
+        ENABLE_SCALE_TEST = "true"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
-        GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
+        SCALE_NUM_OF_DEPLOYMENTS = "100"
 
         OCP4_ENV = true
-        //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
         BUILD_HARNESS_BRANCH="devel"
-	 }
-
-    stages {
-        stage('pull artifact') {
+	}
+	stages{
+	    stage('pull artifact') {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.3-build.txt',
+                    filter: 'latest-4.5-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'poll-artifactory',
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.4-build.txt',
-                    fingerprintArtifacts: true,
-                    projectName: 'poll-artifactory',
-                    target: 'artifactory',
-                    selector: lastSuccessful()
-                    ])
-                    step([  $class: 'CopyArtifact',
-                    filter: 'cicd-rhcos-4.3.latest.txt',
+                    filter: 'cicd-rhcos-4.5.latest.txt',
                     fingerprintArtifacts: true,
                     projectName: 'poll-powervc-images',
                     target: 'artifactory',
@@ -149,7 +143,8 @@ pipeline {
                 }
             }
         }
-        //Checkout the installer git repo
+
+	    //Checkout the installer git repo
         stage('Prepare Teraform Template') {
             steps {
                 script {
@@ -170,16 +165,12 @@ pipeline {
                         MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
                         MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists('artifactory/latest-4.3-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.3-build.txt'
+                        if (fileExists('artifactory/latest-4.5-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.5-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
-                        if (fileExists('artifactory/latest-4.4-build.txt')) {
-                            env.OPENSHIFT_UPGRADE_IMAGE = readFile 'artifactory/latest-4.4-build.txt'
-                            env.OPENSHIFT_UPGRADE_IMAGE = env.OPENSHIFT_UPGRADE_IMAGE.trim()
-                        }
-                        if (fileExists('artifactory/cicd-rhcos-4.3.latest.txt')) {
-                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.3.latest.txt'
+                        if (fileExists('artifactory/cicd-rhcos-4.5.latest.txt')) {
+                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.5.latest.txt'
                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
                         }
                         if (env.DEPLOY_MASTER == "false")
@@ -196,11 +187,16 @@ pipeline {
                         {
                             echo 'Setting-up terraform template file for PowerVM!'
                             env.AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
-                            //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
+                        {
+                            echo "Unable to find openshift install tarball. falling back to default"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-13-172606/openshift-install-linux.tar.gz"
+                        }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"
@@ -250,7 +246,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -259,7 +255,6 @@ pipeline {
                     try {
                         sh '''
                         echo 'Initializing supporting repos and keys !'
-
                         cd ${WORKSPACE}/deploy
                         make init
                         make keys
@@ -297,7 +292,50 @@ pipeline {
                 }
             }
         }
-
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
+                           oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
         stage('Waiting to timeout') {
             steps {
                 script {
@@ -319,37 +357,53 @@ pipeline {
                 }
             }
         }
-    }
+	}
+
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/e2e-upgrade-summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
-                if (fileExists('deploy/summary.txt')) {
-                    E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    E2E_SUMMARY = E2E_SUMMARY.trim()
+                if (fileExists('deploy/time_taken')) {
+                    sh '''
+                       cat deploy/time_taken | grep '[^[:blank:]]' | tail -n 3 > deploy/time || true
+                    '''
+                    SCALE_SUMMARY = readFile 'deploy/time'
+                    SCALE_SUMMARY.split('\n').each { line ->
+                        if ( line  != null) {
+                            if (line.contains('real')){
+                                REAL_TIME = line.split()[1]
+                            }
+                            if (line.contains('user')){
+                                USER_TIME = line.split()[1]
+                            }
+                            if (line.contains('sys')){
+                                SYSTEM_TIME = line.split()[1]
+                            }
+                        }
+                    }
                 }
-                if (fileExists('deploy/e2e-upgrade-summary.txt')) {
-                    E2E_UPGRADE_SUMMARY = readFile 'deploy/e2e-upgrade-summary.txt'
-                    E2E_UPGRADE_SUMMARY = E2E_UPGRADE_SUMMARY.trim()
-                }
-                E2E_SUMMARY = "e2e: " + E2E_SUMMARY + "   e2eUpgrade: " + E2E_UPGRADE_SUMMARY
-                if ( env.OPENSHIFT_IMAGE != ""  ) {
-                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
-                }
-                JUNIT_E2E = fileExists 'deploy/junit_e2e.xml'
-                JUNIT_E2E_UPGRADE = fileExists 'deploy/junit_e2e_upgrade.xml'
-                if ( JUNIT_E2E ) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
-                }
-                if ( JUNIT_E2E_UPGRADE ) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e_upgrade.xml'])
-                }
-                if ( JUNIT_E2E == false &&  JUNIT_E2E_UPGRADE == false ) {
+                else
+                {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
+                }
+                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+                def logContent_modified=logContent.toLowerCase()
+                def infra_errors = readFile 'files/infra-issues.txt'
+                infra_errors.split('\n').each { line ->
+                   line1=line.toLowerCase()
+                    if ( line1  != null) {
+                        if (logContent_modified.contains(line1)){
+                            INFRA_ISSUE = true
+                        }
+                    }
+                }
+                if ( env.OPENSHIFT_IMAGE != ""  ) {
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
                 }
                 clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
                 clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
@@ -360,12 +414,23 @@ pipeline {
                 clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
                 clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
                 clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
+                clusterInfo['real_time'] = REAL_TIME
+                clusterInfo['user_time'] = USER_TIME
+                clusterInfo['system_time'] = SYSTEM_TIME
+                clusterInfo['deployments'] = "${SCALE_NUM_OF_DEPLOYMENTS}"
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
-            }
-            step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+
+                if ( ! INFRA_ISSUE ) {
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+                }
+                else{
+                    echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
+                    SCALE_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
+                }
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, SCALE_SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
-            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+            }
         }
     }
 }
