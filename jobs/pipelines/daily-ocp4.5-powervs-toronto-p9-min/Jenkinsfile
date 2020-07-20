@@ -103,7 +103,7 @@ pipeline {
                     step([  $class: 'CopyArtifact',
                     filter: 'latest-4.5-build.txt',
                     fingerprintArtifacts: true,
-                    projectName: 'poll-artifactory',
+                    projectName: 'mirror-openshift-release',
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
