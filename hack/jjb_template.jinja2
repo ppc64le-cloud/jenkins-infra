@@ -20,7 +20,6 @@
         {% elif 'daily-ocp4.5-powervm-p8-scale' in JOB_NAME %}'1 2 * * *'
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
-        {% elif 'cleanup-nodes' in JOB_NAME %}'@hourly'
         {% elif 'powervs' in JOB_NAME %}'@daily'
         {% else %}''
         {% endif %}
