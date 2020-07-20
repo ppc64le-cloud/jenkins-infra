@@ -19,7 +19,9 @@
         {% elif 'daily-ocp4.5-powervm-p9-scale' in JOB_NAME %}'30  13  * * *'
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-artifactory' in JOB_NAME %}'@hourly'
-        {% else %}'@daily'
+        {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
+        {% elif 'cleanup-nodes' in JOB_NAME %}'@hourly'
+        {% else %}''
         {% endif %}
     sandbox: true
     pipeline-scm:
