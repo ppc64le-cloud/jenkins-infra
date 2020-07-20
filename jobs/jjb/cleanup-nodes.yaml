@@ -17,6 +17,7 @@
             stage("Cleanup docker images") {
                 sh '''
                       for i in `docker images -q`;do docker rmi $i || true;done
+                      for i in `docker images | grep 'sys-powercloud-docker\\|registry.svc' | awk '{print $1":"$2}'` ;do docker rmi $i || true;done
                 '''
             }
           }

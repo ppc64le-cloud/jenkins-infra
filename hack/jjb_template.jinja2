@@ -21,6 +21,7 @@
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
         {% elif 'cleanup-nodes' in JOB_NAME %}'@hourly'
+        {% elif 'powervs' in JOB_NAME %}'@daily'
         {% else %}''
         {% endif %}
     sandbox: true

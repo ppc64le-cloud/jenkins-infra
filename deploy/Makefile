@@ -126,92 +126,6 @@ keys:
 keys\:clean:
 	@$(shell rm -f id_rsa id_rsa.pub)
 
-# ---------------------------------
-## ----- amd64-openstack -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-openstack\:
-## Create amd64 build on HDC BlueRidgeGroup tenant
-deploy-amd64-openstack: %deploy-amd64-openstack:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openstack OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-openstack\:config
-## Configure kubectl for access to amd64-openstack build
-deploy-amd64-openstack\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-openstack\:clean\:
-## Clean up amd64-openstack build artifacts
-deploy-amd64-openstack\:clean:
-	@$(SELF) -s deploy:openstack:clean OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- power-openstack -----
-# ---------------------------------
-
-.PHONY: deploy-power-openstack\:
-## Create power build on HDC BlueRidgeGroup-P tenant
-deploy-power-openstack: %deploy-power-openstack:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openstack OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-power-openstack\:config
-## Configure kubectl for access to power-openstack build
-deploy-power-openstack\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-power-openstack\:clean
-## Clean up power-openstack build artifacts
-deploy-power-openstack\:clean:
-	@$(SELF) -s deploy:openstack:clean OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- power-nutanix -----
-# ---------------------------------
-
-.PHONY: deploy-power-nutanix\:
-## Create power build on Nutanix
-deploy-power-nutanix: %deploy-power-nutanix:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:nutanix NUTANIX_DEPLOY_DIR=$(TERRAFORM_DIR) NUTANIX_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-power-nutanix\:config
-## Configure kubectl for access to power-nutanix build
-deploy-power-nutanix\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-power-nutanix\:clean
-## Clean up power-nutanix build artifacts
-deploy-power-nutanix\:clean:
-	@$(SELF) -s deploy:nutanix:clean NUTANIX_DEPLOY_DIR=$(TERRAFORM_DIR) NUTANIX_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
 # ---------------------------------
 ## ----- power-powervc -----
@@ -287,125 +201,6 @@ deploy-power-powervc\:config:
 ## Clean up power-powervc build artifacts
 deploy-power-powervc\:clean:
 	@$(SELF) -s deploy:powervc:clean POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- amd64-aws -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-aws\:
-## Create amd64 build on HDC BlueRidgeGroup tenant
-deploy-amd64-aws: %deploy-amd64-aws:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:aws AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-aws\:config
-## Configure kubectl for access to amd64-aws build
-deploy-amd64-aws\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-aws\:clean\:
-## Clean up amd64-openstack build artifacts
-deploy-amd64-aws\:clean:
-	@$(SELF) -s deploy:aws:clean AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- amd64-aws-min -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-aws-min\:
-deploy-amd64-aws-min: %deploy-amd64-aws-min:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/.deploy-amd64-aws-minimal.tfvars.template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:aws AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-aws-min\:config
-## Configure kubectl for access to amd64-aws build
-deploy-amd64-aws-min\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-aws-min\:clean\:
-## Clean up amd64-openstack build artifacts
-deploy-amd64-aws-min\:clean:
-	@$(SELF) -s deploy:aws:clean AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- amd64-aws-EDGE -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-aws-edge\:
-deploy-amd64-aws-edge: %deploy-amd64-aws-edge:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:aws AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-aws-edge\:config
-## Configure kubectl for access to amd64-aws build
-deploy-amd64-aws-edge\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	# @$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	# @$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	# @echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-aws-edge\:clean\:
-## Clean up amd64-openstack build artifacts
-deploy-amd64-aws-edge\:clean:
-	@$(SELF) -s deploy:aws:clean AWS_DEPLOY_DIR=$(TERRAFORM_DIR) AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-
-# ---------------------------------
-## ----- openshift-aws -----
-# ---------------------------------
-
-.PHONY: deploy-openshift-aws\:
-## Create power build on HDC BlueRidgeGroup-P tenant
-deploy-openshift-aws: %deploy-openshift-aws:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openshift:aws OPENSHIFT_AWS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-openshift-aws\:config
-## Configure kubectl for access to power-openstack build
-deploy-openshift-aws\:config:
-	@$(SELF) -s cloudctl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-		K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-		K8S_CLUSTER_MASTER_PORT=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=icp-port) \
-		K8S_CLUSTER_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=admin-user) \
-		K8S_CLUSTER_PASSWORD=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=admin-password) \
-		OPENSHIFT_ICP_CONSOLE=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=icp-web-console)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-openshift-aws\:clean
-## Clean up power-openstack build artifacts
-deploy-openshift-aws\:clean:
-	@$(SELF) -s deploy:openshift:aws:clean OPENSHIFT_AWS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-
-
-
-# ---------------------------------
-## ----- openshift-powervc -----
-# ---------------------------------
 
 # ---------------------------------
 ## ----- openshift-powervc -----
@@ -505,6 +300,40 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 deploy-openshift4-powervc\:clean:
 	@$(SELF) -s deploy:openshift:powervc:clean OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+# ---------------------------------
+## ----- openshift4-powervs -----
+# ---------------------------------
+
+.PHONY: deploy-openshift4-powervs\:
+## Create power build on powervs tenant
+deploy-openshift4-powervs: %deploy-openshift4-powervs:
+	@$(shell sed -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" \
+        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZOME__|$(IBM_CLOUD_ZOME)|g" \
+		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
+		-e "s|__BOOTSTRAP_MEMORY__|$(BOOTSTRAP_MEMORY)|g" -e "s|__BOOTSTRAP_PROCESSORS__|$(BOOTSTRAP_PROCESSORS)|g" \
+		-e "s|__MASTER_MEMORY__|$(MASTER_MEMORY)|g" -e "s|__MASTER_PROCESSORS__|$(MASTER_PROCESSORS)|g" -e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" \
+		-e "s|__WORKER_MEMORY__|$(WORKER_MEMORY)|g" -e "s|__WORKER_PROCESSORS__|$(WORKER_PROCESSORS)|g" -e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" \
+		-e "s|__BASTION_IMAGE_NAME__|$(BASTION_IMAGE_NAME)|g" -e "s|__RHCOS_IMAGE_NAME__|$(RHCOS_IMAGE_NAME)|g" -e "s|__SYSTEM_TYPE__|$(SYSTEM_TYPE)|g" \
+		-e "s|__NETWORK_NAME__|$(NETWORK_NAME)|g" -e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__REDHAT_USERNAME__|$(REDHAT_USERNAME)|g" \
+		-e "s|__REDHAT_PASSWORD__|$(REDHAT_PASSWORD)|g" -e "s|__OPENSHIFT_INSTALL_TARBALL__|$(OPENSHIFT_INSTALL_TARBALL)|g" \
+		-e "s|__OPENSHIFT_CLIENT_TARBALL__|$(OPENSHIFT_CLIENT_TARBALL)|g" \
+		-e "s|__OPENSHIFT_IMAGE__|$(OPENSHIFT_IMAGE)|g" -e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \
+		-e "s|__ENABLE_LOCAL_REGISTRY__|$(ENABLE_LOCAL_REGISTRY)|g" -e "s|__LOCAL_REGISTRY_IMAGE__|$(LOCAL_REGISTRY_IMAGE)|g" \
+		-e "s|__OCP_RELEASE_TAG__|$(OCP_RELEASE_TAG)|g" -e "s|__HELPERNODE_REPO__|$(HELPERNODE_REPO)|g" \
+		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(UPGRADE_PAUSE_TIME)|g" \
+		-e "s|__INSTALL_PLAYBOOT_TAG__|$(INSTALL_PLAYBOOT_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
+		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
+        -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
+
+##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
+	@$(SELF) -s deploy:openshift4:powervs OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+.PHONY: deploy-openshift4-powervs\:clean
+## Clean up power-openstack build artifacts
+deploy-openshift4-powervs\:clean:
+	@$(SELF) -s deploy:openshift4:powervs:clean OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+
 .PHONY: deploy-openshift-powervc-offline\:
 ## Create power build on powervc tenant
 deploy-openshift-powervc-offline: %deploy-openshift-powervc-offline:
@@ -546,358 +375,6 @@ deploy-openshift-powervc-offline\:config:
 ## Clean up power-openstack build artifacts
 deploy-openshift-powervc-offline\:clean:
 	@$(SELF) -s deploy:openshift:powervc:clean OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-
-
-# ---------------------------------
-## ----- amd64-vsphere -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-vsphere\:
-## Create amd64-vsphere build on https://ibmpcvc65.rtp.raleigh.ibm.com/
-deploy-amd64-vsphere: %deploy-amd64-vsphere:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:vsphere VSPHERE_DEPLOY_DIR=$(TERRAFORM_DIR) VSPHERE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-vsphere\:config
-## Configure kubectl for access to amd64-vsphere build
-deploy-amd64-vsphere\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-								K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your personal cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-vsphere\:clean\:
-## Clean up amd64-vsphere build artifacts
-deploy-amd64-vsphere\:clean:
-	@$(SELF) -s deploy:vsphere:clean VSPHERE_DEPLOY_DIR=$(TERRAFORM_DIR) VSPHERE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- amd64-azure -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-azure\:
-## Create amd64 build on HDC BlueRidgeGroup tenant
-deploy-amd64-azure: %deploy-amd64-azure:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:azure AZURE_DEPLOY_DIR=$(TERRAFORM_DIR) AZURE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-azure\:config
-## Configure kubectl for access to amd64-azure build
-deploy-amd64-azure\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_SSH_USER=vmadmin
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name) \
-								K8S_CLUSTER_SSH_USER=vmadmin
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your personal cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at https://$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR)/templates/icp-ce TERRAFORM_OUTPUT_VAR=cluster-name):8443
-
-.PHONY: deploy-amd64-azure\:clean\:
-## Clean up amd64-openstack build artifacts
-deploy-amd64-azure\:clean:
-	@$(SELF) -s deploy:azure:clean AZURE_DEPLOY_DIR=$(TERRAFORM_DIR) AZURE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- fyre -----
-# ---------------------------------
-
-.PHONY: deploy-TARGET-fyre\:
-deploy-TARGET-fyre: %deploy-TARGET-fyre:
-	# Generate the selected credential and stage override files
-	@$(shell sed -e "s|__DOCKER_USER__|$(ARTIFACTORY_USER)|g" -e "s|__DOCKER_PASS__|$(ARTIFACTORY_TOKEN)|g" templates/.deploy-creds_override.tf.template > fyre_overrides/creds_override.tf)
-	@$(shell sed -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" templates/.deploy-stage_override.tf.template > fyre_overrides/stage_override.tf)
-	# Generate the null tfvars file (for backward compatibility with targets expecting one)
-	@touch $(FYRE_TERRAFORM_VARS_FILE)
-	#
-	## Deploy with build-harness, which copies the overrides files to the config
-	# 
-	@$(SELF) -s deploy:fyre
-	# Don't leave the creds sitting in the fyre_overrides directory
-	@rm -f fyre_overrides/creds_override.tf
-	@echo INFO: Fyre override configuration files are located under $(FYRE_OVERRIDES_DIR).
-
-.PHONY: deploy-TARGET-fyre\:config
-deploy-TARGET-fyre\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) \
-				K8S_CLUSTER_MASTER_IP=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=master-node) \
-				K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=console-ip) \
-				K8S_CLUSTER_SSH_USER=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) \
-				K8S_CLUSTER_MASTER_IP=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=master-node) \
-				K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=console-ip) \
-				K8S_CLUSTER_SSH_USER=$(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) -s terraform:output TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output -s TERRAFORM_DIR=$(FYRE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-TARGET-fyre\:clean\:
-deploy-TARGET-fyre\:clean:
-	#
-	## Clean with build-harness, which deletes its own overrides
-	# 
-	@$(SELF) -s deploy:fyre:clean
-	# Delete the generated stage override file
-	@rm -f fyre_overrides/stage_override.tf
-	@echo INFO: Fyre cluster and configuration clean complete.
-
-## -------- amd64-fyre --------
-
-.PHONY: deploy-amd64-fyre\:
-## Create amd64 build on Fyre
-deploy-amd64-fyre: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="amd64" FYRE_TOPOLOGY="min"
-
-.PHONY: deploy-amd64-fyre\:config
-## Configure kubectl for access to amd64-fyre build
-deploy-amd64-fyre\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="amd64" FYRE_TOPOLOGY="min"
-	
-.PHONY: deploy-amd64-fyre\:clean\:
-## Clean up amd64-fyre build artifacts
-deploy-amd64-fyre\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="amd64" FYRE_TOPOLOGY="min"
-	
-## -------- power-fyre --------
-
-.PHONY: deploy-power-fyre\:
-## Create ppc64le build on Fyre
-deploy-power-fyre: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="min"
-
-.PHONY: deploy-power-fyre\:config
-## Configure kubectl for access to power-fyre build
-deploy-power-fyre\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="min"
-	
-.PHONY: deploy-power-fyre\:clean\:
-## Clean up power-fyre build artifacts
-deploy-power-fyre\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="min"
-	
-## -------- zos-fyre --------
-
-.PHONY: deploy-zos-fyre\:
-## Create s390x build on Fyre
-deploy-zos-fyre: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="s390x" FYRE_TOPOLOGY="min"
-
-.PHONY: deploy-zos-fyre\:config
-## Configure kubectl for access to zos-fyre build
-deploy-zos-fyre\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="s390x" FYRE_TOPOLOGY="min"
-	
-.PHONY: deploy-zos-fyre\:clean\:
-## Clean up zos-fyre build artifacts
-deploy-zos-fyre\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="s390x" FYRE_TOPOLOGY="min"
-	
-
-## -------- amd64-fyre-ha --------
-
-.PHONY: deploy-amd64-fyre-ha\:
-## Create amd64 HA build on Fyre
-deploy-amd64-fyre-ha: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="amd64" FYRE_TOPOLOGY="ha"
-
-.PHONY: deploy-amd64-fyre-ha\:config
-## Configure kubectl for access to amd64-fyre-ha build
-deploy-amd64-fyre-ha\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="amd64" FYRE_TOPOLOGY="ha"
-	
-.PHONY: deploy-amd64-fyre-ha\:clean\:
-## Clean up amd64-fyre-ha build artifacts
-deploy-amd64-fyre-ha\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="amd64" FYRE_TOPOLOGY="ha"
-	
-## -------- power-fyre-ha --------
-
-.PHONY: deploy-power-fyre-ha\:
-## Create ppc64le HA build on Fyre
-deploy-power-fyre-ha: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="ha"
-
-.PHONY: deploy-power-fyre-ha\:config
-## Configure kubectl for access to power-fyre-ha build
-deploy-power-fyre-ha\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="ha"
-	
-.PHONY: deploy-power-fyre-ha\:clean\:
-## Clean up power-fyre-ha build artifacts
-deploy-power-fyre-ha\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="ppc64le" FYRE_TOPOLOGY="ha"
-	
-## -------- zos-fyre-ha --------
-
-.PHONY: deploy-zos-fyre-ha\:
-## Create s390x HA build on Fyre
-deploy-zos-fyre-ha: 
-	@$(SELF) -s deploy-TARGET-fyre FYRE_ARCH="s390x" FYRE_TOPOLOGY="ha"
-
-.PHONY: deploy-zos-fyre-ha\:config
-## Configure kubectl for access to zos-fyre-ha build
-deploy-zos-fyre-ha\:config:
-	@$(SELF) -s deploy-TARGET-fyre:config FYRE_ARCH="s390x" FYRE_TOPOLOGY="ha"
-	
-.PHONY: deploy-zos-fyre-ha\:clean\:
-## Clean up zos-fyre-ha build artifacts
-deploy-zos-fyre-ha\:clean:
-	@$(SELF) -s deploy-TARGET-fyre:clean FYRE_ARCH="s390x" FYRE_TOPOLOGY="ha"
-
-# ---------------------------------
-## ----- amd64-vmware -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-vmware\:
-## Create amd64 build on VMWare
-deploy-amd64-vmware: %deploy-amd64-vmware:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:vmw_cicdlab VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-vmware\:config
-## Configure kubectl for access to amd64-vmware build
-deploy-amd64-vmware\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-				K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-				K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-				K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-				K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-				K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-				K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-vmware\:clean\:
-## Clean up amd64-vmware build artifacts
-deploy-amd64-vmware\:clean:
-	@$(SELF) -s deploy:vmw_cicdlab:clean VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- amd64-vmware-ha -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-vmware-ha\:
-## Create amd64 HA build on VMWare
-deploy-amd64-vmware-ha: %deploy-amd64-vmware-ha:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:vmw_cicdlab VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-vmware-ha\:config
-## Configure kubectl for access to amd64-vmware-ha build
-deploy-amd64-vmware-ha\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-							K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-							K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-							K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-							K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-							K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-							K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-vmware-ha\:clean\:
-## Clean up amd64-vmware-ha build artifacts
-deploy-amd64-vmware-ha\:clean:
-	@$(SELF) -s deploy:vmw_cicdlab:clean VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-
-# ---------------------------------
-## ----- amd64-vmware-ha-debug -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-vmware-ha-debug\:
-## Create amd64 ha-debug build on VMWare
-deploy-amd64-vmware-ha-debug: %deploy-amd64-vmware-ha-debug:
-	@$(shell sed -e "s|__EDITION__|$(EDITION)|g" -e "s|__FIXPACK__|$(FIXPACK)|g" -e "s|__VERSION__|$(VERSION)|g" -e "s|__REPO__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:vmw_cicdlab VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-vmware-ha-debug\:config
-## Configure kubectl for access to amd64-vmware-ha-debug build
-deploy-amd64-vmware-ha-debug\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-							K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-							K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-							K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name) \
-							K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=master-node) \
-							K8S_CLUSTER_CONSOLE_IP=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=console-ip) \
-							K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-vmware-ha-debug\:clean\:
-## Clean up amd64-vmware-ha-debug build artifacts
-deploy-amd64-vmware-ha-debug\:clean:
-	@$(SELF) -s deploy:vmw_cicdlab:clean VMW_CICDLAB_DEPLOY_DIR=$(TERRAFORM_DIR) VMW_CICDLAB_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-
-# ---------------------------------
-## ----- amd64-offline -----
-# ---------------------------------
-
-.PHONY: deploy-amd64-offline\:
-## Create amd64 build on HDC BlueRidgeGroup tenant
-deploy-amd64-offline: %deploy-amd64-offline:
-	@$(shell sed -e "s|__OFFLINE_IMAGE__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" $(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openstack OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-amd64-offline\:config
-## Configure kubectl for access to amd64-offline build
-deploy-amd64-offline\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=master-node) K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=master-node) K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-amd64-offline\:clean\:
-## Clean up amd64-offline build artifacts
-deploy-amd64-offline\:clean:
-	@$(SELF) -s deploy:openstack:clean OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR)OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-# ---------------------------------
-## ----- power-offline -----
-# ---------------------------------
-
-.PHONY: deploy-power-offline\:
-## Create power build on HDC BlueRidgeGroup-P tenant
-deploy-power-offline: %deploy-power-offline:
-	@$(shell sed -e "s|__OFFLINE_IMAGE__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" $(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openstack OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-power-offline\:config
-## Configure kubectl for access to power-offline build
-deploy-power-offline\:config:
-	#@$(SELF) -s kubectl:install
-	@$(SELF) -s kubectl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=master-node) K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=master-node) K8S_CLUSTER_SSH_USER=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=vm-username)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-power-offline\:clean
-## Clean up power-offline build artifacts
-deploy-power-offline\:clean:
-	@$(SELF) -s deploy:openstack:clean OPENSTACK_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSTACK_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
 # ---------------------------------
 ## ----- power-powervc-offline -----
@@ -1120,35 +597,6 @@ deploy-power-powervc-fixpack-upgrade\:config:
 deploy-power-powervc-fixpack-upgrade\:clean:
 	@$(SELF) -s deploy:powervc:clean POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
-
-
-# ---------------------------------
-## ----- openshift-aws-offline -----
-# ---------------------------------
-
-.PHONY: deploy-openshift-aws-offline\:
-## Create power build on HDC BlueRidgeGroup-P tenant
-deploy-openshift-aws-offline: %deploy-openshift-aws-offline:
-	@$(shell sed -e "s|__OFFLINE_BUILD__|$(DEPLOY_REPO)|g" -e "s|__ARTIFACTORY_USER__|$(ARTIFACTORY_USER)|g" -e "s|__ARTIFACTORY_API_KEY__|$(ARTIFACTORY_TOKEN)|g" $(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
-	@$(SELF) -s deploy:openshift:aws OPENSHIFT_AWS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
-.PHONY: deploy-openshift-aws-offline\:config
-## Configure kubectl for access to power-openstack build
-deploy-openshift-aws-offline\:config:
-	@$(SELF) -s cloudctl:config K8S_CLUSTER_NAME=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name) \
-		K8S_CLUSTER_MASTER_IP=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=master-node) \
-		K8S_CLUSTER_MASTER_PORT=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=icp-port) \
-		K8S_CLUSTER_USER=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=admin-user) \
-		K8S_CLUSTER_PASSWORD=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=admin-password) \
-		OPENSHIFT_ICP_CONSOLE=$(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=icp-web-console)
-	@$(SELF) -s helm:init
-	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=cluster-name)"
-	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=web-console)
-
-.PHONY: deploy-openshift-aws-offline\:clean
-## Clean up power-openstack build artifacts
-deploy-openshift-aws-offline\:clean:
-	@$(SELF) -s deploy:openshift:aws:clean OPENSHIFT_AWS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_AWS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
 # -----------------------------------------------
 ## ----- setup-dependencies, show-env -----

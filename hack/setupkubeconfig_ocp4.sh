@@ -11,8 +11,13 @@
         cp kubectl oc /usr/bin/
     fi
     # Capturing Teraform template
-    BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip || true)
-    [ $? -ne 0 ] && exit 1;
+    if [ ${POWERVS} == "false" ] ; then
+        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip )
+        [ $? -ne 0 ] && exit 1
+    else
+        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+        [ $? -ne 0 ] && exit 1
+    fi
     if [ ! -z "${BASTION_IP}" ]; then
         ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} exit
         rc=$?
