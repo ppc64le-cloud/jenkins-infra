@@ -56,7 +56,7 @@ rhcos_kernel_options        = []
 #proxy = {}
 #proxy = {server = "hostname_or_ip"}
 #proxy = {server = "hostname_or_ip", port = "3128", user = "pxuser", password = "pxpassword"}
-
+setup_squid_proxy = "__SETUP_SQUID_PROXY__
 
 storage_type                = "nfs"
 volume_size                 = "300" # Value in GB

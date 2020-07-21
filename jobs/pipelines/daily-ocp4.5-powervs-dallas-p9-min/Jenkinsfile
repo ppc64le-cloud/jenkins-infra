@@ -67,8 +67,10 @@ pipeline {
         CLUSTER_DOMAIN = "redhat.com"
         INSTANCE_NAME = "ltccci"
 
-        ENABLE_LOCAL_REGISTRY = "true"
+        ENABLE_LOCAL_REGISTRY = "false"
         LOCAL_REGISTRY_IMAGE = "docker.io/ibmcom/registry-ppc64le:2.6.2.5"
+
+        SETUP_SQUID_PROXY = "true"
 
         // Bellow 4 variables are not used. Disabled in template
         HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
