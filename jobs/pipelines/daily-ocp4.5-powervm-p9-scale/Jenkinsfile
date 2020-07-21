@@ -17,7 +17,7 @@ pipeline {
     agent {
         dockerfile {
             dir 'images/terraform'
-            additionalBuildArgs '--force-rm	--no-cache'
+            additionalBuildArgs '--force-rm	--no-cache --quiet'
             args '-v /etc/resolv.conf:/etc/resolv.conf'
             label 'daily-x86_64'
         }
