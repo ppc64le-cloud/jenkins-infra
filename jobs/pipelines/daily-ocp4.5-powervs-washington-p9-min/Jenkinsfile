@@ -309,7 +309,7 @@ pipeline {
                 clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
                 clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
                 clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
-                clusterinfo['system_type']     = "${SYSTEM_TYPE}"
+                clusterInfo['system_type']     = "${SYSTEM_TYPE}"
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
 
