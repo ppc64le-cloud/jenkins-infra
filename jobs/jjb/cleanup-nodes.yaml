@@ -3,7 +3,7 @@
     name: cleanup-nodes
     project-type: pipeline
     triggers:
-      - timed: '@hourly'
+      - timed: '@daily'
     sandbox: false
     dsl: |
       def branches = [:]
