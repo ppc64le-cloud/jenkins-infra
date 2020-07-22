@@ -36,6 +36,8 @@ pipeline {
         TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PUBLIC_GITHUB_USER = credentials('PUBLIC_GITHUB_USER')
+        PUBLIC_GITHUB_TOKEN = credentials('PUBLIC_GITHUB_TOKEN')
 
 
         //Env constants
