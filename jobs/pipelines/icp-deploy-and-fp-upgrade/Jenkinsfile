@@ -728,7 +728,7 @@ properties([
                                 return["icp_network"]
                             }
                             else if(Virtualization.equals("PowerVM")){
-                                return["icp_network2", "icp_network", "icp_network1"]
+                                return["icp_network2", "icp_network", "icp_network1", "workload"]
                             }
                         '''
                 ]

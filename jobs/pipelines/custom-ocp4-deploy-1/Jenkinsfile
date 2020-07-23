@@ -430,7 +430,7 @@ properties([
                                 return["icp_network"]
                             }
                             else if(Virtualization.equals("PowerVM")){
-                                return["icp_network2:selected", "icp_network1", "icp_network"]
+                                return["icp_network2:selected", "icp_network1", "icp_network", "workload"]
                             }
                         '''
                 ]
