@@ -167,7 +167,7 @@ pipeline {
                     try {
                         sh '''
                         echo ' get the plugin from artifactory repo !'
-                        curl -u${GITHUB_USER}:${ARTIFACTORY_TOKEN} https://na.artifactory.swg-devops.com/artifactory/sys-powercloud-generic-local/terraform-provider-ibm/linux_amd64.zip -o linux_amd64.zip
+                        curl -u${GITHUB_USER}:${ARTIFACTORY_TOKEN} https://na.artifactory.swg-devops.com/artifactory/sys-powercloud-generic-local/powercloud-cicd/terraform-provider-ibm/linux_amd64.zip -o linux_amd64.zip
                         mkdir -p ~/.terraform.d/plugins/linux_amd64/
                         unzip linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
                         '''
