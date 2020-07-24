@@ -328,6 +328,11 @@ deploy-openshift4-powervs: %deploy-openshift4-powervs:
 ##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
 	@$(SELF) -s deploy:openshift4:powervs OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+.PHONY: deploy-openshift4-powervs\:redeploy
+## Re deploy on powervs tenant
+deploy-openshift4-powervs\:redeploy:
+	@$(SELF) -s deploy:openshift4:powervs:redeploy OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
 .PHONY: deploy-openshift4-powervs\:clean
 ## Clean up power-openstack build artifacts
 deploy-openshift4-powervs\:clean:
