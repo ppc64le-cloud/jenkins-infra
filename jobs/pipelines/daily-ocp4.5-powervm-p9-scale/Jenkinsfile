@@ -120,7 +120,7 @@ pipeline {
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
-        BUILD_HARNESS_BRANCH="devel"
+        //BUILD_HARNESS_BRANCH="devel"
         POWERVS = false
 	}
 	stages{
