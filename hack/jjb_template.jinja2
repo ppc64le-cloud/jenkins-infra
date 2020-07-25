@@ -20,11 +20,11 @@
         {% elif 'daily-ocp4.5-powervm-p8-scale' in JOB_NAME %}'1 2 * * *'
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
-        {% elif 'daily-ocp4.5-powervs-dallas-p9-min' in JOB_NAME %}'1 8 * * * '
-        {% elif 'daily-ocp4.5-powervs-frankfurt-p9-min' in JOB_NAME %}'1 1 * * *'
-        {% elif 'daily-ocp4.5-powervs-london-p9-min' in JOB_NAME %}'1 2 * * *'
-        {% elif 'daily-ocp4.5-powervs-toronto-p9-min' in JOB_NAME %}'1 7 * * *'
-        {% elif 'daily-ocp4.5-powervs-washington-p9-min' in JOB_NAME %}'1 7 * * *'
+        {% elif 'daily-ocp4.5-powervs-dallas-p9-min' in JOB_NAME %}'0 */4 * * *'
+        {% elif 'daily-ocp4.5-powervs-frankfurt-p9-min' in JOB_NAME %}'0 */4 * * *'
+        {% elif 'daily-ocp4.5-powervs-london-p9-min' in JOB_NAME %}'0 */4 * * *'
+        {% elif 'daily-ocp4.5-powervs-toronto-p9-min' in JOB_NAME %}'0 */4 * * *'
+        {% elif 'pdaily-ocp4.5-powervs-washington-p9-min' in JOB_NAME %}'0 */4 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
