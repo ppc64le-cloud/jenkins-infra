@@ -294,6 +294,11 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 # 	@echo INFO: You can now access your cluster with "kubectl config use-context $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=cluster-name)"
 # 	@echo INFO: You can access your cluster web console at $(shell $(SELF) terraform:output TERRAFORM_OUTPUT_VAR=web-console)
 
+.PHONY: deploy-openshift4-powervc\:redeploy
+## Re deploy on powervc tenant
+deploy-openshift4-powervc\:redeploy:
+	@$(SELF) -s deploy:openshift4:powervc:redeploy OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
 
 .PHONY: deploy-openshift4-powervc\:clean
 ## Clean up power-openstack build artifacts

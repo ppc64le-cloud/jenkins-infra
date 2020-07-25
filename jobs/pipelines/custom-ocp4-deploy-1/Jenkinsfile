@@ -719,8 +719,19 @@ pipeline {
                         echo 'Deploying Cluster!'
                         export TF_VAR_offline_remote_password=$TF_VAR_password
                         cd ${WORKSPACE}/deploy
-                        make $TARGET
-                        sleep 60
+                        make $TARGET || true
+                        retries=0
+                        until [ "$retries" -ge 3 ]
+                        do
+                                if [ "$retries" -eq 2 ]; then
+                                        make $TARGET:redeploy
+                                        sleep 60
+                                else
+                                        make $TARGET:redeploy || true
+                                fi
+                                retries=$((retries+1))
+                                sleep 10
+                        done
                         '''
                         }
                     catch (err) {
