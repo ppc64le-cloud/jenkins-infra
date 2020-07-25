@@ -4,6 +4,7 @@ env.DISTRO = ""
 def TIMEOUT_SEC
 def TIMEOUT_MIN
 def E2E_SUMMARY
+def ERROR_MESSAGE
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
@@ -333,6 +334,7 @@ pipeline {
                     if ( line1  != null) {
                         if (logContent_modified.contains(line1)){
                             INFRA_ISSUE = true
+                            ERROR_MESSAGE = line1
                         }
                     }
                 }
@@ -355,7 +357,7 @@ pipeline {
                 }
                 else{
                     echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
-                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
+                    E2E_SUMMARY = ERROR_MESSAGE
                 }
             notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
