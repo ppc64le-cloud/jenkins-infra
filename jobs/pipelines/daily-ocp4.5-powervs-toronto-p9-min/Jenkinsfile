@@ -237,7 +237,6 @@ pipeline {
                         }
                         echo "HOLDING THE CLUSTER FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
                         sleep TIMEOUT_SEC
-                        }
                         echo 'Error ! Tearing off the cluster !'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
