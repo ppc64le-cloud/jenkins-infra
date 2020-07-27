@@ -96,6 +96,8 @@ pipeline {
         BUILD_HARNESS_ORG="sudeeshjohn"
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
+
+        WAIT_FOR_DEBUG = "4"
 	 }
 
     stages {
@@ -229,6 +231,14 @@ pipeline {
                         '''
                         }
                     catch (err) {
+                        TIMEOUT_HRS =  WAIT_FOR_DEBUG.toInteger()
+                        if ( TIMEOUT_HRS != 0 )
+                        {
+                            TIMEOUT_SEC=TIMEOUT_HRS*60*60
+                        }
+                        echo "HOLDING THE CLUSTER FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
+                        sleep TIMEOUT_SEC
+                        }
                         echo 'Error ! Tearing off the cluster !'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
