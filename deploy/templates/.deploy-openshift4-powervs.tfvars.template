@@ -16,6 +16,7 @@ system_type         = "__SYSTEM_TYPE__"
 network_name        = "__NETWORK_NAME__"
 
 rhel_username               = "__RHEL_USERNAME__"
+rhel_smt                    = "__RHEL_SMT__"
 public_key_file             = "id_rsa.pub"
 private_key_file            = "id_rsa"
 private_key                 = ""
