@@ -64,6 +64,7 @@ pipeline {
         SYSTEM_TYPE = "e880"
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
+        RHEL_SMT = "4"
         CLUSTER_DOMAIN = "redhat.com"
         INSTANCE_NAME = "ltccci"
 
@@ -97,7 +98,7 @@ pipeline {
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
 
-        WAIT_FOR_DEBUG = "4"
+        WAIT_FOR_DEBUG = "0"
 	 }
 
     stages {
