@@ -276,6 +276,8 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 		-e "s|__GITHUB_USER__|$(GITHUB_USER)|g" -e "s|__GITHUB_TOKEN__|$(GITHUB_TOKEN)|g" \
 		-e "s|__MOUNT_ETCD_RAMDISK__|$(MOUNT_ETCD_RAMDISK)|g" -e "s|__SCALE_NUM_OF_DEPLOYMENTS__|$(SCALE_NUM_OF_DEPLOYMENTS)|g"\
 		-e "s|__ENABLE_SCALE_TEST__|$(ENABLE_SCALE_TEST)|g" -e "s|__GOLANG_TARBALL__|$(GOLANG_TARBALL)|g"\
+        -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" -e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g"\
+        -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g"\
         -e "s|__REPO__|$(DEPLOY_REPO)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
 ##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
