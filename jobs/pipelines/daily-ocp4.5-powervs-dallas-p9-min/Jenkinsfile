@@ -98,7 +98,7 @@ pipeline {
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
 
-        WAIT_FOR_DEBUG = "0"
+        WAIT_FOR_DEBUG = "6"
 	 }
 
     stages {
