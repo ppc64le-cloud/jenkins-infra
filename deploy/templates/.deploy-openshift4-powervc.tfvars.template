@@ -61,7 +61,7 @@ scale_num_of_deployments = "__SCALE_NUM_OF_DEPLOYMENTS__"
 
 upgrade_image = "__UPGRADE_IMAGE__"
 
-upgrade_pause_time = "__UPGRADE_PAUSE_TIME___"
+upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
 
 upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
 
