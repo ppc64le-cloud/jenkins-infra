@@ -175,9 +175,8 @@ pipeline {
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
                         if (fileExists('artifactory/latest-4.5-build.txt')) {
-                            env.OPENSHIFT_UPGRADE_IMAGE = readFile 'artifactory/latest-4.5-build.txt'
-                            env.OPENSHIFT_UPGRADE_IMAGE = env.OPENSHIFT_UPGRADE_IMAGE.trim()
-                            env.UPGRADE_IMAGE = env.OPENSHIFT_UPGRADE_IMAGE.trim()
+                            env.UPGRADE_IMAGE  = readFile 'artifactory/latest-4.5-build.txt'
+                            env.UPGRADE_IMAGE  = env.UPGRADE_IMAGE.trim()
                         }
                         if (fileExists('artifactory/cicd-rhcos-4.4.latest.txt')) {
                             env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.4.latest.txt'
