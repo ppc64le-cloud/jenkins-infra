@@ -8,9 +8,6 @@ pipeline {
             label 'daily-x86_64'
         }
     }
-    triggers {
-        cron('H * * * *')
-    }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         DOCKER_USER = credentials('DOCKER_USER')
