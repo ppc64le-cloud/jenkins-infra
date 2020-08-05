@@ -128,14 +128,14 @@ pipeline {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.4-build.txt',
+                    filter: 'latest-4.4-stable-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.5-build.txt',
+                    filter: 'latest-4.5-stable-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
