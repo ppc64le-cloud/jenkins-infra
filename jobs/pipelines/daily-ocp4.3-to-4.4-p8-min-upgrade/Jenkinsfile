@@ -110,6 +110,8 @@ pipeline {
         MOUNT_ETCD_RAMDISK = "true"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
 
+        CHRONY_CONFIG = "true"
+
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
