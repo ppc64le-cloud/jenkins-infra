@@ -483,8 +483,7 @@ pipeline {
                     clusterInfoFields['clusterinfo'] = clusterInfo
 
                     if ( ! env.INFRA_ISSUE ) {
-                        //step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
-                        echo "no db"
+                        step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
                     }
                     else{
                         echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
