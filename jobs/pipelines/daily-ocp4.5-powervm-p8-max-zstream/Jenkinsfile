@@ -491,7 +491,6 @@ pipeline {
                     }
                     notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
                 }
-            cleanWs()
             }
         }
     }
