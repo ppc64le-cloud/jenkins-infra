@@ -140,11 +140,11 @@ pipeline {
                     selector: lastSuccessful()
                     ])
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.5-stable-build.txt',
+                    filter: 'artifactory/latest-4.5-stable-build.txt',
                     fingerprintArtifacts: true,
                     projectName: '${JOB_NAME}',
                     target: 'lastbuild',
-                    selector: lastSuccessful()
+                    selector: lastCompleted()
                     ])
                 }
             }
