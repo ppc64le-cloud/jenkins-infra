@@ -105,10 +105,12 @@ pipeline {
         E2E_BRANCH="release-${OCP_RELEASE}"
         E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.3-powervm/ocp4.3_power_blacklist.txt"
         CS_INSTALL = "false"
-        ENABLE_E2E_UPGRADE = "true"
+        ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
         MOUNT_ETCD_RAMDISK = "true"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
+        UPGRADE_DELAY_TIME =  "600"
+        UPGRADE_PAUSE_TIME = "90"
 
         CHRONY_CONFIG = "true"
 
@@ -117,7 +119,7 @@ pipeline {
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="sudeeshjohn"
-        BUILD_HARNESS_BRANCH="devel"
+        //BUILD_HARNESS_BRANCH="devel"
         POWERVS = false
 	 }
 
@@ -126,14 +128,14 @@ pipeline {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.3-build.txt',
+                    filter: 'latest-4.3-stable-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.4-build.txt',
+                    filter: 'latest-4.4-stable-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
@@ -175,8 +177,8 @@ pipeline {
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
                         if (fileExists('artifactory/latest-4.4-build.txt')) {
-                            env.OPENSHIFT_UPGRADE_IMAGE = readFile 'artifactory/latest-4.4-build.txt'
-                            env.OPENSHIFT_UPGRADE_IMAGE = env.OPENSHIFT_UPGRADE_IMAGE.trim()
+                            env.UPGRADE_IMAGE  = readFile 'artifactory/latest-4.4-build.txt'
+                            env.UPGRADE_IMAGE  = env.UPGRADE_IMAGE.trim()
                         }
                         if (fileExists('artifactory/cicd-rhcos-4.3.latest.txt')) {
                             env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.3.latest.txt'
@@ -285,8 +287,42 @@ pipeline {
                         echo 'Deploying Cluster!'
                         export TF_VAR_offline_remote_password=$TF_VAR_password
                         cd ${WORKSPACE}/deploy
-                        make $TARGET
-                        sleep 60
+                        make $TARGET || true
+                        retries=0
+                        until [ "$retries" -ge 3 ]
+                        do
+                                if [ "$retries" -eq 2 ]; then
+                                        make $TARGET:redeploy
+                                        sleep 60
+                                else
+                                        make $TARGET:redeploy || true
+                                fi
+                                retries=$((retries+1))
+                                sleep 10
+                        done
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
                         '''
                         }
                     catch (err) {
@@ -337,7 +373,7 @@ pipeline {
                 }
                 E2E_SUMMARY = "e2e: " + E2E_SUMMARY + "   e2eUpgrade: " + E2E_UPGRADE_SUMMARY
                 if ( env.OPENSHIFT_IMAGE != ""  ) {
-                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE + " to " + env.UPGRADE_IMAGE
                 }
                 JUNIT_E2E = fileExists 'deploy/junit_e2e.xml'
                 JUNIT_E2E_UPGRADE = fileExists 'deploy/junit_e2e_upgrade.xml'

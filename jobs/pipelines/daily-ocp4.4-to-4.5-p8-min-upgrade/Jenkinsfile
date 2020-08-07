@@ -77,12 +77,12 @@ pipeline {
 
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P8"
-        NODE_OS = "rhcos-43"
+        NODE_OS = "rhcos-44"
         BASTION_OS  = "RHEL8.0"
         TIMEOUT = "0"
         OS_NETWORK = "icp_network4"
         OS_PRIVATE_NETWORK = "icp_network4"
-        OCP_RELEASE="4.3"
+        OCP_RELEASE="4.4"
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
@@ -373,7 +373,7 @@ pipeline {
                 }
                 E2E_SUMMARY = "e2e: " + E2E_SUMMARY + "   e2eUpgrade: " + E2E_UPGRADE_SUMMARY
                 if ( env.OPENSHIFT_IMAGE != ""  ) {
-                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE + " to " + env.UPGRADE_IMAGE
                 }
                 JUNIT_E2E = fileExists 'deploy/junit_e2e.xml'
                 JUNIT_E2E_UPGRADE = fileExists 'deploy/junit_e2e_upgrade.xml'
