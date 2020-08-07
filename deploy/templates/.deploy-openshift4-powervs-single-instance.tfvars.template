@@ -1,0 +1,35 @@
+### Configure the IBM Cloud provider
+ibmcloud_api_key    = "__IBMCLOUD_API_KEY__"
+ibmcloud_region     = "__IBM_CLOUD_REGION__"
+ibmcloud_zone       = "__IBM_CLOUD_ZOME__"
+service_instance_id = "__SERVICE_INSTANCE_ID__"
+
+### Configure the Instance details
+bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__"}
+rhel_image_name     = "__BASTION_IMAGE_NAME__"
+rhcos_image_name    = "__RHCOS_IMAGE_NAME__"
+processor_type      = "shared"
+system_type         = "__SYSTEM_TYPE__"
+network_name        = "__NETWORK_NAME__"
+
+rhel_username               = "__RHEL_USERNAME__"
+rhel_smt                    = "__RHEL_SMT__"
+public_key_file             = "id_rsa.pub"
+private_key_file            = "id_rsa"
+private_key                 = ""
+public_key                  = ""
+rhel_subscription_username = "__REDHAT_USERNAME__"
+rhel_subscription_password = "__REDHAT_PASSWORD__"
+
+
+### OpenShift variables
+
+cluster_domain = "__CLUSTER_DOMAIN__"
+cluster_id_prefix = "__INSTANCE_NAME__"
+
+installer_log_level         = "info"
+pull_secret_file            = "data/pull-secret.txt"
+dns_forwarders              = "1.1.1.1; 9.9.9.9"
+rhcos_kernel_options        = []
+setup_squid_proxy = "__SETUP_SQUID_PROXY__"
+
