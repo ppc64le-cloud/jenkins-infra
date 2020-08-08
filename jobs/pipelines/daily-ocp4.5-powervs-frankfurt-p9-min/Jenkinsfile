@@ -241,6 +241,7 @@ pipeline {
                     }
                     finally {
                         echo 'Error ! Tearing off the cluster !'
+                        currentBuild.result = 'FAILURE'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                     }
                 }
