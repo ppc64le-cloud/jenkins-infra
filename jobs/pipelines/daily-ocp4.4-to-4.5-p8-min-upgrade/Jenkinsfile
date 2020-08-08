@@ -111,6 +111,7 @@ pipeline {
         GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
         UPGRADE_DELAY_TIME =  "600"
         UPGRADE_PAUSE_TIME = "90"
+        UPGRADE_CHANNEL = "stable-4.5"
 
         CHRONY_CONFIG = "true"
 
@@ -179,6 +180,7 @@ pipeline {
                         if (fileExists('artifactory/latest-4.5-stable-build.txt')) {
                             env.UPGRADE_IMAGE  = readFile 'artifactory/latest-4.5-stable-build.txt'
                             env.UPGRADE_IMAGE  = env.UPGRADE_IMAGE.trim()
+                            env.UPGRADE_VERSION = env.UPGRADE_IMAGE.split(":")[1]
                         }
                         if (fileExists('artifactory/cicd-rhcos-4.4.latest.txt')) {
                             env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.4.latest.txt'

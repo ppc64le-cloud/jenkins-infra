@@ -59,7 +59,9 @@ scale_test_enabled = "__ENABLE_SCALE_TEST__"
 
 scale_num_of_deployments = "__SCALE_NUM_OF_DEPLOYMENTS__"
 
-upgrade_image = "__UPGRADE_IMAGE__"
+upgrade_version = "__UPGRADE_VERSION__"
+
+upgrade_channel = "__UPGRADE_CHANNEL__"
 
 upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
 
