@@ -78,7 +78,7 @@ pipeline {
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P8"
         NODE_OS = "rhcos-43"
-        BASTION_OS  = "RHEL8.0"
+        BASTION_OS  = "RHEL8.2"
         TIMEOUT = "0"
         OS_NETWORK = "icp_network4"
         OS_PRIVATE_NETWORK = "icp_network4"
