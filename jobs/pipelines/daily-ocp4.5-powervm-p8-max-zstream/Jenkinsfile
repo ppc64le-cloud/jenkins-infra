@@ -154,8 +154,8 @@ pipeline {
                 script {
                     env.OPENSHIFT_IMAGE = ""
                     env.LAST_OPENSHIFT_IMAGE = ""
-                    if (fileExists('lastbuild/latest-4.5-stable-build.txt')) {
-                        env.LAST_OPENSHIFT_IMAGE = readFile 'lastbuild/latest-4.5-stable-build.txt'
+                    if (fileExists('lastbuild/artifactory/latest-4.5-stable-build.txt')) {
+                        env.LAST_OPENSHIFT_IMAGE = readFile 'lastbuild/artifactory/latest-4.5-stable-build.txt'
                         env.LAST_OPENSHIFT_IMAGE = env.LAST_OPENSHIFT_IMAGE.trim() 
                     }
                     if (fileExists('artifactory/latest-4.5-stable-build.txt')) {
