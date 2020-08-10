@@ -173,12 +173,12 @@ pipeline {
                         MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
                         MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists('artifactory/latest-4.3-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.3-build.txt'
+                        if (fileExists('artifactory/latest-4.3-stable-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.3-stable-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
-                        if (fileExists('artifactory/latest-4.4-build.txt')) {
-                            env.UPGRADE_IMAGE  = readFile 'artifactory/latest-4.4-build.txt'
+                        if (fileExists('artifactory/latest-4.4-stable-build.txt')) {
+                            env.UPGRADE_IMAGE  = readFile 'artifactory/latest-4.4-stable-build.txt'
                             env.UPGRADE_IMAGE  = env.UPGRADE_IMAGE.trim()
                             env.UPGRADE_VERSION = env.UPGRADE_IMAGE.split(":")[1]
                         }
