@@ -240,8 +240,7 @@ pipeline {
                         sleep TIMEOUT_SEC
                     }
                     finally {
-                        echo 'Error ! Tearing off the cluster !'
-                        currentBuild.result = 'FAILURE'
+                        echo 'Tearing off the cluster !'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                     }
                 }
@@ -290,30 +289,7 @@ pipeline {
         //             }
         //         }
         //     }
-        // }x
-
-        stage('Waiting to timeout') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        TIMEOUT_MIN = TIMEOUT.toInteger()
-                        if ( TIMEOUT_MIN != 0 )
-                        {
-                            TIMEOUT_SEC=TIMEOUT_MIN*60
-                        }
-                        echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
-                        sleep TIMEOUT_SEC
-                        }
-                    finally {
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                    }
-                }
-            }
-        }
-    }
+        // }
     post {
         always {
             //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
