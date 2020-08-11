@@ -209,17 +209,17 @@ pipeline {
                             env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.4.16/openshift-install-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == null)
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
                         {
                             env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.4.16/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == null)
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
                         {
                             env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.4.16/openshift-client-linux.tar.gz"
                         }
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
-                        if ("${AVAILABILITY_ZONE}" == null)
+                        if ("${AVAILABILITY_ZONE}" == "null")
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"
                             error('Requested zone could not find')
