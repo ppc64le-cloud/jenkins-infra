@@ -111,7 +111,7 @@ pipeline {
         GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
         UPGRADE_DELAY_TIME =  "600"
         UPGRADE_PAUSE_TIME = "90"
-        UPGRADE_CHANNEL = "candidate-4.4"
+        UPGRADE_CHANNEL = "fast-4.4"
 
         CHRONY_CONFIG = "true"
 
