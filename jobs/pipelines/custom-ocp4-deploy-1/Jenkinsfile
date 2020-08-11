@@ -637,7 +637,7 @@ pipeline {
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${AVAILABILITY_ZONE}" == null)
+                        if ("${AVAILABILITY_ZONE}" == "null")
                         {
                             echo "Requested zone could not find in ${AUTH_URL}"
                             error('Could not find requesed zone')

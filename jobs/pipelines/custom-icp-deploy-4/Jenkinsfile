@@ -530,7 +530,7 @@ pipeline {
                             echo 'Setting-up terraform template file for KVM!'
                             env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/kvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                             env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
-                            if ("${AVAILABILITY_ZONE}" == null)
+                            if ("${AVAILABILITY_ZONE}" == "null")
                             {
                                 echo "Requested zone could not find in ${env.AUTH_URL}"
                                 error('Requested zone could not find')
@@ -558,7 +558,7 @@ pipeline {
                             echo 'Setting-up terraform template file for PowerVM!'
                             env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                             env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
-                            if ("${AVAILABILITY_ZONE}" == null)
+                            if ("${AVAILABILITY_ZONE}" == "null")
                             {
                                 echo "Requested zone could not find in ${AUTH_URL}"
                                 error('Could not find requesed zone')

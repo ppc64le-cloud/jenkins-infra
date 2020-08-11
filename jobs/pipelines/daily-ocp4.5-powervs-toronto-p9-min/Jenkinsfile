@@ -134,19 +134,17 @@ pipeline {
                         if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-17-091818/openshift-install-linux-4.5.0-0.nightly-ppc64le-2020-07-17-091818.tar.gz"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-install-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null" )
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
                         {
-                            echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-17-091818/openshift-client-linux-4.5.0-0.nightly-ppc64le-2020-07-17-091818.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null" )
+                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
                         {
-                            echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.5.0-0.nightly-2020-06-05-214616/openshift-client-linux-4.5.0-0.nightly-2020-06-05-214616.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
                         }
                     }
                     catch (err)

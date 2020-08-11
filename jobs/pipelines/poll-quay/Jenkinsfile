@@ -76,7 +76,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'latest-4.3-build.txt', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             script {
-                if ( env.OPENSHIFT_INSTALL_TARBALL == null)
+                if ( env.OPENSHIFT_INSTALL_TARBALL == "null")
                 {
                     env.OPENSHIFT_INSTALL_TARBALL = "No new build"
                 }
