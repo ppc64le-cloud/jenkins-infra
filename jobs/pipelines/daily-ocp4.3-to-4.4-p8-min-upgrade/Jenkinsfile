@@ -206,12 +206,13 @@ pipeline {
                         if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-install-linux.tar.gz"
+                            
                         }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL}" == null)
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-install-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == null)

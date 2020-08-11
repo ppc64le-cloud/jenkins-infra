@@ -188,7 +188,6 @@ pipeline {
                             env.AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
                             //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
-                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
@@ -197,7 +196,7 @@ pipeline {
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL}" == null)
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-4.4/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.4.16/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == null)
