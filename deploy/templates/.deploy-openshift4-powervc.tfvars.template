@@ -69,7 +69,7 @@ upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
 
 chrony_config = "__CHRONY_CONFIG__"
 
-install_playbook_tag = "29be0d6d55a1dfe5cb7c1aafb0210a56d87c17f6"
+install_playbook_tag = "02a598faa332aa2c3d53e8edd0e840440ff74bd5"
 
 chrony_config_servers = [ {server = "0.centos.pool.ntp.org", options = "iburst"}, {server = "1.centos.pool.ntp.org", options = "iburst"} ]
 
