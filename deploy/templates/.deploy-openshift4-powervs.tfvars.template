@@ -46,6 +46,7 @@ ocp_release_tag            = "__OCP_RELEASE_TAG__"
 #helpernode_tag             = "__HELPERNODE_TAG__"
 #install_playbook_repo       = "__INSTALL_PLAYBOOK_REPO__"
 #install_playbook_tag       = "__INSTALL_PLAYBOOT_TAG__"
+install_playbook_tag = "29be0d6d55a1dfe5cb7c1aafb0210a56d87c17f6"
 
 installer_log_level         = "info"
 ansible_extra_options       = "-v"
