@@ -236,10 +236,7 @@ pipeline {
                         }
                         echo "HOLDING THE CLUSTER FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
                         sleep TIMEOUT_SEC
-                    }
-                    finally {
-                        echo 'Tearing off the cluster !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
                     }
                 }
             }
@@ -290,6 +287,7 @@ pipeline {
         // }
     post {
         always {
+            getArtifactsAndCleanOcp4(env.AUTH_URL)
             //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
