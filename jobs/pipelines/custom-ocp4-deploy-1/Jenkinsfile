@@ -629,7 +629,7 @@ pipeline {
                             env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
+                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == null )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
                             env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.5.0-0.nightly-ppc64le-2020-07-13-172606/openshift-install-linux.tar.gz"
@@ -637,7 +637,7 @@ pipeline {
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${AVAILABILITY_ZONE}" == "null")
+                        if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${AUTH_URL}"
                             error('Could not find requesed zone')
