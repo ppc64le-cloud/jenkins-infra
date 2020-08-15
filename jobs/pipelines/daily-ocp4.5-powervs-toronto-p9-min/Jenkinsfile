@@ -10,6 +10,7 @@ def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
+env.BASTION_IP = ""
 
 pipeline {
     agent {
@@ -86,6 +87,13 @@ pipeline {
         TIMEOUT = "0"
         OCP_RELEASE = "4.5"
 
+        //e2e specific variables
+        ENABLE_E2E_TEST = "true"
+        E2E_GIT = "https://github.com/openshift/origin"
+        E2E_BRANCH="release-${OCP_RELEASE}"
+        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
+
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The downlod branch
@@ -101,6 +109,11 @@ pipeline {
 	 }
 
     stages {
+        stage('Clone ansible extra') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ansible_extra'], [$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false, timeout: 20]], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.ibm.com:redstack-power/ocp4_ansible_extras.git', credentialsId: 'ibm-github']]])
+            }
+        }
         stage('pull artifact') {
             steps {
                 script {
@@ -227,6 +240,7 @@ pipeline {
                                 sleep 10
                         done
                         '''
+                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip").trim()
                         }
                     catch (err) {
                         TIMEOUT_HRS =  WAIT_FOR_DEBUG.toInteger()
@@ -241,60 +255,79 @@ pipeline {
                 }
             }
         }
-        // stage('Setup Kubectl') {
-        //     steps {
-        //         script {
-        //             ansiColor('xterm') {
-        //                 echo ""
-        //             }
-        //             try {
-        //                 setupKubeconfigOcp4()
-        //                 sh '''
-        //                 echo 'Setting up kubectl!'
-        //                 oc get nodes
-        //                 echo 'Get the Cluster Operators'
-        //                 oc get co
-        //                 '''
-        //                 }
-        //             catch (err) {
-        //                 echo 'Error ! Tearing off the cluster !'
-        //                 getArtifactsAndCleanOcp4(env.AUTH_URL)
-        //                 throw err
-        //             }
-        //         }
-        //     }
-        // }
-        // stage('Gather pprof and prometheus data') {
-        //     steps {
-        //         script {
-        //             ansiColor('xterm') {
-        //                 echo ""
-        //             }
-        //             try {
-        //                 sh '''
-        //                    oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
-        //                    oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
-        //                    oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
-        //                 '''
-        //                 }
-        //             catch (err) {
-        //                 echo 'Error ! Tearing off the cluster !'
-        //                 getArtifactsAndCleanOcp4(env.AUTH_URL)
-        //                 throw err
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Setup and run ansible extra') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                       sh '''
+                        echo 'Creating var.yaml'
+                        cd ${WORKSPACE}/ansible_extra
+                        cp examples/e2e_vars.yaml vars.yaml
+                        sed -i "s|e2e_tests_enabled:.*$|e2e_tests_enabled: true|g" vars.yaml
+                        sed -i "s|e2e_tests_git:.*$|e2e_tests_git: ${E2E_GIT}|g" vars.yaml
+                        sed -i "s|e2e_tests_git_branch:.*$|e2e_tests_git_branch: ${E2E_BRANCH}|g" vars.yaml
+                        sed -i "s|e2e_tests_exclude_list_url:.*$|e2e_tests_exclude_list_url: ${E2E_EXCLUDE_LIST}|g" vars.yaml
+                        sed -i "s|golang_tarball:.*$|golang_tarball: ${GOLANG_TARBALL}|g" vars.yaml
+                        sed -i "s|github_token:.*$|github_token: ${GITHUB_TOKEN}|g" vars.yaml
+                        cat vars.yaml
+                        cp examples/inventory .
+                        sed -i "s|localhost|${BASTION_IP}|g" inventory
+                        sed -i 's/ansible_connection=local/ansible_connection=ssh/g' inventory
+                        sed -i "s|ssh|ssh ansible_ssh_private_key_file=${WORKSPACE}/deploy/id_rsa|g" inventory
+                        cat inventory
+                        echo "[ssh_connection]" >> ansible.cfg
+                        echo "ssh_args = -C -o ControlMaster=auto -o ControlPersist=120m -o ServerAliveInterval=30" >> ansible.cfg
+                        cat ansible.cfg
+                        ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml
+                       # cd ../
+                       # tar -czvf ansible_extra.tar.gz ansible_extra
+                       # scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa ansible_extra.tar.gz root@${BASTION_IP}:
+                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} tar -zxvf ansible_extra.tar.gz
+                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ansible_extra ; ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml -vvv"
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/profile --as=system:admin" > cpu-pre.pprof || true
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/heap --as=system:admin" > heap-pre.pprof || true
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . " > prometheus.tar.gz || true
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
     }
     post {
         always {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
-            //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
-            //archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
-            //archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
-            //archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
-            //archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
