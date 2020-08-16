@@ -331,14 +331,25 @@ pipeline {
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    E2E_SUMMARY = E2E_SUMMARY.trim()
-                    STR = E2E_SUMMARY.split(',')
-                    FAILS = STR[0].split()
-                    PASS = STR[1].split()
-                    SKIP = STR[2].split()
-                    TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
-                    FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                    UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    if (E2E_SUMMARY.contains('fail')) {
+                        E2E_SUMMARY = E2E_SUMMARY.trim()
+                        STR = E2E_SUMMARY.split(',')
+                        FAILS = STR[0].split()
+                        PASS = STR[1].split()
+                        SKIP = STR[2].split()
+                        TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
+                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    }
+                    else {
+                        E2E_SUMMARY = E2E_SUMMARY.trim()
+                        STR = E2E_SUMMARY.split(',')
+                        PASS = STR[0].split()
+                        SKIP = STR[1].split()
+                        TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
+                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    }
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
                 def logContent_modified=logContent.toLowerCase()
@@ -354,6 +365,18 @@ pipeline {
                 }
                 if ( env.OPENSHIFT_IMAGE != ""  ) {
                     env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
+                }
+                if ( fileExists('deploy/junit_e2e.xml')) {
+                    sh '''
+                    sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
+                    sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
+                    '''
+                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
+                }
+                else
+                {
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    currentBuild.result = 'FAILURE'
                 }
                 clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
                 clusterInfo['master_node_cpu'] = "${MASTER_PROCESSORS}"
