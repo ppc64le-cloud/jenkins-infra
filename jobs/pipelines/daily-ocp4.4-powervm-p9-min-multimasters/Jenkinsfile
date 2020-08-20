@@ -40,7 +40,7 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.13"
+        TERRAFORM_VER = "0.12.23"
         TEST_SUITE = "ppc64le-edge"
         OS = "linux"
         OS_IDENTITY_API_VERSION='3'
