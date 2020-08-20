@@ -46,17 +46,17 @@ pipeline {
         SERVICE_INSTANCE_ID = "4a1f10a2-0797-4ac8-9c41-44bc04b2d18f"
 
         BASTION_MEMORY = "8"
-        BASTION_PROCESSORS = "1"
+        BASTION_PROCESSORS = ".5"
 
         BOOTSTRAP_MEMORY = "16"
-        BOOTSTRAP_PROCESSORS = "2"
+        BOOTSTRAP_PROCESSORS = ".5"
 
         MASTER_MEMORY = "16"
-        MASTER_PROCESSORS = "2"
+        MASTER_PROCESSORS = ".5"
         NUM_OF_MASTERS = "3"
 
         WORKER_MEMORY = "16"
-        WORKER_PROCESSORS = "2"
+        WORKER_PROCESSORS = ".5"
         NUM_OF_WORKERS = "2"
 
         BASTION_IMAGE_NAME = "rhel-8.2"
