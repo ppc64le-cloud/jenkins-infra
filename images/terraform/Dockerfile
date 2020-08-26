@@ -22,6 +22,7 @@ RUN apt-get update && apt install --yes nodejs imagemagick gifsicle \
         kubectl \
         python-selenium \
 	    sudo \
+        time \
     && rm -rf /var/lib/apt/lists/*
 RUN pip3 install python-openstackclient
 RUN ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa

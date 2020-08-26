@@ -9,9 +9,13 @@ def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
-def REAL_TIME
-def USER_TIME
-def SYSTEM_TIME
+def REAL_TIME_NS
+def USER_TIME_NS
+def SYSTEM_TIME_NS
+def REAL_TIME_DP
+def USER_TIME_DP
+def SYSTEM_TIME_DP
+env.BASTION_IP = ""
 
 pipeline {
     agent {
@@ -63,7 +67,7 @@ pipeline {
 
         VCPUS_REQ_WORKER = "2"
         MEM_REQ_WORKER = "16"
-        PRO_UNIT_REQ_WORKER = ".2"
+        PRO_UNIT_REQ_WORKER = ".5"
 
         VCPUS_REQ_BOOTSTRAP = "2"
         MEM_REQ_BOOTSTRAP = "16"
@@ -108,10 +112,12 @@ pipeline {
         E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.5-powervm/ocp4.5_power_blacklist.txt"
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
-        ENABLE_SCALE_TEST = "true"
+        ENABLE_SCALE_TEST = "false"
         GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
-        SCALE_NUM_OF_DEPLOYMENTS = "100"
+        SCALE_NUM_OF_DEPLOYMENTS = "60"
+        SCALE_NUM_OF_NAMESPACES = "1000"
+        EXPOSE_IMAGE_REGISTRY = "false"
 
         CHRONY_CONFIG = "true"
 
@@ -123,6 +129,11 @@ pipeline {
         POWERVS = false
 	}
 	stages{
+        stage('Clone ansible extra') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'OpenShift4-tools'], [$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false, timeout: 20]], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/RobertKrawitz/OpenShift4-tools.git']]])
+            }
+        }
 	    stage('pull artifact') {
             steps {
                 script {
@@ -302,6 +313,7 @@ pipeline {
                                 sleep 10
                         done
                         '''
+                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
                         }
                     catch (err) {
                         echo 'Error ! Tearing off the cluster !'
@@ -334,7 +346,7 @@ pipeline {
                 }
             }
         }
-        stage('Gather pprof and prometheus data') {
+        stage('Gather pprof and prometheus data before ') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -344,7 +356,82 @@ pipeline {
                         sh '''
                            oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
                            oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
-                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.pre.tar.gz || true
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Run scale test') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        writeFile file: 'ingress.yaml', text: 'spec:\n  nodePlacement:\n    nodeSelector:\n      matchLabels:\n        node-role.kubernetes.io/infra: ""'
+                        sh 'cat ingress.yaml'
+                        
+                        writeFile file: 'registry.yaml', text: 'spec:\n  nodeSelector::\n    node-role.kubernetes.io/infra: ""'
+                        sh 'cat registry.yaml'
+                        sh '''
+                        npm install -g @alexlafroscia/yaml-merge
+
+                        cd ${WORKSPACE}/OpenShift4-tools
+                        echo './clusterbuster -N ${SCALE_NUM_OF_NAMESPACES} -d 0 ;while [ `oc get ns | grep clusterbuster | grep -v Active | wc -l` -ne 0 ];do sleep .0000000001;done' > ./namespaces.sh
+                        chmod +x ./namespaces.sh
+                        time -o ${WORKSPACE}/time_taken_namespaces -f  "real-%E user-%U system-%S" ./namespaces.sh
+                        ./clusterbuster --cleanup
+
+                        oc label node worker-0 node-role.kubernetes.io/infra=""
+                        oc label node worker-1 node-role.kubernetes.io/infra=""
+
+                        oc get nodes
+                        
+                        oc get ingresscontroller default -n openshift-ingress-operator -o yaml > base_1.yaml && yaml-merge base_1.yaml ${WORKSPACE}/ingress.yaml | kubectl apply -f -
+                        oc get pod -n openshift-ingress -o wide
+                        oc get configs.imageregistry.operator.openshift.io cluster -o yaml > base_2.yaml && yaml-merge base_2.yaml ${WORKSPACE}/registry.yaml | kubectl apply -f -
+                        oc get pods -o wide -n openshift-image-registry
+
+                        echo './clusterbuster -d ${SCALE_NUM_OF_DEPLOYMENTS} -B ltccci ;while [ `oc get pods -n ltccci-0 | grep -v NAME | grep -v Running | wc -l` -ne 0 ];do sleep .0000000001;done' > deployments.sh
+                        chmod +x deployments.sh
+                        time -o ${WORKSPACE}/time_taken_deployments -f  "real-%E user-%U system-%S"  sh deployments.sh
+                        ./clusterbuster --cleanup -B ltccci
+
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        sh '''
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-post.pprof || true
+                           oc get --raw /debug/pprof/heap --as=system:admin > heap-post.pprof || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.post.tar.gz || true
                         '''
                         }
                     catch (err) {
@@ -380,27 +467,44 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'time_taken_namespaces', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'time_taken_deployments', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.pre.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-post.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-post.pprof', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.post.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
-                if (fileExists('deploy/time_taken')) {
-                    sh '''
-                       cat deploy/time_taken | grep '[^[:blank:]]' | tail -n 3 > deploy/time || true
-                    '''
-                    SCALE_SUMMARY = readFile 'deploy/time'
+                if (fileExists('time_taken_namespaces')) {
+                    SCALE_SUMMARY = readFile 'time_taken_namespaces'
                     SCALE_SUMMARY.split('\n').each { line ->
                         if ( line  != null) {
                             if (line.contains('real')){
-                                REAL_TIME = line.split()[1]
+                                REAL_TIME_NS = line.split()[0].split("-")[1]
                             }
                             if (line.contains('user')){
-                                USER_TIME = line.split()[1]
+                                USER_TIME_NS = line.split()[1].split("-")[1]
                             }
                             if (line.contains('sys')){
-                                SYSTEM_TIME = line.split()[1]
+                                SYSTEM_TIME_NS = line.split()[2].split("-")[1]
+                            }
+                        }
+                    }
+                }
+                if (fileExists('time_taken_deployments')) {
+                    SCALE_SUMMARY = readFile 'time_taken_deployments'
+                    SCALE_SUMMARY.split('\n').each { line ->
+                        if ( line  != null) {
+                            if (line.contains('real')){
+                                REAL_TIME_DP = line.split()[0].split("-")[1]
+                            }
+                            if (line.contains('user')){
+                                USER_TIME_DP = line.split()[1].split("-")[1]
+                            }
+                            if (line.contains('sys')){
+                                SYSTEM_TIME_DP = line.split()[2].split("-")[1]
                             }
                         }
                     }
@@ -410,6 +514,7 @@ pipeline {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                 }
+                SUMMARY = "Namespace time: " + REAL_TIME_NS + ", " + "Deployment time: " + REAL_TIME_DP
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
                 def logContent_modified=logContent.toLowerCase()
                 def infra_errors = readFile 'files/infra-issues.txt'
@@ -433,9 +538,13 @@ pipeline {
                 clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
                 clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
                 clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
-                clusterInfo['real_time'] = REAL_TIME
-                clusterInfo['user_time'] = USER_TIME
-                clusterInfo['system_time'] = SYSTEM_TIME
+                clusterInfo['real_time_namespace'] = REAL_TIME_NS
+                clusterInfo['user_time_namespace'] = USER_TIME_NS
+                clusterInfo['system_time_namespace'] = SYSTEM_TIME_NS
+                clusterInfo['namespaces'] = "${SCALE_NUM_OF_NAMESPACES}"
+                clusterInfo['real_time_deployments'] = REAL_TIME_DP
+                clusterInfo['user_time_deployments'] = USER_TIME_DP
+                clusterInfo['system_time_deployments'] = SYSTEM_TIME_DP
                 clusterInfo['deployments'] = "${SCALE_NUM_OF_DEPLOYMENTS}"
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
@@ -447,7 +556,7 @@ pipeline {
                     echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
                     SCALE_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
                 }
-            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, SCALE_SUMMARY, env.RHCOS_IMAGE_NAME)
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
             }
         }
