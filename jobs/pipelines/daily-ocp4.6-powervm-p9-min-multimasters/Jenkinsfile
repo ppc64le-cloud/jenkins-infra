@@ -41,7 +41,7 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.23"
+        TERRAFORM_VER = "0.13.0"
         TEST_SUITE = "ppc64le-edge"
         OS = "linux"
         OS_IDENTITY_API_VERSION='3'
@@ -254,6 +254,28 @@ pipeline {
                     catch (err)
                     {
                         echo 'Error ! Template prepration failed !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Setup terraform plugin') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo ' get the plugin from artifactory repo !'
+                        wget https://github.com/community-terraform-providers/terraform-provider-ignition/releases/download/v2.1.0/terraform-provider-ignition_2.1.0_linux_amd64.zip
+                        mkdir -p ~/.terraform.d/plugins/linux_amd64/
+                        unzip terraform-provider-ignition_2.1.0_linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
