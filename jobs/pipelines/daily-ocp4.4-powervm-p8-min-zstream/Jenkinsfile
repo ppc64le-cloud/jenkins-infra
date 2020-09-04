@@ -9,6 +9,7 @@ def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
+env.BASTION_IP = ""
 
 pipeline {
     agent {
@@ -86,7 +87,8 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
         NUM_OF_WORKERS = "2"
         NUM_OF_MASTERS = "3"
@@ -122,6 +124,11 @@ pipeline {
 	 }
 
     stages {
+        stage('Clone ansible extra') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ansible_extra'], [$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false, timeout: 20]], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.ibm.com:redstack-power/ocp4_ansible_extras.git', credentialsId: 'ibm-github']]])
+            }
+        }
         stage('pull artifact') {
             steps {
                 script {
@@ -329,6 +336,7 @@ pipeline {
                                 sleep 10
                         done
                         '''
+                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
                         }
                     catch (err) {
                         echo 'Error ! Tearing off the cluster !'
@@ -338,7 +346,48 @@ pipeline {
                 }
             }
         }
-
+        stage('Setup and run ansible extra') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                       sh '''
+                        echo 'Creating var.yaml'
+                        cd ${WORKSPACE}/ansible_extra
+                        cp examples/e2e_vars.yaml vars.yaml
+                        sed -i "s|e2e_tests_enabled:.*$|e2e_tests_enabled: true|g" vars.yaml
+                        sed -i "s|e2e_tests_git:.*$|e2e_tests_git: ${E2E_GIT}|g" vars.yaml
+                        sed -i "s|e2e_tests_git_branch:.*$|e2e_tests_git_branch: ${E2E_BRANCH}|g" vars.yaml
+                        sed -i "s|e2e_tests_exclude_list_url:.*$|e2e_tests_exclude_list_url: ${E2E_EXCLUDE_LIST}|g" vars.yaml
+                        sed -i "s|golang_tarball:.*$|golang_tarball: ${GOLANG_TARBALL}|g" vars.yaml
+                        sed -i "s|github_token:.*$|github_token: ${GITHUB_TOKEN}|g" vars.yaml
+                        cat vars.yaml
+                        cp examples/inventory .
+                        sed -i "s|localhost|${BASTION_IP}|g" inventory
+                        sed -i 's/ansible_connection=local/ansible_connection=ssh/g' inventory
+                        sed -i "s|ssh|ssh ansible_ssh_private_key_file=${WORKSPACE}/deploy/id_rsa|g" inventory
+                        cat inventory
+                        echo "[ssh_connection]" >> ansible.cfg
+                        echo "ssh_args = -C -o ControlMaster=auto -o ControlPersist=120m -o ServerAliveInterval=30" >> ansible.cfg
+                        cat ansible.cfg
+                        ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml
+                       # cd ../
+                       # tar -czvf ansible_extra.tar.gz ansible_extra
+                       # scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa ansible_extra.tar.gz root@${BASTION_IP}:
+                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} tar -zxvf ansible_extra.tar.gz
+                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ansible_extra ; ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml -vvv"
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
         stage('Setup Kubectl') {
             when {
                 expression { env.LAST_OPENSHIFT_IMAGE != env.OPENSHIFT_IMAGE }
