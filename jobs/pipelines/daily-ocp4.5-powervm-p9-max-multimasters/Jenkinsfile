@@ -308,8 +308,8 @@ pipeline {
                                 retries=$((retries+1))
                                 sleep 10
                         done
-                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
                         '''
+                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
                         }
                     catch (err) {
                         echo 'Error ! Tearing off the cluster !'
