@@ -270,8 +270,8 @@ pipeline {
                         sh '''
                         echo ' get the plugin from artifactory repo !'
                         wget https://github.com/community-terraform-providers/terraform-provider-ignition/releases/download/v2.1.0/terraform-provider-ignition_2.1.0_linux_amd64.zip
-                        mkdir -p ~/.terraform.d/plugins/linux_amd64/
-                        unzip terraform-provider-ignition_2.1.0_linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
+                        mkdir -p ~/.local/share/terraform/plugins/registry.terraform.io/terraform-providers/ignition/
+                        mv terraform-provider-ignition_2.1.0_linux_amd64.zip ~/.local/share/terraform/plugins/registry.terraform.io/terraform-providers/ignition/
                         '''
                         }
                     catch (err) {

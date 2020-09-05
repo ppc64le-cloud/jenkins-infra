@@ -93,7 +93,8 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-harness
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="devel" //The download branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
         NUM_OF_WORKERS = "3"
         NUM_OF_MASTERS = "3"
