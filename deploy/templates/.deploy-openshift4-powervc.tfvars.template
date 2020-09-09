@@ -69,8 +69,6 @@ upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
 
 chrony_config = "__CHRONY_CONFIG__"
 
-install_playbook_tag = "02a598faa332aa2c3d53e8edd0e840440ff74bd5"
-
 ocp4_extras_playbook_tag = "335a0dc1b329c3f05e3b48409441d9eb1420c27b"
 
 chrony_config_servers = [ {server = "0.centos.pool.ntp.org", options = "iburst"}, {server = "1.centos.pool.ntp.org", options = "iburst"} ]
