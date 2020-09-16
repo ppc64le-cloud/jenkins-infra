@@ -108,7 +108,7 @@ pipeline {
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
-        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
         SCALE_NUM_OF_DEPLOYMENTS = "100"
 
@@ -461,24 +461,26 @@ pipeline {
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    if (E2E_SUMMARY.contains('fail')) {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        FAILS = STR[0].split()
-                        PASS = STR[1].split()
-                        SKIP = STR[2].split()
-                        TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
-                    }
-                    else {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        PASS = STR[0].split()
-                        SKIP = STR[1].split()
-                        TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    if (E2E_SUMMARY?.trim()){
+                        if (E2E_SUMMARY.contains('fail')) {
+                            E2E_SUMMARY = E2E_SUMMARY.trim()
+                            STR = E2E_SUMMARY.split(',')
+                            FAILS = STR[0].split()
+                            PASS = STR[1].split()
+                            SKIP = STR[2].split()
+                            TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
+                            FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                            UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        }
+                        else {
+                            E2E_SUMMARY = E2E_SUMMARY.trim()
+                            STR = E2E_SUMMARY.split(',')
+                            PASS = STR[0].split()
+                            SKIP = STR[1].split()
+                            TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
+                            FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                            UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        }
                     }
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
@@ -505,7 +507,13 @@ pipeline {
                 else
                 {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
-                    currentBuild.result = 'FAILURE'
+                    if (fileExists('deploy/summary.txt') && !E2E_SUMMARY?.trim()) {
+                        currentBuild.result = 'UNSTABLE'
+                        E2E_SUMMARY = "E2e test didn't run"
+                     }
+                     else{
+                        currentBuild.result = 'FAILURE'
+                    }
                 }
                 clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
                 clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
