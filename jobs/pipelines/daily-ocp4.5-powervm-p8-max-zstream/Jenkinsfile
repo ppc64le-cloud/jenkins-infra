@@ -336,6 +336,7 @@ pipeline {
                                 sleep 10
                         done
                         '''
+                        sleep 60
                         env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
                         }
                     catch (err) {
@@ -347,10 +348,10 @@ pipeline {
             }
         }
         stage('Setup and run ansible extra') {
+            when {
+                expression { env.LAST_OPENSHIFT_IMAGE != env.OPENSHIFT_IMAGE }
+            }
             steps {
-                when {
-                    expression { env.LAST_OPENSHIFT_IMAGE != env.OPENSHIFT_IMAGE }
-                }
                 script {
                     ansiColor('xterm') {
                         echo ""
