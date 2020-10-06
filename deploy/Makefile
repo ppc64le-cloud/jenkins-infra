@@ -347,6 +347,34 @@ deploy-openshift4-powervs\:redeploy:
 deploy-openshift4-powervs\:clean:
 	@$(SELF) -s deploy:openshift4:powervs:clean OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+# ---------------------------------
+## ----- single-instance-openshift4-powervs -----
+# ---------------------------------
+
+.PHONY: deploy-openshift4-powervs-single-instance\:
+## Create power build on powervs tenant
+deploy-openshift4-powervs-single-instance: %deploy-openshift4-powervs-single-instance:
+	@$(shell sed -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" \
+        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZOME__|$(IBM_CLOUD_ZOME)|g" \
+		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
+		-e "s|__BASTION_IMAGE_NAME__|$(BASTION_IMAGE_NAME)|g" -e "s|__RHCOS_IMAGE_NAME__|$(RHCOS_IMAGE_NAME)|g" -e "s|__SYSTEM_TYPE__|$(SYSTEM_TYPE)|g" \
+		-e "s|__NETWORK_NAME__|$(NETWORK_NAME)|g" -e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__REDHAT_USERNAME__|$(REDHAT_USERNAME)|g" \
+		-e "s|__REDHAT_PASSWORD__|$(REDHAT_PASSWORD)|g" -e "s|__SETUP_SQUID_PROXY__|$(SETUP_SQUID_PROXY)|g" \
+		-e "s|__OPENSHIFT_IMAGE__|$(OPENSHIFT_IMAGE)|g" -e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \
+		-e "s|__OCP_RELEASE_TAG__|$(OCP_RELEASE_TAG)|g" -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" \
+        -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
+	@$(SELF) -s deploy:openshift4:powervs:single:instance OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+.PHONY: deploy-openshift4-powervs-single-instance\:redeploy
+## Re deploy on powervs tenant
+deploy-openshift4-powervs-single-instance\:redeploy:
+	@$(SELF) -s deploy:openshift4:powervs:single:instance:redeploy OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+.PHONY: deploy-openshift4-powervs-single-instance\:clean
+## Clean up power-openstack build artifacts
+deploy-openshift4-powervs-single-instance\:clean:
+	@$(SELF) -s deploy:openshift4:powervs:single:instance:clean OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
 
 .PHONY: deploy-openshift-powervc-offline\:
 ## Create power build on powervc tenant
