@@ -41,7 +41,7 @@ pipeline {
                         export PATH=$PATH:$PWD
                         oc login https://api.ci.openshift.org --token=${CI_OCP_TOKEN}
                         oc registry login
-                        ./mirror-images.sh
+                        ./mirror-images.sh || true
                     '''
                     }
                     catch (err)
