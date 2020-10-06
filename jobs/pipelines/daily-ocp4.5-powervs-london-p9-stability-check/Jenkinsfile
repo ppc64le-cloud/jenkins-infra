@@ -196,6 +196,7 @@ pipeline {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
+            notifyBySlack(currentBuild.result)
         }
     }
 }
