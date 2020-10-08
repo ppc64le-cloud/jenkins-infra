@@ -34,6 +34,9 @@
         {% elif 'daily-powervs-london-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
         {% elif 'daily-powervs-toronto-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
         {% elif 'daily-powervs-washington-p9-stability-check' in JOB_NAME %}''
+        {% elif 'daily-ocp4.6-powervs-frankfurt01-p9-min' in JOB_NAME %}'1 4 * * *'
+        {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}'1 5 * * *'
+        {% elif 'daily-ocp4.6-powervs-toronto-p9-min' in JOB_NAME %}'1 10 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
