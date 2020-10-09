@@ -33,22 +33,21 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.12.29"
-        IBM_CLOUD_REGION = "us-south"
-        IBM_CLOUD_ZOME = "us-south"
-        SERVICE_INSTANCE_ID = "7cf52a5e-54eb-402c-a62f-0b15ddb80ae8"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd04"
+        SERVICE_INSTANCE_ID = "6d030c4b-64a3-494d-aeed-8c453dd98903"
 
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
 
         BASTION_IMAGE_NAME = "rhel-82-10072020-001"
 
-        SYSTEM_TYPE = "e880"
+        SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         RHEL_SMT = "4"
         CLUSTER_DOMAIN = "redhat.com"
         INSTANCE_NAME = "ltccci"
-
         SETUP_SQUID_PROXY = "true"
 
         TIMEOUT = "0"
@@ -99,7 +98,6 @@ pipeline {
                     try {
                         sh '''
                         echo 'Initializing supporting repos and keys !'
-
                         cd ${WORKSPACE}/deploy
                         make init
                         make keys
