@@ -40,7 +40,7 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.29"
+        TERRAFORM_VER = "0.13.4"
         IBM_CLOUD_REGION = "eu-de"
         IBM_CLOUD_ZOME = "eu-de-1"
         SERVICE_INSTANCE_ID = "360a5df8-3f00-44b2-bd9f-d9a51fe53de6"
