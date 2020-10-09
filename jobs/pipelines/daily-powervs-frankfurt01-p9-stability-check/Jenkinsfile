@@ -52,7 +52,6 @@ pipeline {
         SETUP_SQUID_PROXY = "true"
 
         TIMEOUT = "0"
-        OCP_RELEASE = "4.5"
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
