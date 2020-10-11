@@ -328,6 +328,8 @@ pipeline {
                     try {
                        sh '''
                         echo 'Creating var.yaml'
+                        rm -rf ~/.ansible
+                        ansible all -m setup -a 'gather_subset=!all'
                         cd ${WORKSPACE}/ansible_extra
                         cp examples/e2e_vars.yaml vars.yaml
                         sed -i "s|e2e_tests_enabled:.*$|e2e_tests_enabled: true|g" vars.yaml
