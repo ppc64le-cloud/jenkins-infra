@@ -3,8 +3,8 @@
     name: {{ JOB_NAME }}
     project-type: pipeline
     triggers:
-      - timed: {% if 'daily-ocp4.3-powervm-p8-min-multimasters' in JOB_NAME %}'30 14 * * * '
-        {% elif 'daily-ocp4.3-powervm-p9-min-multimasters' in JOB_NAME %}'30 15 * * * '
+      - timed: {% if 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}'30 14 * * * '
+        {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}'30 15 * * * '
         {% elif 'daily-ocp4.3-to-4.4-p8-min-upgrade' in JOB_NAME %}'30 16 * * * '
         {% elif 'daily-ocp4.4-powervm-p8-min-multimasters' in JOB_NAME %}'30 17 * * * '
         {% elif 'daily-ocp4.4-powervm-p8-min-zstream' in JOB_NAME %}'30 18 * * * '
@@ -18,13 +18,13 @@
         {% elif 'daily-ocp4.5-powervm-p9-min-multimasters' in JOB_NAME %}'30 2 * * * '
         {% elif 'daily-ocp4.5-powervm-p9-scale' in JOB_NAME %}'30 3 * * * '
         {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}'30 4 * * * '
-        {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}'  '
+        {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}'30 5 * * * '
         {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}'30 6 * * * '
-        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}'  '
+        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}'30 7 * * * '
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
         {% elif 'daily-ocp4.5-powervs-dallas-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.5-powervs-frankfurt-p9-min' in JOB_NAME %}'1 1 * * *'
+        {% elif 'daily-ocp4.5-powervs-frankfurt-p9-min' in JOB_NAME %}''
         {% elif 'daily-ocp4.5-powervs-london-p9-min' in JOB_NAME %}''
         {% elif 'daily-ocp4.5-powervs-toronto-p9-min' in JOB_NAME %}'1 7 * * *'
         {% elif 'daily-ocp4.5-powervs-washington-p9-min' in JOB_NAME %}''
@@ -38,6 +38,7 @@
         {% elif 'daily-ocp4.6-powervs-frankfurt01-p9-min' in JOB_NAME %}'1 4 * * *'
         {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}'1 5 * * *'
         {% elif 'daily-ocp4.6-powervs-toronto-p9-min' in JOB_NAME %}'1 10 * * *'
+        {% elif 'daily-ocp4.6-powervs-sydney-p9-min' in JOB_NAME %}'1 10 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
