@@ -59,8 +59,8 @@ pipeline {
         WORKER_PROCESSORS = ".5"
         NUM_OF_WORKERS = "2"
 
-        BASTION_IMAGE_NAME = "rhel-8.2.1"
-        RHCOS_IMAGE_NAME = "rhcos-4.5"
+        BASTION_IMAGE_NAME = "rhel-82-10072020-001"
+        RHCOS_IMAGE_NAME = "rhcos-45-09242020-001"
 
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
@@ -102,7 +102,7 @@ pipeline {
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
-        BUILD_HARNESS_ORG="sudeeshjohn"
+        BUILD_HARNESS_ORG="powercloud-cicd"
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
         WAIT_FOR_DEBUG = "6"

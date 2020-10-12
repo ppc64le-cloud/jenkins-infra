@@ -103,7 +103,7 @@ pipeline {
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
-        BUILD_HARNESS_ORG="sudeeshjohn"
+        BUILD_HARNESS_ORG="powercloud-cicd"
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
         WAIT_FOR_DEBUG = "6"

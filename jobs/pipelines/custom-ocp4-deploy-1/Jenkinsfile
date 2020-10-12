@@ -573,7 +573,7 @@ pipeline {
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
-        BUILD_HARNESS_ORG="sudeeshjohn"
+        BUILD_HARNESS_ORG="powercloud-cicd"
         POWERVS = false
 	 }
 
