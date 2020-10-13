@@ -60,7 +60,7 @@ pipeline {
         WORKER_PROCESSORS = ".5"
         NUM_OF_WORKERS = "2"
 
-        BASTION_IMAGE_NAME = "rhel-82-10072020-001"
+        BASTION_IMAGE_NAME = "rhel-82-09232020-001"
         RHCOS_IMAGE_NAME = "rhcos-46-09182020-001"
 
         SYSTEM_TYPE = "s922"
