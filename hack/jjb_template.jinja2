@@ -21,7 +21,8 @@
         {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}'30 5 * * * '
         {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}'30 6 * * * '
         {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}'30 7 * * * '
-        {% elif 'daily-ocp4.6-powervm-p9-maxx-multimasters' in JOB_NAME %}'30 8 * * * '
+        {% elif 'daily-ocp4.6-powervm-p8-maxx-multimasters' in JOB_NAME %}'30 8 * * * '
+        {% elif 'daily-ocp4.6-powervm-p9-maxx-multimasters' in JOB_NAME %}''
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
         {% elif 'daily-ocp4.5-powervs-dallas-p9-min' in JOB_NAME %}''
@@ -40,6 +41,8 @@
         {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}'1 5 * * *'
         {% elif 'daily-ocp4.6-powervs-toronto-p9-min' in JOB_NAME %}'1 10 * * *'
         {% elif 'daily-ocp4.6-powervs-sydney-p9-min' in JOB_NAME %}'1 10 * * *'
+        {% elif 'daily-ocp4.6-powervs-toronto-p9-32gb-min' in JOB_NAME %}'1 10 * * *'
+        {% elif 'daily-ocp4.6-powervs-sydney-p9-32gb-min' in JOB_NAME %}'1 10 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
