@@ -80,6 +80,7 @@ pipeline {
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.4\\|44' > rhcos-4.4.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.5\\|45' > rhcos-4.5.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.6\\|46' > rhcos-4.6.txt || true
+                    cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.7\\|47' > rhcos-4.7.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep rhcos-43 | tail -n 1  > rhcos-4.3-nightly-latest.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.0'  > rhel-8.0.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.1'  > rhel-8.1.txt || true
@@ -98,7 +99,7 @@ pipeline {
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.4\\|cicd-rhcos-44' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.4.latest.txt || true
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.5\\|cicd-rhcos-45' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.5.latest.txt || true
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.6\\|cicd-rhcos-46' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.6.latest.txt || true
-                    
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.7\\|cicd-rhcos-47' | awk '{print $1}'|head -n 1 > cicd-rhcos-4.7.latest.txt || true
                     '''
                     }
                     catch (err)
@@ -118,10 +119,12 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.4.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.5.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.6.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.7.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.3.latest.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.4.latest.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.5.latest.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.6.latest.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.7.latest.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.0.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.1.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.2.txt', fingerprint: true, onlyIfSuccessful: false
