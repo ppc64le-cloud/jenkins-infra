@@ -43,7 +43,7 @@ pipeline {
         //Env constants
         TERRAFORM_VER = "0.13.4"
         IBM_CLOUD_REGION = "eu-de"
-        IBM_CLOUD_ZOME = "eu-de-2"
+        IBM_CLOUD_ZONE = "eu-de-2"
         SERVICE_INSTANCE_ID = "fca73cd3-8627-45fc-b09b-50253249cf3f"
 
         BASTION_MEMORY = "8"

@@ -1,7 +1,7 @@
 ### Configure the IBM Cloud provider
 ibmcloud_api_key    = "__IBMCLOUD_API_KEY__"
 ibmcloud_region     = "__IBM_CLOUD_REGION__"
-ibmcloud_zone       = "__IBM_CLOUD_ZOME__"
+ibmcloud_zone       = "__IBM_CLOUD_ZONE__"
 service_instance_id = "__SERVICE_INSTANCE_ID__"
 
 ### Configure the Instance details

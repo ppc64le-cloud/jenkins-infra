@@ -22,13 +22,8 @@
         sed -i "s|ibmcloud_api_key.*=.*$|ibmcloud_api_key = ************|g" ${TARGET}.tfvars
         cp ${TARGET}.tfvars powervc.tfvars
     fi
-    if [ ${POWERVS} == "false" ] ; then
-        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip )
-        [ $? -ne 0 ] && exit 1
-    else
-        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
-        [ $? -ne 0 ] && exit 1
-    fi
+    BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+    [ $? -ne 0 ] && exit 1
     if [ ! -z "${BASTION_IP}" ]; then
         ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} exit
         rc=$?
@@ -40,7 +35,6 @@
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/scale_test_results/time_taken .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/e2e_tests_results/conformance-parallel/junit_e2e_*.xml junit_e2e.xml
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/e2e_tests_results/conformance-parallel-upgrade/junit_e2e_*.xml junit_e2e_upgrade.xml
-            scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/cron.log .
         else
             echo 'Unable to access Bastion. You may delete the VMs manually'
         fi

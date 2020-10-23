@@ -17,10 +17,6 @@ network_name        = "__NETWORK_NAME__"
 
 rhel_username               = "__RHEL_USERNAME__"
 rhel_smt                    = "__RHEL_SMT__"
-public_key_file             = "id_rsa.pub"
-private_key_file            = "id_rsa"
-private_key                 = ""
-public_key                  = ""
 rhel_subscription_username = "__REDHAT_USERNAME__"
 rhel_subscription_password = "__REDHAT_PASSWORD__"
 
