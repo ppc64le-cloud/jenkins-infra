@@ -343,6 +343,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/deploy
+                            scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/hack/cron.sh root@${BASTION_IP}:
+                            ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 cron.sh;
+                                                                                            echo '* */2 * * * root ~/cron.sh >> ~/cron.log 2>&1' >> /etc/crontab;
+                                                                                            exit"
+                        '''
+                    } catch (err) {
+                        echo 'Running Crontab script failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
         stage('Setup and run ansible extra') {
             steps {
                 script {
@@ -396,6 +420,8 @@ pipeline {
                     try {
                         setupKubeconfigOcp4()
                         sh '''
+                        echo 'oc version'
+                        oc version
                         echo 'Setting up kubectl!'
                         oc get nodes
                         echo 'Get the Cluster Operators'
@@ -462,6 +488,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cron.log', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
