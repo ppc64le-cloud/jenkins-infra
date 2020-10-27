@@ -11,7 +11,6 @@ int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
-boolean DEPLOYMENT_STATUS = false
 
 pipeline {
     agent {
@@ -42,9 +41,9 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
-        IBM_CLOUD_REGION = "lon"
-        IBM_CLOUD_ZONE = "lon06"
-        SERVICE_INSTANCE_ID = "729b4527-6709-4ecb-8803-e0f1709ea945"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd04"
+        SERVICE_INSTANCE_ID = "6d030c4b-64a3-494d-aeed-8c453dd98903"
 
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
@@ -60,8 +59,8 @@ pipeline {
         WORKER_PROCESSORS = ".5"
         NUM_OF_WORKERS = "2"
 
-        BASTION_IMAGE_NAME = "rhel-82-10162020"
-        RHCOS_IMAGE_NAME = "rhcos-47-10172020"
+        BASTION_IMAGE_NAME = "rhel-82-09232020-001"
+        RHCOS_IMAGE_NAME = "rhcos-45-09242020-001"
 
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
@@ -86,24 +85,24 @@ pipeline {
         UPGRADE_DELAY_TIME = ""
 
         TIMEOUT = "0"
-        OCP_RELEASE = "4.7"
+        OCP_RELEASE = "4.5"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH="release-${OCP_RELEASE}"
         E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_blacklist.txt"
-        GOLANG_TARBALL = "https://golang.org/dl/go1.15.2.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The downlod branch
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.5" //The downlod branch
 
-        TARGET = "deploy-openshift4-powervs"
+        TARGET = "deploy-openshift4-powervs-script"
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
-        BUILD_HARNESS_ORG="powercloud-cicd"
+        BUILD_HARNESS_ORG="sudeeshjohn"
         //BUILD_HARNESS_BRANCH="devel"
         POWERVS = true
         WAIT_FOR_DEBUG = "6"
@@ -119,7 +118,7 @@ pipeline {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.7-build.txt',
+                    filter: 'latest-4.5-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
@@ -139,8 +138,8 @@ pipeline {
                     {
                         env.OPENSHIFT_IMAGE = ""
                         env.OCP_RELEASE_TAG = ""
-                        if (fileExists('artifactory/latest-4.7-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.7-build.txt'
+                        if (fileExists('artifactory/latest-4.5-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.5-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
@@ -148,45 +147,23 @@ pipeline {
                         if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-install-linux.tar.gz"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-install-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.6.0-0.nightly-2020-10-03-051134/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
                         }
                     }
                     catch (err)
                     {
                         echo 'Error ! Template prepration failed !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
-            }
-        }
-        stage('Setup terraform plugin') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo ' get the plugin from artifactory repo !'
-                        wget https://github.com/IBM-Cloud/terraform-provider-ibm/releases/download/v1.9.0/linux_amd64.zip
-                        mkdir -p ~/.terraform.d/plugins/linux_amd64/
-                        unzip linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
-                        '''
-                        }
-                    catch (err) {
-                        echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
                         throw err
                     }
                 }
@@ -210,7 +187,7 @@ pipeline {
                         }
                     catch (err) {
                         echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
                         throw err
                     }
                 }
@@ -226,23 +203,12 @@ pipeline {
                         sh '''
                         echo 'Deploying Cluster!'
                         export TF_VAR_offline_remote_password=$TF_VAR_password
+                        export CLOUD_API_KEY=$IBMCLOUD_API_KEY
                         cd ${WORKSPACE}/deploy
-                        make $TARGET || true
-                        retries=0
-                        until [ "$retries" -ge 3 ]
-                        do
-                                if [ "$retries" -eq 2 ]; then
-                                        make $TARGET:redeploy
-                                        sleep 60
-                                else
-                                        make $TARGET:redeploy || true
-                                fi
-                                retries=$((retries+1))
-                                sleep 10
-                        done
+                        make $TARGET 
                         '''
-                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip").trim()
-                        DEPLOYMENT_STATUS = true
+                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip").trim()
+                        echo env.BASTION_IP
                         }
                     catch (err) {
                         TIMEOUT_HRS =  WAIT_FOR_DEBUG.toInteger()
@@ -295,32 +261,7 @@ pipeline {
                     }
                     catch (err) {
                         echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
-            }
-        }
-        stage('Setup Kubectl') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        setupKubeconfigOcp4()
-                        sh '''
-                        echo 'kubectl version'
-                        oc version
-                        echo 'Setting up kubectl!'
-                        oc get nodes
-                        echo 'Get the Cluster Operators'
-                        oc get co
-                        '''
-                        }
-                    catch (err) {
-                        echo 'Error ! Tearing off the cluster !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
                         throw err
                     }
                 }
@@ -334,14 +275,14 @@ pipeline {
                     }
                     try {
                         sh '''
-                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
-                           oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
-                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/profile --as=system:admin" > cpu-pre.pprof || true
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/heap --as=system:admin" > heap-pre.pprof || true
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . " > prometheus.tar.gz || true
                         '''
                         }
                     catch (err) {
                         echo 'Error ! Tearing off the cluster !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
                         throw err
                     }
                 }
@@ -350,7 +291,7 @@ pipeline {
     }
     post {
         always {
-            getArtifactsAndCleanOcp4(env.AUTH_URL)
+            getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
@@ -387,10 +328,8 @@ pipeline {
                    line1=line.toLowerCase()
                     if ( line1  != null) {
                         if (logContent_modified.contains(line1)){
-                            if ( ! DEPLOYMENT_STATUS ){
-                                INFRA_ISSUE = true
-                                ERROR_MESSAGE = line1
-                            }
+                            INFRA_ISSUE = true
+                            ERROR_MESSAGE = line1
                         }
                     }
                 }

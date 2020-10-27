@@ -308,6 +308,50 @@ deploy-openshift4-powervc\:redeploy:
 deploy-openshift4-powervc\:clean:
 	@$(SELF) -s deploy:openshift:powervc:clean OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+
+# ---------------------------------
+## ----- openshift4-powervs-script -----
+# ---------------------------------
+
+.PHONY: deploy-openshift4-powervs-script\:
+## Create power build on powervs tenant
+deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
+	@$(shell sed -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" \
+        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZONE__|$(IBM_CLOUD_ZONE)|g" \
+		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
+		-e "s|__BOOTSTRAP_MEMORY__|$(BOOTSTRAP_MEMORY)|g" -e "s|__BOOTSTRAP_PROCESSORS__|$(BOOTSTRAP_PROCESSORS)|g" \
+		-e "s|__MASTER_MEMORY__|$(MASTER_MEMORY)|g" -e "s|__MASTER_PROCESSORS__|$(MASTER_PROCESSORS)|g" -e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" \
+		-e "s|__WORKER_MEMORY__|$(WORKER_MEMORY)|g" -e "s|__WORKER_PROCESSORS__|$(WORKER_PROCESSORS)|g" -e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" \
+		-e "s|__BASTION_IMAGE_NAME__|$(BASTION_IMAGE_NAME)|g" -e "s|__RHCOS_IMAGE_NAME__|$(RHCOS_IMAGE_NAME)|g" -e "s|__SYSTEM_TYPE__|$(SYSTEM_TYPE)|g" \
+		-e "s|__NETWORK_NAME__|$(NETWORK_NAME)|g" -e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__REDHAT_USERNAME__|$(REDHAT_USERNAME)|g" \
+		-e "s|__REDHAT_PASSWORD__|$(REDHAT_PASSWORD)|g" -e "s|__OPENSHIFT_INSTALL_TARBALL__|$(OPENSHIFT_INSTALL_TARBALL)|g" \
+		-e "s|__OPENSHIFT_CLIENT_TARBALL__|$(OPENSHIFT_CLIENT_TARBALL)|g" -e "s|__SETUP_SQUID_PROXY__|$(SETUP_SQUID_PROXY)|g" \
+		-e "s|__OPENSHIFT_IMAGE__|$(OPENSHIFT_IMAGE)|g" -e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \
+		-e "s|__ENABLE_LOCAL_REGISTRY__|$(ENABLE_LOCAL_REGISTRY)|g" -e "s|__LOCAL_REGISTRY_IMAGE__|$(LOCAL_REGISTRY_IMAGE)|g" \
+		-e "s|__OCP_RELEASE_TAG__|$(OCP_RELEASE_TAG)|g" -e "s|__HELPERNODE_REPO__|$(HELPERNODE_REPO)|g" \
+		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(UPGRADE_PAUSE_TIME)|g" \
+		-e "s|__INSTALL_PLAYBOOT_TAG__|$(INSTALL_PLAYBOOT_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
+		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
+        -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" \
+        -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
+
+##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
+	@$(SELF) -s deploy:openshift4:powervs:script OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+.PHONY: deploy-openshift4-powervs-script\:output
+## Clean up power-openstack build artifacts
+deploy-openshift4-powervs-script\:output:
+	@$(SELF) -s deploy:openshift4:powervs:script:output OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE) TERRAFORM_OUTPUT_VAR=$(TERRAFORM_OUTPUT_VAR)
+
+
+
+.PHONY: deploy-openshift4-powervs-script\:clean
+## Clean up power-openstack build artifacts
+deploy-openshift4-powervs-script\:clean:
+	@$(SELF) -s deploy:openshift4:powervs:script:clean OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+
+
 # ---------------------------------
 ## ----- openshift4-powervs -----
 # ---------------------------------
@@ -316,7 +360,7 @@ deploy-openshift4-powervc\:clean:
 ## Create power build on powervs tenant
 deploy-openshift4-powervs: %deploy-openshift4-powervs:
 	@$(shell sed -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" \
-        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZOME__|$(IBM_CLOUD_ZOME)|g" \
+        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZONE__|$(IBM_CLOUD_ZONE)|g" \
 		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
 		-e "s|__BOOTSTRAP_MEMORY__|$(BOOTSTRAP_MEMORY)|g" -e "s|__BOOTSTRAP_PROCESSORS__|$(BOOTSTRAP_PROCESSORS)|g" \
 		-e "s|__MASTER_MEMORY__|$(MASTER_MEMORY)|g" -e "s|__MASTER_PROCESSORS__|$(MASTER_PROCESSORS)|g" -e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" \
@@ -355,7 +399,7 @@ deploy-openshift4-powervs\:clean:
 ## Create power build on powervs tenant
 deploy-openshift4-powervs-single-instance: %deploy-openshift4-powervs-single-instance:
 	@$(shell sed -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" -e "s|__IBMCLOUD_API_KEY__|$(IBMCLOUD_API_KEY)|g" \
-        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZOME__|$(IBM_CLOUD_ZOME)|g" \
+        -e "s|__IBM_CLOUD_REGION__|$(IBM_CLOUD_REGION)|g" -e "s|__IBM_CLOUD_ZONE__|$(IBM_CLOUD_ZONE)|g" \
 		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
 		-e "s|__BASTION_IMAGE_NAME__|$(BASTION_IMAGE_NAME)|g" -e "s|__RHCOS_IMAGE_NAME__|$(RHCOS_IMAGE_NAME)|g" -e "s|__SYSTEM_TYPE__|$(SYSTEM_TYPE)|g" \
 		-e "s|__NETWORK_NAME__|$(NETWORK_NAME)|g" -e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__REDHAT_USERNAME__|$(REDHAT_USERNAME)|g" \
