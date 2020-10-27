@@ -42,9 +42,9 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
-        IBM_CLOUD_REGION = "eu-de"
-        IBM_CLOUD_ZOME = "eu-de-1"
-        SERVICE_INSTANCE_ID = "360a5df8-3f00-44b2-bd9f-d9a51fe53de6"
+        IBM_CLOUD_REGION = "us-east"
+        IBM_CLOUD_ZOME = "us-east"
+        SERVICE_INSTANCE_ID = "8aec6256-b197-4fe5-afcf-7507be7aa77b"
 
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
@@ -61,7 +61,7 @@ pipeline {
         NUM_OF_WORKERS = "2"
 
         BASTION_IMAGE_NAME = "rhel-82-10162020"
-        RHCOS_IMAGE_NAME = "rhcos-46-09182020"
+        RHCOS_IMAGE_NAME = "rhcos-47-10172020"
 
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
@@ -86,7 +86,7 @@ pipeline {
         UPGRADE_DELAY_TIME = ""
 
         TIMEOUT = "0"
-        OCP_RELEASE = "4.6"
+        OCP_RELEASE = "4.7"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
@@ -119,7 +119,7 @@ pipeline {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.6-build.txt',
+                    filter: 'latest-4.7-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
@@ -139,8 +139,8 @@ pipeline {
                     {
                         env.OPENSHIFT_IMAGE = ""
                         env.OCP_RELEASE_TAG = ""
-                        if (fileExists('artifactory/latest-4.6-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.6-build.txt'
+                        if (fileExists('artifactory/latest-4.7-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.7-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
@@ -301,6 +301,31 @@ pipeline {
                 }
             }
         }
+        stage('Setup Kubectl') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        setupKubeconfigOcp4()
+                        sh '''
+                        echo 'kubectl version'
+                        oc version
+                        echo 'Setting up kubectl!'
+                        oc get nodes
+                        echo 'Get the Cluster Operators'
+                        oc get co
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Tearing off the cluster !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
         stage('Gather pprof and prometheus data') {
             steps {
                 script {
@@ -309,9 +334,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/profile --as=system:admin" > cpu-pre.pprof || true
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc get --raw /debug/pprof/heap --as=system:admin" > heap-pre.pprof || true
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . " > prometheus.tar.gz || true
+                           oc get --raw /debug/pprof/profile --as=system:admin > cpu-pre.pprof || true
+                           oc get --raw /debug/pprof/heap --as=system:admin > heap-pre.pprof || true
+                           oc --insecure-skip-tls-verify exec -n openshift-monitoring prometheus-k8s-0 -- tar cvzf - -C /prometheus . > prometheus.tar.gz || true
                         '''
                         }
                     catch (err) {
