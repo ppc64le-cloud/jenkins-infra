@@ -98,6 +98,9 @@ pipeline {
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
         OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.5" //The downlod branch
 
+        //Script arguments
+        ARTIFACTS_VERSION = "release-4.5"
+
         TARGET = "deploy-openshift4-powervs-script"
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"
 
