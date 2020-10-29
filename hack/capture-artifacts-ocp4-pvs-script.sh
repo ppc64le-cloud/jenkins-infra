@@ -21,6 +21,7 @@
         sed -i "s|github_token.*=.*$|github_token = ************|g" ${TARGET}.tfvars
         sed -i "s|ibmcloud_api_key.*=.*$|ibmcloud_api_key = ************|g" ${TARGET}.tfvars
         cp ${TARGET}.tfvars powervc.tfvars
+        tar -czvf ${WORKSPACE}/deploy/logs.tar.gz ${WORKSPACE}/deploy/.${TARGET}/logs
     fi
     BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip )
     [ $? -ne 0 ] && exit 1

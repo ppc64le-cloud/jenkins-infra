@@ -301,6 +301,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/logs.tar.gz', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
