@@ -1,9 +1,9 @@
 #!/bin/bash
 export TZ='Asia/Kolkata'
+printf "Login to the cluster "
+/usr/local/bin/oc login -u kubeadmin -p provide_cluster_passwd
 printf "Output of oc get nodes on bastion at " && date
 /usr/local/bin/oc get nodes
-printf "\nOutput of oc get co on bastion at " && date
-/usr/local/bin/oc get co
 printf "\nOutput of oc adm top nodes on bastion at " && date
 /usr/local/bin/oc adm top nodes
 printf "\nOutput of oc get pods --all-namespaces -o=wide | grep -vi running | grep -vi completed on bastion at " && date
@@ -15,77 +15,29 @@ ssh -oStrictHostKeyChecking=no root@$(/usr/sbin/ip route get 1 | cut -d" " -f7) 
 printf "\nOutput of oc adm top pod --all-namespaces on bastion at " && date
 /usr/local/bin/oc adm top pod --all-namespaces
 
-printf "\n Executing commands on master-0 "
-printf "\n Output of systemctl status kubelet on master-0 at " && date
-ssh -oStrictHostKeyChecking=no core@master-0 /bin/systemctl status kubelet
-printf "\n Output of systemctl status crio on master-0 " && date
-ssh core@master-0 /bin/systemctl status crio
-printf "\n Output of free -g on master-0 " && date
-ssh core@master-0 /usr/bin/free -g
-printf "\n Output of /proc/meminfo on master-0 " && date
-/bin/cat /proc/meminfo
-printf "\n Output of systemd-cgtop on master-0 " && date
-ssh core@master-0 systemd-cgtop
+declare -a array=("worker-0" "master-0"  "worker-1" "master-1" "worker-2" "master-2")
+arraylength=${#array[@]}
+for (( i=0; i<${arraylength}; i++ ));
+do	
+ if ssh -oStrictHostKeyChecking=no core@${array[i]} exit; then	
+ 	printf "\n***************************************************************\n"
+ 	printf "\n Executing commands on ${array[i]}\n"
 
-printf "\n Executing commands on worker-0"
-printf "\n Output of systemctl status kubelet on worker-0 at " && date
-ssh -oStrictHostKeyChecking=no core@worker-0 /bin/systemctl status kubelet
-printf "\n Output of systemctl status crio on worker-0 at " && date
-ssh core@worker-0 /bin/systemctl status crio
-printf "\n Output of free -g on worker-0 at " && date
-ssh core@worker-0 /usr/bin/free -g
-printf "\n Output of /proc/meminfo on worker-0 at " && date
-/bin/cat /proc/meminfo
-printf "\n Output of systemd-cgtop on worker-0 at " && date
-ssh core@worker-0 systemd-cgtop
+ 	printf "\n Output of systemctl status kubelet on ${array[i]} at " && date
+ 	ssh core@${array[i]} /bin/systemctl status kubelet
 
-printf "\n Executing commands on master-1 "
-printf "\n Output of systemctl status kubelet on master-1 at " && date
-ssh -oStrictHostKeyChecking=no core@master-1 /bin/systemctl status kubelet
-printf "\n Output of systemctl status crio on master-1 " && date
-ssh core@master-1 /bin/systemctl status crio
-printf "\n Output of free -g on master-1 " && date
-ssh core@master-1 /usr/bin/free -g
-printf "\n Output of /proc/meminfo on master-1 " && date
-/bin/cat /proc/meminfo
-printf "\n Output of systemd-cgtop on master-1 " && date
-ssh core@master-1 systemd-cgtop
+ 	printf "\n Output of systemctl status crio on ${array[i]} at " && date
+ 	ssh core@${array[i]} /bin/systemctl status crio
 
-printf "\n Executing commands on worker-1"
-printf "\n Output of systemctl status kubelet on worker-1 at " && date
-ssh -oStrictHostKeyChecking=no core@worker-1 /bin/systemctl status kubelet
-printf "\n Output of systemctl status crio on worker-1 at " && date
-ssh core@worker-1 /bin/systemctl status crio
-printf "\n Output of free -g on worker-1 at " && date
-ssh core@worker-1 /usr/bin/free -g
-printf "\n Output of /proc/meminfo on worker-1 at " && date
-/bin/cat /proc/meminfo
-printf "\n Output of systemd-cgtop on worker-1 at " && date
-ssh core@worker-1 systemd-cgtop
+ 	printf "\n Output of free -g on ${array[i]} at " && date
+ 	ssh core@${array[i]} /usr/bin/free -g
 
-printf "\n Executing commands on master-2 "
-printf "\n Output of systemctl status kubelet on master-2 at " && date
-ssh -oStrictHostKeyChecking=no core@master-2 /bin/systemctl status kubelet
-printf "\n Output of systemctl status crio on master-2 " && date
-ssh core@master-2 /bin/systemctl status crio
-printf "\n Output of free -g on master-2 " && date
-ssh core@master-2 /usr/bin/free -g
-printf "\n Output of /proc/meminfo on master-2 " && date
-/bin/cat /proc/meminfo
-printf "\n Output of systemd-cgtop on master-2 " && date
-ssh core@master-2 systemd-cgtop
+ 	printf "\n Output of /proc/meminfo on ${array[i]} at " && date
+ 	ssh core@${array[i]} /bin/cat /proc/meminfo
 
-ssh -oStrictHostKeyChecking=no core@worker-2 exit
-if [ $? -eq 0 ]; then
-  printf "\n Executing commands on worker-2"
-  printf "\n Output of systemctl status kubelet on worker-2 at " && date
-  ssh -oStrictHostKeyChecking=no core@worker-2 /bin/systemctl status kubelet
-  printf "\n Output of systemctl status crio on worker-2 at " && date
-  ssh core@worker-2 /bin/systemctl status crio
-  printf "\n Output of free -g on worker-2 at " && date
-  ssh core@worker-2 /usr/bin/free -g
-  printf "\n Output of /proc/meminfo on worker-2 at " && date
-  /bin/cat /proc/meminfo
-  printf "\n Output of systemd-cgtop on worker-2 at " && date
-  ssh core@worker-2 systemd-cgtop
-fi
+ 	printf "\n Output of systemd-cgtop on ${array[i]} at " && date
+ 	ssh core@${array[i]} systemd-cgtop
+
+ 	printf "\n***************************************************************\n"
+ fi	
+done
