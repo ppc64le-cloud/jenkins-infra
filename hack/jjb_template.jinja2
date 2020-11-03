@@ -41,6 +41,10 @@
         {% elif 'daily-ocp4.7-powervs-washington-p9-min' in JOB_NAME %}'0 06 * * * '
         {% elif 'daily-ocp4.7-powervs-frankfurt02-p9-min' in JOB_NAME %}''
         {% elif 'daily-ocp4.7-powervs-sydney-p9-min' in JOB_NAME %}'0 12 * * * '
+        {% elif 'daily-ocp4.7-powervs-sydney-p9-32gb-min' in JOB_NAME %}'0 15 * * *'
+        {% elif 'daily-ocp4.7-powervs-toronto-p9-32gb-min' in JOB_NAME %}''
+        {% elif 'daily-ocp4.7-powervs-washington-p9-32gb-min' in JOB_NAME %}' '
+        {% elif 'daily-ocp4.7-powervs-london-p9-32gb-min' in JOB_NAME %}'0 06 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
