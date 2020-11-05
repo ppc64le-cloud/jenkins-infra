@@ -75,7 +75,7 @@ pipeline {
                     openstack image list --insecure --format value -c Name > images.all.txt
                     for i in `cat images.all.txt`; do  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $i" " >> images.all.date.txt; echo $create_date >> images.all.date.txt ;done
                     cat images.all.date.txt | sort -k2 -r > images.all.date.sorted.txt
-                    
+
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.3\\|43' > rhcos-4.3.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.4\\|44' > rhcos-4.4.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.5\\|45' > rhcos-4.5.txt || true
@@ -85,6 +85,7 @@ pipeline {
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.0'  > rhel-8.0.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.1'  > rhel-8.1.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.2'  > rhel-8.2.txt || true
+                    cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.3'  > rhel-8.3.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel7\\.6'  > rhel-7.6.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel7\\.7'  > rhel-7.7.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel7\\.8'  > rhel-7.8.txt || true
@@ -128,6 +129,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.0.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.1.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.2.txt', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.3.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.6.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.7.txt', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.8.txt', fingerprint: true, onlyIfSuccessful: false
