@@ -61,11 +61,11 @@ pipeline {
 
 
         // Node Configuration
-        VCPUS_REQ_MASTER = "2"
+        VCPUS_REQ_MASTER = "1"
         MEM_REQ_MASTER = "16"
-        PRO_UNIT_REQ_MASTER = ".2"
+        PRO_UNIT_REQ_MASTER = ".5"
 
-        VCPUS_REQ_WORKER = "2"
+        VCPUS_REQ_WORKER = "1"
         MEM_REQ_WORKER = "16"
         PRO_UNIT_REQ_WORKER = ".5"
 
@@ -85,7 +85,7 @@ pipeline {
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P8"
         NODE_OS = "rhcos-45"
-        BASTION_OS  = "RHEL8.2"
+        BASTION_OS  = "RHEL8.3"
         TIMEOUT = "0"
         OS_NETWORK = "icp_network4"
         OS_PRIVATE_NETWORK = "icp_network4"
