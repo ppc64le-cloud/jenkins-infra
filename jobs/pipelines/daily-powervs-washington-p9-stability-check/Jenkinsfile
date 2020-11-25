@@ -40,7 +40,7 @@ pipeline {
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
 
-        BASTION_IMAGE_NAME = "rhel-83-11032020"
+        BASTION_IMAGE_NAME = "rhel-83-11242020"
 
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
