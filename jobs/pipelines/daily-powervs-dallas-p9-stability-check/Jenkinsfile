@@ -32,25 +32,20 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.29"
+        TERRAFORM_VER = "0.13.4"
         IBM_CLOUD_REGION = "us-south"
         IBM_CLOUD_ZONE = "us-south"
         SERVICE_INSTANCE_ID = "7cf52a5e-54eb-402c-a62f-0b15ddb80ae8"
 
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
-
-        BASTION_IMAGE_NAME = "rhel-83-11242020"
+        VM_ID_PREFIX = "ltccci"
+        BASTION_IMAGE_NAME = "rhel-83-12142020"
 
         SYSTEM_TYPE = "e880"
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         RHEL_SMT = "4"
-        CLUSTER_DOMAIN = "redhat.com"
-        INSTANCE_NAME = "ltccci"
-
-        SETUP_SQUID_PROXY = "true"
-
         TIMEOUT = "0"
 
         //Makefile variables
@@ -67,29 +62,7 @@ pipeline {
         WAIT_FOR_DEBUG = "0"
 	 }
 
-    stages {
-        stage('Setup terraform plugin') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo ' get the plugin from artifactory repo !'
-                        wget https://github.com/IBM-Cloud/terraform-provider-ibm/releases/download/v1.9.0/linux_amd64.zip
-                        mkdir -p ~/.terraform.d/plugins/linux_amd64/
-                        unzip linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
-                        '''
-                        }
-                    catch (err) {
-                        echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
-            }
-        }
+ stages {
         stage('Initialize Environment') {
             steps {
                 script {
@@ -114,7 +87,7 @@ pipeline {
                 }
             }
         }
-        stage('Deploy OCP Cluster') {
+        stage('Deploy VM') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -122,7 +95,7 @@ pipeline {
                     }
                     try {
                         sh '''
-                        echo 'Deploying Cluster!'
+                        echo 'Deploying VM!'
                         export TF_VAR_offline_remote_password=$TF_VAR_password
                         cd ${WORKSPACE}/deploy
                         make $TARGET || true
@@ -146,7 +119,7 @@ pipeline {
                         {
                             TIMEOUT_SEC=TIMEOUT_HRS*60*60
                         }
-                        echo "HOLDING THE CLUSTER FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
+                        echo "HOLDING THE VM FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
                         sleep TIMEOUT_SEC
                         throw err
                     }
@@ -154,7 +127,7 @@ pipeline {
             }
         }
 
-        stage('Check Network') {
+        stage('Stability Check') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -170,19 +143,15 @@ pipeline {
                             BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
                             [ $? -ne 0 ] && exit 1
                             if [ ! -z "${BASTION_IP}" ]; then
-                              ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} "yum install docker -y;
-                              docker pull registry.access.redhat.com/ubi8/ubi;
-                              docker pull quay.io/baselibrary/ubuntu;
-                              docker pull gcr.io/google-containers/busybox;
-                              docker pull docker.io/nginx;
-                              echo "List of docker images:";
-                              docker images;
-                              exit"
+                            scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/hack/stability-check.sh root@${BASTION_IP}:
+                            ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 stability-check.sh;
+                                                                                            ./stability-check.sh 2>&1 | tee -a stability-check.log;
+                                                                                            exit"
                             fi
                         '''
                     }
                     catch (err) {
-                         echo 'Error ! Tearing off the cluster failed to check network !'
+                         echo 'Error ! Tearing off the vm stability check failed!'
                          getArtifactsAndCleanOcp4(env.AUTH_URL)
                          throw err
                     }
@@ -195,6 +164,7 @@ pipeline {
         always {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/stability-check.log', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             notifyBySlack(currentBuild.result)
         }
