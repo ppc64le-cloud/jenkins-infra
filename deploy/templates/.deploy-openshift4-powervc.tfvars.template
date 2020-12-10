@@ -17,8 +17,8 @@ public_key  = ""
 
 bastion = { instance_type  = "__BASTION_TEMPLATE__", image_id = "__BASTION_IMAGE_ID__" }
 bootstrap = { instance_type  = "__BOOTSTRAP_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = 1 }
-master = { instance_type  = "__MASTER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = "__NUM_OF_MASTERS__" }
-worker = { instance_type  = "__WORKER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = "__NUM_OF_WORKERS__" }
+master = { instance_type  = "__MASTER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_MASTERS__ }
+worker = { instance_type  = "__WORKER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_WORKERS__ }
 
 ## RedHat Subscription credentials
 rhel_subscription_username = "__REDHAT_USERNAME__"
