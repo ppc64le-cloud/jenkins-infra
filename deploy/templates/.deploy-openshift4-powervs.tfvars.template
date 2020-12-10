@@ -7,8 +7,8 @@ service_instance_id = "__SERVICE_INSTANCE_ID__"
 ### Configure the Instance details
 bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__", "count"   = 1}
 bootstrap                   = {memory      = "__BOOTSTRAP_MEMORY__",   processors  = "__BOOTSTRAP_PROCESSORS__",  "count"   = 1}
-master                      = {memory      = "__MASTER_MEMORY__",   processors  = "__MASTER_PROCESSORS__",  "count"   = "__NUM_OF_MASTERS__"}
-worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = "__NUM_OF_WORKERS__"}
+master                      = {memory      = "__MASTER_MEMORY__",   processors  = "__MASTER_PROCESSORS__",  "count"   = __NUM_OF_MASTERS__}
+worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = __NUM_OF_WORKERS__}
 rhel_image_name     = "__BASTION_IMAGE_NAME__"
 rhcos_image_name    = "__RHCOS_IMAGE_NAME__"
 processor_type      = "shared"
@@ -16,7 +16,7 @@ system_type         = "__SYSTEM_TYPE__"
 network_name        = "__NETWORK_NAME__"
 
 rhel_username               = "__RHEL_USERNAME__"
-rhel_smt                    = "__RHEL_SMT__"
+rhel_smt                    = __RHEL_SMT__
 public_key_file             = "id_rsa.pub"
 private_key_file            = "id_rsa"
 private_key                 = ""
