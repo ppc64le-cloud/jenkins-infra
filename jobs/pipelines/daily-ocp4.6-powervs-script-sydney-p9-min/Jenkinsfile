@@ -99,7 +99,7 @@ pipeline {
         OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.6" //The downlod branch
 
         //Script arguments
-        ARTIFACTS_VERSION = "master"
+        //ARTIFACTS_VERSION = "master"
 
         TARGET = "deploy-openshift4-powervs-script"
         TERMPLATE_FILE = ".${TARGET}.tfvars.template"

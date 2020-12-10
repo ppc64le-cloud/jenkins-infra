@@ -13,10 +13,10 @@
         {% elif 'daily-ocp4.6-powervm-p9-max-multimasters-3w' in JOB_NAME %}'30 21 * * * '
         {% elif 'daily-ocp4.6-powervm-p8-maxx-multimasters' in JOB_NAME %}'30 13 * * * '
         {% elif 'daily-ocp4.6-powervm-p9-maxx-multimasters' in JOB_NAME %}'30 07 * * * '
-        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}'30 00'
-        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}'30 01'
-        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}'30 03'
-        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}'30 04'
+        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}'30 00 * * * '
+        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}'30 01 * * * '
+        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}'30 03 * * * '
+        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}'30 04 * * *'
         {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
         {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
         {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
@@ -27,6 +27,7 @@
         {% elif 'daily-powervs-washington-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
         {% elif 'daily-powervs-sydney-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
         {% elif 'daily-powervs-tokyo-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
+  
         {% elif 'daily-ocp4.5-powervs-script-sydney-p9-min' in JOB_NAME %}'0 18 * * * '
         {% elif 'daily-ocp4.5-powervs-script-tokyo-p9-min' in JOB_NAME %}'0 06 * * * '
         {% elif 'daily-ocp4.6-powervs-dallas-p9-min' in JOB_NAME %}''
@@ -49,6 +50,8 @@
         {% elif 'daily-ocp4.7-powervs-toronto-p9-32gb-min' in JOB_NAME %}''
         {% elif 'daily-ocp4.7-powervs-washington-p9-32gb-min' in JOB_NAME %}' '
         {% elif 'daily-ocp4.7-powervs-london-p9-32gb-min' in JOB_NAME %}'0 06 * * *'
+        {% elif 'daily-ocp4.7-powervs-tokyo-p9-min' in JOB_NAME %}'0 06 * * *'
+        {% elif 'daily-ocp4.7-powervs-tokyo-p9-32gb-min' in JOB_NAME %}'0 06 * * *'
         {% else %}''
         {% endif %}
     sandbox: true
