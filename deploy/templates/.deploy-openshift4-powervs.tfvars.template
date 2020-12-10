@@ -5,7 +5,7 @@ ibmcloud_zone       = "__IBM_CLOUD_ZONE__"
 service_instance_id = "__SERVICE_INSTANCE_ID__"
 
 ### Configure the Instance details
-bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__"}
+bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__", "count"   = 1}
 bootstrap                   = {memory      = "__BOOTSTRAP_MEMORY__",   processors  = "__BOOTSTRAP_PROCESSORS__",  "count"   = 1}
 master                      = {memory      = "__MASTER_MEMORY__",   processors  = "__MASTER_PROCESSORS__",  "count"   = "__NUM_OF_MASTERS__"}
 worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = "__NUM_OF_WORKERS__"}
