@@ -14,6 +14,7 @@ pipeline {
         ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
         DOCKER_PASSWORD = "${ARTIFACTORY_TOKEN}"
         CI_OCP_TOKEN = credentials('CI_OCP_TOKEN')
+        CI_OCP_TOKEN_2 = credentials('CI_OCP_TOKEN_2')
     }
     stages {
         stage('Clone mirror-openshift-releases') {
@@ -40,6 +41,9 @@ pipeline {
                         chmod +x oc
                         export PATH=$PATH:$PWD
                         oc login https://api.ci.openshift.org --token=${CI_OCP_TOKEN}
+                        oc registry login
+                        ./mirror-images.sh || true
+                        oc login --token=${CI_OCP_TOKEN_2} --server=https://api.ci.l2s4.p1.openshiftapps.com:6443
                         oc registry login
                         ./mirror-images.sh || true
                     '''
