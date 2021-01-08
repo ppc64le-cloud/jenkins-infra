@@ -105,7 +105,7 @@ pipeline {
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH="release-${OCP_RELEASE}"
-        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.4-powervm/ocp4.4_power_blacklist.txt"
+        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.4-powervm/ocp4.4_exclude_list.txt"
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
