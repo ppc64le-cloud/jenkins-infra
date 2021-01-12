@@ -11,6 +11,7 @@ int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
+boolean DEPLOYMENT_STATUS = false
 
 pipeline {
     agent {
@@ -213,6 +214,7 @@ pipeline {
                         '''
                         env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip").trim()
                         echo env.BASTION_IP
+                        DEPLOYMENT_STATUS = true
                         }
                     catch (err) {
                         TIMEOUT_HRS =  WAIT_FOR_DEBUG.toInteger()
@@ -333,8 +335,10 @@ pipeline {
                    line1=line.toLowerCase()
                     if ( line1  != null) {
                         if (logContent_modified.contains(line1)){
-                            INFRA_ISSUE = true
-                            ERROR_MESSAGE = line1
+                            if ( ! DEPLOYMENT_STATUS ){
+                                INFRA_ISSUE = true
+                                ERROR_MESSAGE = line1
+                            }
                         }
                     }
                 }
