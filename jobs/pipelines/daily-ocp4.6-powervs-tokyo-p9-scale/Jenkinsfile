@@ -376,14 +376,13 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_namespaces', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_deployments', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.pre.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.post.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cron.log', fingerprint: true, onlyIfSuccessful: false
             script {
-                  if (fileExists('time_taken_namespaces')) {
-                    SCALE_SUMMARY = readFile 'time_taken_namespaces'
+                if (fileExists('deploy/time_taken_namespaces') && fileExists('deploy/time_taken_namespaces')) {
+                    SCALE_SUMMARY = readFile 'deploy/time_taken_namespaces'
                     SCALE_SUMMARY.split('\n').each { line ->
                         if ( line  != null) {
                             if (line.contains('real')){
@@ -397,9 +396,7 @@ pipeline {
                             }
                         }
                     }
-                }
-                if (fileExists('time_taken_deployments')) {
-                    SCALE_SUMMARY = readFile 'time_taken_deployments'
+                    SCALE_SUMMARY = readFile 'deploy/time_taken_deployments'
                     SCALE_SUMMARY.split('\n').each { line ->
                         if ( line  != null) {
                             if (line.contains('real')){
@@ -413,13 +410,14 @@ pipeline {
                             }
                         }
                     }
+                SUMMARY = "Namespace time: " + REAL_TIME_NS + ", " + "Deployment time: " + REAL_TIME_DP
                 }
                 else
                 {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
+                    SUMMARY = "Scale test didn't run"
                 }
-                 SUMMARY = "Namespace time: " + REAL_TIME_NS + ", " + "Deployment time: " + REAL_TIME_DP
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
                 def logContent_modified=logContent.toLowerCase()
                 def infra_errors = readFile 'files/infra-issues.txt'
@@ -461,9 +459,9 @@ pipeline {
                 }
                 else{
                     echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
-                    E2E_SUMMARY = ERROR_MESSAGE
+                    SUMMARY = ERROR_MESSAGE
                 }
-            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+            notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, SUMMARY, env.RHCOS_IMAGE_NAME)
             cleanWs()
             }
         }

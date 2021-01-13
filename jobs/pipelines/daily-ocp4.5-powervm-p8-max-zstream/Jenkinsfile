@@ -10,6 +10,7 @@ int FAILS_PER_THRESHOLD
 int UNSTALE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
+boolean DEPLOYMENT_STATUS = false
 
 pipeline {
     agent {
@@ -338,6 +339,7 @@ pipeline {
                         '''
                         sleep 60
                         env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
+                        DEPLOYMENT_STATUS = true
                         }
                     catch (err) {
                         echo 'Error ! Tearing off the cluster !'
@@ -480,7 +482,9 @@ pipeline {
                 line1=line.toLowerCase()
                     if ( line1  != null) {
                         if (logContent_modified.contains(line1)){
-                            env.INFRA_ISSUE = true
+                            if ( ! DEPLOYMENT_STATUS ){
+                                INFRA_ISSUE = true
+                            }
                         }
                     }
                 }
