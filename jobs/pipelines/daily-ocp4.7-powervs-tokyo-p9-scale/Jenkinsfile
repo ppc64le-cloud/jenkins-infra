@@ -448,7 +448,7 @@ pipeline {
                 clusterInfoFields['clusterinfo'] = clusterInfo
 
                 if ( ! INFRA_ISSUE ) {
-                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervs', customDataMap: clusterInfoFields])
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervsscale', customDataMap: clusterInfoFields])
                 }
                 else{
                     echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
