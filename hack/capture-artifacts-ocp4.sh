@@ -43,6 +43,7 @@
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/cron.log .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/time_taken_deployments .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/time_taken_namespaces .
+            scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/stability-check.log .
         else
             echo 'Unable to access Bastion. You may delete the VMs manually'
         fi
