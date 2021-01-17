@@ -57,11 +57,11 @@ pipeline {
 
         // Node Configuration
         VCPUS_REQ_MASTER = "1"
-        MEM_REQ_MASTER = "16"
+        MEM_REQ_MASTER = "32"
         PRO_UNIT_REQ_MASTER = ".5"
 
         VCPUS_REQ_WORKER = "1"
-        MEM_REQ_WORKER = "16"
+        MEM_REQ_WORKER = "32"
         PRO_UNIT_REQ_WORKER = ".5"
 
         VCPUS_REQ_BOOTSTRAP = "2"
