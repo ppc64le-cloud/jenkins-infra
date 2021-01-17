@@ -10,12 +10,12 @@
         wget "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
         cp kubectl oc /usr/bin/
     fi
-    # Capturing Teraform template
+    # Capturing Terraform template
     if [ ${POWERVS} == "false" ] ; then
         BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip )
         [ $? -ne 0 ] && exit 1
     else
-        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+        BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip )
         [ $? -ne 0 ] && exit 1
     fi
     if [ ! -z "${BASTION_IP}" ]; then
@@ -25,7 +25,11 @@
             rm -rf ~/.kube
             mkdir ~/.kube
             scp -i id_rsa -o StrictHostKeyChecking=no  root@${BASTION_IP}:/root/openstack-upi/auth/kubeconfig ~/.kube/config
-            make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=etc_hosts_entries >> /etc/hosts
+            if [ ${POWERVS} == "false" ] ; then
+                make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=etc_hosts_entries >> /etc/hosts
+            else
+                make $TARGET:output TERRAFORM_OUTPUT_VAR=etc_hosts_entries >> /etc/hosts
+            fi
         else
             echo 'Unable to access the cluster. You may delete the VMs manually'
         fi
