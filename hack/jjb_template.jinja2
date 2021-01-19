@@ -3,47 +3,60 @@
     name: {{ JOB_NAME }}
     project-type: pipeline
     triggers:
-      - timed: {% if 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}'30 14 * * * '
-        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}'30 15 * * * '
-        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}'30 18 * * *'
-        {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}'30 19 * * *'
-        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}'30 00 * * * '
-        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}'30 01 * * * '
-        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}'30 03 * * * '
-        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}'30 04 * * *'
-        {% elif 'mirror-openshift-release' in JOB_NAME %}'@hourly'
-        {% elif 'poll-powervc-images' in JOB_NAME %}'@daily'
-        {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-frankfurt01-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-frankfurt02-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-london-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-toronto-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-washington-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-sydney-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
-        {% elif 'daily-powervs-tokyo-p9-stability-check' in JOB_NAME %}'0 */5 * * *'
+      - timed: {% if 'daily-ocp4.5-powervm-p8-min-multimasters' in JOB_NAME %}"00 14 * * * "
+
+        {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}"00 15 * * * "
+        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}"00 16 * * * "
+        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}"00 17 * * * "
+        {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}"00 18 * * * "
+
+        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}"00 19,23,03 * * * "
+        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}"00 20,00,04 * * * "
+        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}"00 21,01,05 * * * "
+        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}"00 22,02,06 * * * "
+
+        {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}"0 */5 * * *"
+        {% elif 'daily-powervs-frankfurt01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-frankfurt02-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-london-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-toronto-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-washington-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-sydney-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
+        {% elif 'daily-powervs-tokyo-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
   
-        {% elif 'daily-ocp4.5-powervs-script-sydney-p9-min' in JOB_NAME %}'0 18 * * * '
-        {% elif 'daily-ocp4.5-powervs-script-tokyo-p9-min' in JOB_NAME %}'0 06 * * * '
-        {% elif 'daily-ocp4.6-powervs-dallas-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.6-powervs-frankfurt01-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.6-powervs-toronto-p9-min' in JOB_NAME %}'0 08 * * *'
-        {% elif 'daily-ocp4.6-powervs-sydney-p9-min' in JOB_NAME %}'0 06 * * * '
-        {% elif 'daily-ocp4.6-powervs-script-sydney-p9-min' in JOB_NAME %}'0 08 * * * '
-        {% elif 'daily-ocp4.6-powervs-tokyo-p9-scale' in JOB_NAME %}'0 10 * * * '
-        {% elif 'daily-ocp4.7-powervs-dallas-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.7-powervs-frankfurt01-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.7-powervs-london-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.7-powervs-toronto-p9-min' in JOB_NAME %}'0 06 * * *'
-        {% elif 'daily-ocp4.7-powervs-washington-p9-min' in JOB_NAME %}'0 06 * * * '
-        {% elif 'daily-ocp4.7-powervs-frankfurt02-p9-min' in JOB_NAME %}''
-        {% elif 'daily-ocp4.7-powervs-sydney-p9-min' in JOB_NAME %}'0 12 * * * '
-        {% elif 'daily-ocp4.7-powervs-tokyo-p9-min' in JOB_NAME %}'0 06 * * *'
-        {% elif 'daily-ocp4.7-powervs-script-tokyo-p9-min' in JOB_NAME %}'0 09 * * *'
-        {% elif 'daily-ocp4.7-powervs-tokyo-p9-scale' in JOB_NAME %}'0 15 * * *'
-        {% else %}''
+        {% elif 'daily-ocp4.5-powervs-script-sydney-p9-min' in JOB_NAME %}"0 20 * * * "
+        {% elif 'daily-ocp4.6-powervs-sydney-p9-min' in JOB_NAME %}""
+        {% elif 'daily-ocp4.6-powervs-script-sydney-p9-min' in JOB_NAME %}"0 16 * * * "
+        {% elif 'daily-ocp4.7-powervs-sydney-p9-min' in JOB_NAME %}"0 13 * * * "
+
+        {% elif 'daily-ocp4.5-powervs-script-tokyo-p9-min' in JOB_NAME %}"0 00 * * * "
+        {% elif 'daily-ocp4.6-powervs-tokyo-p9-scale' in JOB_NAME %}"0 20 * * * "
+        {% elif 'daily-ocp4.7-powervs-tokyo-p9-min' in JOB_NAME %}"0 19 * * * "
+        {% elif 'daily-ocp4.7-powervs-script-tokyo-p9-min' in JOB_NAME %}"0 16 * * * "
+        {% elif 'daily-ocp4.7-powervs-tokyo-p9-scale' in JOB_NAME %}"0 15 * * * "
+
+        {% elif 'daily-ocp4.6-powervs-dallas-p9-min' in JOB_NAME %}"0 10 * * * "
+        {% elif 'daily-ocp4.7-powervs-dallas-p9-min' in JOB_NAME %}"0 06 * * * "
+
+        {% elif 'daily-ocp4.6-powervs-frankfurt01-p9-min' in JOB_NAME %}""
+        {% elif 'daily-ocp4.7-powervs-frankfurt01-p9-min' in JOB_NAME %}""
+
+        {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}"0 04 * * * "
+        {% elif 'daily-ocp4.7-powervs-london-p9-min' in JOB_NAME %}"0 00 * * * "
+
+        {% elif 'daily-ocp4.6-powervs-toronto-p9-min' in JOB_NAME %}"0 09 * * * "
+        {% elif 'daily-ocp4.7-powervs-toronto-p9-min' in JOB_NAME %}"0 05 * * * "
+
+        {% elif 'daily-ocp4.7-powervs-washington-p9-min' in JOB_NAME %}"0 05 * * * "
+
+        {% elif 'daily-ocp4.7-powervs-frankfurt02-p9-min' in JOB_NAME %}""
+
+        {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
+        {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
+        {% else %}""
         {% endif %}
     sandbox: true
+    concurrent: true
     pipeline-scm:
       scm:
         - git:
