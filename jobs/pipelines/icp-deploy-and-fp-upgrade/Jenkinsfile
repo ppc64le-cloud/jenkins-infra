@@ -882,7 +882,7 @@ pipeline {
         TIMEOUT = "${params.KeepFor}"
         OS_NETWORK = "${params.Network}"
         OS_PRIVATE_NETWORK = "${params.Network}"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         OFFLINE_IMAGE_LOCATION = "https://na.artifactory.swg-devops.com/artifactory/hyc-cloud-private-${DEPLOY_REPO}-generic-local/${BUILD_TYPE}/${ICP_VERSION}/${OFFLINE_TARBALL}".trim()
         BASE_UPGRADE_LOCATION = "${params.DeploymentType == 'One-Time-Upgrade' ? "https://na.artifactory.swg-devops.com/artifactory/hyc-cloud-private-${UPGRADE_REPO}-generic-local/${UPGRADE_BUILD_TYPE}/${UPGRADE_ICP_VERSION}/${UPGRADE_OFFLINE_TARBALL}" : ""}".trim()
         FIXPACK_DOWNLOAD_LOCATION = "${params.DeploymentType == 'Multi-Level-FP-Upgrade' ? "${RELEASED_FIXPACK_LOCS}, https://na.artifactory.swg-devops.com/artifactory/hyc-cloud-private-${UPGRADE_REPO}-generic-local/${UPGRADE_BUILD_TYPE}/${UPGRADE_ICP_VERSION}/${UPGRADE_OFFLINE_TARBALL}" : ""}".trim()
@@ -942,7 +942,7 @@ pipeline {
                 }
             }
         }
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -1029,7 +1029,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -1146,7 +1146,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/systeminfo.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cluster.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cluster/config.yaml', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             //notifyBySlack(currentBuild.result)
         }

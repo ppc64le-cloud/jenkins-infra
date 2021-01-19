@@ -7,7 +7,7 @@ def SCALE_SUMMARY
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
-int UNSTALE_PER_THRESHOLD
+int UNSTABLE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 def REAL_TIME_NS
 def USER_TIME_NS
@@ -94,14 +94,14 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-harness
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The download branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
         NUM_OF_WORKERS = "3"
         NUM_OF_MASTERS = "3"
 
         TARGET = "deploy-openshift4-powervc"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         REDHAT_RELEASE = "7.6"
         RHEL_USERNAME = "root"
@@ -158,7 +158,7 @@ pipeline {
         }
 
 	    //Checkout the installer git repo
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -477,7 +477,7 @@ pipeline {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'time_taken_namespaces', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'time_taken_deployments', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.pre.tar.gz', fingerprint: true, onlyIfSuccessful: false
@@ -519,7 +519,7 @@ pipeline {
                 }
                 else
                 {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                 }
                 SUMMARY = "Namespace time: " + REAL_TIME_NS + ", " + "Deployment time: " + REAL_TIME_DP

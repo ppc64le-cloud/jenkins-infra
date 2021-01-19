@@ -121,7 +121,7 @@ pipeline {
         
         TIMEOUT = "0"
         TARGET = "deploy-openshift-powervc"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         OFFLINE_IMAGE_LOCATION = ""
         OCP_ENV = true
         IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
@@ -132,7 +132,7 @@ pipeline {
         //BUILD_HARNESS_ORG="sudeeshjohn"
 	}
     stages {
-        stage('Prepare Teraform Template') 
+        stage('Prepare Terraform Template') 
         {
             steps {
                 script 
@@ -185,7 +185,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -316,7 +316,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/systeminfo.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cluster.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cluster/config.yaml', fingerprint: true, onlyIfSuccessful: false           
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             notifyBySlack(currentBuild.result) 
         }

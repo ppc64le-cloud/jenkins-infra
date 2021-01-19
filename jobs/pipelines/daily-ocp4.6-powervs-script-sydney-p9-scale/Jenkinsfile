@@ -112,7 +112,7 @@ pipeline {
         RELEASE_VER="4.6"
 
         TARGET = "deploy-openshift4-powervs-script"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="powercloud-cicd"
@@ -182,7 +182,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -390,7 +390,7 @@ pipeline {
             getArtifactsAndCleanOcp4PvsScript(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_namespaces', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_deployments', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.post.tar.gz', fingerprint: true, onlyIfSuccessful: false
@@ -429,7 +429,7 @@ pipeline {
                 }
                 else
                 {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                     SUMMARY = "Scale test didn't run"
                 }

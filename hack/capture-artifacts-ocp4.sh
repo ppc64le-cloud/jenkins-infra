@@ -5,7 +5,7 @@
     else
         exit 1 
     fi
-    # Capturing Teraform template
+    # Capturing Terraform template
     if [ ! -f ${WORKSPACE}/deploy/.${TARGET}.tfvars ]; then
         echo "${WORKSPACE}/deploy/.${TARGET}.tfvars not found!"
         exit 1
@@ -20,13 +20,14 @@
         sed -i "s|rhel_subscription_password.*=.*$|rhel_subscription_password = ************|g" ${TARGET}.tfvars
         sed -i "s|github_token.*=.*$|github_token = ************|g" ${TARGET}.tfvars
         sed -i "s|ibmcloud_api_key.*=.*$|ibmcloud_api_key = ************|g" ${TARGET}.tfvars
-        cp ${TARGET}.tfvars powervc.tfvars
+        cp ${TARGET}.tfvars vars.tfvars
+        tar -czvf ${WORKSPACE}/deploy/logs.tar.gz ${WORKSPACE}/deploy/.${TARGET}/logs
     fi
     if [ ${POWERVS} == "false" ] ; then
-        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip )
+        BASTION_IP=$(make $TARGET:output  TERRAFORM_OUTPUT_VAR=bastion_ip )
         [ $? -ne 0 ] && exit 1
     else
-        BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+        BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip )
         [ $? -ne 0 ] && exit 1
     fi
     if [ ! -z "${BASTION_IP}" ]; then

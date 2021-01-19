@@ -549,13 +549,13 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.3" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.3" //The download branch
 
         NUM_OF_WORKERS = "${params.DeployWorker == true ? params.NumOfWorkers : 0}"
         NUM_OF_MASTERS = "${params.DeployMaster == true ? params.NumOfMasters : 0}"
 
         TARGET = "deploy-openshift4-powervc"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         //OPENSHIFT_INSTALL_TARBALL = "https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.3.0-0.nightly-ppc64le-2020-02-20-212303/openshift-install-linux-4.3.0-0.nightly-ppc64le-2020-02-20-212303.tar.gz"
 
         REDHAT_RELEASE = "7.6"
@@ -579,7 +579,7 @@ pipeline {
 
     stages {
         //Checkout the installer git repo
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -686,7 +686,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -845,7 +845,7 @@ pipeline {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: true
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: true
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             //notifyBySlack(currentBuild.result, '#cloud-ci', 'cloud-ci')
         }
