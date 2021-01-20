@@ -386,6 +386,11 @@ deploy-openshift4-powervs: %deploy-openshift4-powervs:
 deploy-openshift4-powervs\:redeploy:
 	@$(SELF) -s deploy:openshift4:powervs:redeploy OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+.PHONY: deploy-openshift4-powervs\:output
+## Clean up power-openstack build artifacts
+deploy-openshift4-powervs\:output:
+	@$(SELF) -s deploy:openshift4:powervs:output OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=$(TERRAFORM_OUTPUT_VAR)
+
 .PHONY: deploy-openshift4-powervs\:clean
 ## Clean up power-openstack build artifacts
 deploy-openshift4-powervs\:clean:
@@ -411,6 +416,11 @@ deploy-openshift4-powervs-single-instance: %deploy-openshift4-powervs-single-ins
 ## Re deploy on powervs tenant
 deploy-openshift4-powervs-single-instance\:redeploy:
 	@$(SELF) -s deploy:openshift4:powervs:single:instance:redeploy OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
+
+.PHONY: deploy-openshift4-powervs-single-instance\:output
+## output up power-openstack build artifacts
+deploy-openshift4-powervs-single-instance\:output:
+	@$(SELF) -s deploy:openshift4:powervs:single:instance:output OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=$(TERRAFORM_OUTPUT_VAR)
 
 .PHONY: deploy-openshift4-powervs-single-instance\:clean
 ## Clean up power-openstack build artifacts
