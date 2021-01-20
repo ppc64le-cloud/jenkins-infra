@@ -302,6 +302,10 @@ deploy-openshift4-powervc: %deploy-openshift4-powervc:
 deploy-openshift4-powervc\:redeploy:
 	@$(SELF) -s deploy:openshift4:powervc:redeploy OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVC_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
+.PHONY: deploy-openshift4-powervc\:output
+## Re deploy on powervc tenant
+deploy-openshift4-powervc\:output:
+	@$(SELF) -s deploy:openshift4:powervc:output OPENSHIFT_POWERVC_DEPLOY_DIR=$(TERRAFORM_DIR) TERRAFORM_OUTPUT_VAR=$(TERRAFORM_OUTPUT_VAR)
 
 .PHONY: deploy-openshift4-powervc\:clean
 ## Clean up power-openstack build artifacts
