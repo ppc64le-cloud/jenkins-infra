@@ -54,7 +54,7 @@ pipeline {
         OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH="master" //The download branch
 
         TARGET = "deploy-openshift4-powervs-single-instance"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness for creating single powervs instance
         BUILD_HARNESS_ORG="powercloud-cicd"
@@ -165,7 +165,7 @@ pipeline {
     post {
         always {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/stability-check.log', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
             notifyBySlack(currentBuild.result)

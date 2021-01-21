@@ -7,7 +7,7 @@ def E2E_SUMMARY
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
-int UNSTALE_PER_THRESHOLD
+int UNSTABLE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
 boolean DEPLOYMENT_STATUS = false
@@ -88,14 +88,14 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The downlod branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The download branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
         NUM_OF_WORKERS = "2"
         NUM_OF_MASTERS = "3"
 
         TARGET = "deploy-openshift4-powervc"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         REDHAT_RELEASE = "7.6"
         RHEL_USERNAME = "root"
@@ -151,7 +151,7 @@ pipeline {
             }
         }
         //Checkout the installer git repo
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -283,7 +283,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -404,7 +404,7 @@ pipeline {
                         '''
                     }
                     catch (err) {
-                        echo 'Error ! ENV setup failed!'
+                        echo 'Error ! ansible setup failed!'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
@@ -450,7 +450,7 @@ pipeline {
                         '''
                         }
                     catch (err) {
-                        echo 'Error ! Tearing off the cluster !'
+                        echo 'Error ! Gathering pprof and prometheus data failed!'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
@@ -484,7 +484,7 @@ pipeline {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
@@ -501,7 +501,7 @@ pipeline {
                             SKIP = STR[2].split()
                             TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
                             FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                            UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                            UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                         }
                         else {
                             E2E_SUMMARY = E2E_SUMMARY.trim()
@@ -510,7 +510,7 @@ pipeline {
                             SKIP = STR[1].split()
                             TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
                             FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                            UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                            UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                         }
                     }
                 }
@@ -539,7 +539,7 @@ pipeline {
                 }
                 else
                 {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
                     if (fileExists('deploy/summary.txt') && !E2E_SUMMARY?.trim()) {
                         currentBuild.result = 'UNSTABLE'
                         E2E_SUMMARY = "E2e test didn't run"

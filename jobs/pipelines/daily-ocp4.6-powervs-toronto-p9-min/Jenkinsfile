@@ -8,7 +8,7 @@ def ERROR_MESSAGE
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
-int UNSTALE_PER_THRESHOLD
+int UNSTABLE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
 boolean DEPLOYMENT_STATUS = false
@@ -79,7 +79,7 @@ pipeline {
         HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
         HELPERNODE_TAG = "5eab3db53976bb16be582f2edc2de02f7510050d"
         INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-        INSTALL_PLAYBOOT_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
+        INSTALL_PLAYBOOK_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
 
         UPGRADE_IMAGE = ""
         UPGRADE_PAUSE_TIME = ""
@@ -97,10 +97,10 @@ pipeline {
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.6" //The downlod branch
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.6" //The download branch
 
         TARGET = "deploy-openshift4-powervs"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="powercloud-cicd"
@@ -129,7 +129,7 @@ pipeline {
             }
         }
         //Checkout the installer git repo
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -192,7 +192,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -318,7 +318,7 @@ pipeline {
                         '''
                     }
                     catch (err) {
-                        echo 'Error ! ENV setup failed!'
+                        echo 'Error ! ansible setup failed!'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
@@ -344,7 +344,7 @@ pipeline {
                         '''
                         }
                     catch (err) {
-                        echo 'Error ! Tearing off the cluster !'
+                        echo 'Error ! Kubectl setup  !'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
@@ -379,7 +379,7 @@ pipeline {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
@@ -395,7 +395,7 @@ pipeline {
                         SKIP = STR[2].split()
                         TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
                         FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                     }
                     else {
                         E2E_SUMMARY = E2E_SUMMARY.trim()
@@ -404,7 +404,7 @@ pipeline {
                         SKIP = STR[1].split()
                         TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
                         FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTALE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
                     }
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
@@ -433,7 +433,7 @@ pipeline {
                 }
                 else
                 {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                 }
                 clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL

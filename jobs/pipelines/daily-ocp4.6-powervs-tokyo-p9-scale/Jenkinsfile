@@ -8,7 +8,7 @@ def ERROR_MESSAGE
 def clusterInfoFields = [:]
 def clusterInfo = [:]
 int FAILS_PER_THRESHOLD
-int UNSTALE_PER_THRESHOLD
+int UNSTABLE_PER_THRESHOLD
 boolean INFRA_ISSUE = false
 env.BASTION_IP = ""
 boolean DEPLOYMENT_STATUS = false
@@ -87,7 +87,7 @@ pipeline {
         HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
         HELPERNODE_TAG = "5eab3db53976bb16be582f2edc2de02f7510050d"
         INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-        INSTALL_PLAYBOOT_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
+        INSTALL_PLAYBOOK_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
 
         UPGRADE_IMAGE = ""
         UPGRADE_PAUSE_TIME = ""
@@ -108,7 +108,7 @@ pipeline {
         OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.6" //The download branch
 
         TARGET = "deploy-openshift4-powervs"
-        TERMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
         BUILD_HARNESS_ORG="powercloud-cicd"
@@ -137,7 +137,7 @@ pipeline {
             }
         }
         //Checkout the installer git repo
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -200,7 +200,7 @@ pipeline {
                 }
             }
         }
-        stage('Initilize Environment') {
+        stage('Initialize Environment') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -418,7 +418,7 @@ pipeline {
             getArtifactsAndCleanOcp4(env.AUTH_URL)
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_namespaces', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/time_taken_deployments', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/powervc.tfvars', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-post.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.post.tar.gz', fingerprint: true, onlyIfSuccessful: false
@@ -457,7 +457,7 @@ pipeline {
                 }
                 else
                 {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummay-test-summary.xml'])
+                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
                     currentBuild.result = 'FAILURE'
                     SUMMARY = "Scale test didn't run"
                 }

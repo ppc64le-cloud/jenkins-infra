@@ -5,7 +5,7 @@
     else
         exit 1 
     fi
-    # Capturing Teraform template
+    # Capturing Terraform template
     if [ ! -f ${WORKSPACE}/deploy/.${TARGET}.tfvars ]; then
         echo "${WORKSPACE}/deploy/.${TARGET}.tfvars not found!"
         exit 1
@@ -18,7 +18,7 @@
         sed -i "s|header.*X-JFrog-Art-Api.*$|header.*X-JFrog-Art-Api: ************|g" ${TARGET}.tfvars
         sed -i "s|password.*=.*$|password = ************|g" ${TARGET}.tfvars
         sed -i "s|rhel_subscription_password.*=.*$|rhel_subscription_password = ************|g" ${TARGET}.tfvars
-        cp ${TARGET}.tfvars powervc.tfvars
+        cp ${TARGET}.tfvars vars.tfvars
     fi
     if [ ${OCP_ENV} == true ];then install_dir="/root" ;else install_dir="/opt/ibm";fi
     MASTER_NODE=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=master-node || true)

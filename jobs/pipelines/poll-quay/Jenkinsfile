@@ -39,7 +39,7 @@ pipeline {
                 }
             }
         }
-        stage('Prepare Teraform Template') {
+        stage('Prepare Terraform Template') {
             steps {
                 script {
                     ansiColor('xterm') {
