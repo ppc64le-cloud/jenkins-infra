@@ -3,17 +3,17 @@
     name: {{ JOB_NAME }}
     project-type: pipeline
     triggers:
-      - timed: {% if 'daily-ocp4.5-powervm-p8-min-multimasters' in JOB_NAME %}"00 14 * * * "
+      - timed: {% if 'daily-ocp4.5-powervm-p8-min-multimasters' in JOB_NAME %}"00 13 * * * "
 
-        {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}"00 15 * * * "
+        {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}"00 14 * * * "
+        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}"00 15 * * * "
         {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}"00 16 * * * "
-        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}"00 17 * * * "
-        {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}"00 18 * * * "
+        {% elif 'daily-ocp4.6-powervm-p9-max-multimasters' in JOB_NAME %}"00 17 * * * "
 
-        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}"00 19,23,03 * * * "
-        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}"00 20,00,04 * * * "
-        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}"00 21,01,05 * * * "
-        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}"00 22,02,06 * * * "
+        {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}"00 18,23,05 * * * "
+        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}"00 19,00,06 * * * "
+        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}"00 21,02,07 * * * "
+        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}"00 22,03,08 * * * "
 
         {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}"0 */5 * * *"
         {% elif 'daily-powervs-frankfurt01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
