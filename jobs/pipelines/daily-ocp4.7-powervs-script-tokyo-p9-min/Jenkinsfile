@@ -60,8 +60,8 @@ pipeline {
         WORKER_PROCESSORS = ".5"
         NUM_OF_WORKERS = "2"
 
-        BASTION_IMAGE_NAME = "rhel-83-11242020"
-        RHCOS_IMAGE_NAME = "rhcos-47-10172020"
+        BASTION_IMAGE_NAME = "rhel-83-12142020"
+        RHCOS_IMAGE_NAME = "rhcos-47-01222021"
 
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
