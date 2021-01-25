@@ -1,8 +1,6 @@
 @Library('pcloud-jenkins-library') _
 //Define global variables
 env.DISTRO = ""
-def TIMEOUT_SEC
-def TIMEOUT_MIN
 
 pipeline {
     agent {
@@ -16,20 +14,10 @@ pipeline {
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
-        TF_VAR_user_name = credentials('GITHUB_USER')
-        DOCKER_USER = credentials('DOCKER_USER')
-        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
-        TF_VAR_repo_user = credentials('GITHUB_USER')
-        TF_VAR_password = credentials('TF_VAR_password')
         IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
-        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
-        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-        PUBLIC_GITHUB_USER = credentials('PUBLIC_GITHUB_USER')
-        PUBLIC_GITHUB_TOKEN = credentials('PUBLIC_GITHUB_TOKEN')
-
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
@@ -46,7 +34,7 @@ pipeline {
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         RHEL_SMT = "4"
-        TIMEOUT = "0"
+
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
         OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH="master" //The download branch
@@ -58,112 +46,33 @@ pipeline {
         BUILD_HARNESS_ORG="powercloud-cicd"
         BUILD_HARNESS_BRANCH="master"
         POWERVS = true
+        SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "0"
-	 }
- stages {
+	}
+    stages {
         stage('Initialize Environment') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo 'Initializing supporting repos and keys !'
-
-                        cd ${WORKSPACE}/deploy
-                        make init
-                        make keys
-                        make setup-dependencies
-                        '''
-                        }
-                    catch (err) {
-                        echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
+                initializeEnvironment()
             }
         }
         stage('Deploy VM') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo 'Deploying VM!'
-                        export TF_VAR_offline_remote_password=$TF_VAR_password
-                        cd ${WORKSPACE}/deploy
-                        make $TARGET || true
-                        retries=0
-                        until [ "$retries" -ge 3 ]
-                        do
-                                if [ "$retries" -eq 2 ]; then
-                                        make $TARGET:redeploy
-                                        sleep 60
-                                else
-                                        make $TARGET:redeploy || true
-                                fi
-                                retries=$((retries+1))
-                                sleep 10
-                        done
-                        '''
-                        }
-                    catch (err) {
-                        TIMEOUT_HRS =  WAIT_FOR_DEBUG.toInteger()
-                        if ( TIMEOUT_HRS != 0 )
-                        {
-                            TIMEOUT_SEC=TIMEOUT_HRS*60*60
-                        }
-                        echo "HOLDING THE VM FOR DEBUGGING, FOR ${TIMEOUT_HRS} MINUTES"
-                        sleep TIMEOUT_SEC
-                        throw err
-                    }
-                }
+                deployCluster()
             }
         }
 
         stage('Stability Check') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                     echo ""
-                    }
-                    try {
-                        sh '''
-                            if [ -d ${WORKSPACE}/deploy ];then
-                               cd ${WORKSPACE}/deploy
-                            else
-                                exit 1
-                            fi
-                            BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
-                            [ $? -ne 0 ] && exit 1
-                            if [ ! -z "${BASTION_IP}" ]; then
-                            scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/hack/stability-check.sh root@${BASTION_IP}:
-                            ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 stability-check.sh;
-                                                                                            ./stability-check.sh 2>&1 | tee -a stability-check.log;
-                                                                                            exit"
-                            fi
-                        '''
-                    }
-                    catch (err) {
-                         echo 'Error ! Tearing off the vm stability check failed!'
-                         getArtifactsAndCleanOcp4(env.AUTH_URL)
-                         throw err
-                    }
-                 }
+                checkStability()
              }
         }
     }
 
     post {
         always {
-            getArtifactsAndCleanOcp4(env.AUTH_URL)
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/stability-check.log', fingerprint: true, onlyIfSuccessful: false
+            getArtifactsAndCleanOcp4()
             script {
+                archiveAllArtifacts("deploy/vars.tfvars", "deploy/stability-check.log")
                 message = "VM Image:`${env.BASTION_IMAGE_NAME}`, System Type: `${env.SYSTEM_TYPE}`, Private Network: `${env.NETWORK_NAME}` "
                 notifyBySlack(currentBuild.result, message)
                 cleanWs()
