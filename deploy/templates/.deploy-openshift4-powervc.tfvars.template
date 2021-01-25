@@ -8,6 +8,7 @@ network_name = "__OS_NETWORK__"
 openstack_availability_zone = "__AVAILABILITY_ZONE__"
 tenant_name = "__OS_TENANT_NAME__"
 domain_name = "Default"
+network_type = "__NETWORK_TYPE__"
 
 public_key_file = "id_rsa.pub"
 private_key_file  = "id_rsa"
