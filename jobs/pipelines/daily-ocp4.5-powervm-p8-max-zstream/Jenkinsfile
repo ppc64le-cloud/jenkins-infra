@@ -556,7 +556,9 @@ pipeline {
                         echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
                         E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
                     }
-                    notifyBySlackOcp4(currentBuild.result, env.OPENSHIFT_INSTALL_TARBALL, E2E_SUMMARY, env.RHCOS_IMAGE_NAME)
+                OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
+                message = "e2e summary:`${E2E_SUMMARY}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
+                notifyBySlack(currentBuild.result, message)
                 }
             }
         }
