@@ -1148,7 +1148,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cluster/config.yaml', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
             cleanWs()
-            //notifyBySlack(currentBuild.result)
+            //notifyBySlack(currentBuild.result, " ")
         }
     }
 }
