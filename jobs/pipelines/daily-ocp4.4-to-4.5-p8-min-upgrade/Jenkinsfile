@@ -417,11 +417,11 @@ pipeline {
                 clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
 
                 clusterInfoFields['clusterinfo'] = clusterInfo
+                OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
+                message = "e2e summary:`${E2E_SUMMARY}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
             }
             step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
             cleanWs()
-            OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
-            message = "e2e summary:`${E2E_SUMMARY}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
             notifyBySlack(currentBuild.result, message)
         }
     }
