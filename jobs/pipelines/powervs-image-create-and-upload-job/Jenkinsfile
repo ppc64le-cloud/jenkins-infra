@@ -109,7 +109,7 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'image_list.txt', fingerprint: true, onlyIfSuccessful: true
             archiveArtifacts allowEmptyArchive: true, artifacts: 'instance_list_output.txt', fingerprint: true, onlyIfSuccessful: true
             cleanWs()
-            notifyBySlack(currentBuild.result)
+            notifyBySlack(currentBuild.result, " ")
         }
     }
 }
