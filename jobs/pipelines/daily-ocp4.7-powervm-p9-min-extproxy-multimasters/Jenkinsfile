@@ -114,10 +114,10 @@ pipeline {
         SCALE_NUM_OF_DEPLOYMENTS = "100"
 
         CHRONY_CONFIG = "true"
-        
-        SETUP_SQUID_PROXY = false
-        PROXY = {}
-
+               
+        SETUP_SQUID_PROXY = "false"
+        PROXY_ADDRESS = "9.114.99.234"
+ 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
@@ -214,7 +214,7 @@ pipeline {
                         {
                             env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.6.0-0.nightly-2020-10-03-051134/openshift-client-linux.tar.gz"
                         }
-                        env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.AVAILABILITY_ZONE= "p9"
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"

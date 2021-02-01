@@ -77,6 +77,9 @@ ocp4_extras_playbook_tag = "335a0dc1b329c3f05e3b48409441d9eb1420c27b"
 
 chrony_config_servers = [ {server = "0.centos.pool.ntp.org", options = "iburst"}, {server = "1.centos.pool.ntp.org", options = "iburst"} ]
 
+setup_squid_proxy = "__SETUP_SQUID_PROXY__"
+proxy = {server = "__PROXY_ADDRESS__"}
+
 cs_install                  = __CS_INSTALL__
 cs_project_name             = "ibm-common-services"
 cs_subscription_channel     = "stable-v1"
