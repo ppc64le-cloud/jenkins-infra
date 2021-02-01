@@ -15,7 +15,8 @@
         {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}"00 20,04,12 * * * "
         {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}"00 00,08 * * * "
         {% elif 'daily-ocp4.7-powervm-p9-max-multimasters-sriov' in JOB_NAME %}"00 12 * * 1,4 "
-        
+        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters-ssp' in JOB_NAME %}""
+
         {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}"0 */5 * * *"
         {% elif 'daily-powervs-frankfurt01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
         {% elif 'daily-powervs-frankfurt02-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
