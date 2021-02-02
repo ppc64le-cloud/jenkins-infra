@@ -414,7 +414,7 @@ pipeline {
                 }
             }
         }
-        stage('Setup Kubectl') {
+        stage('Setup Kubectl and check proxy config') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -429,6 +429,8 @@ pipeline {
                         oc get nodes
                         echo 'Get the Cluster Operators'
                         oc get co
+                        echo 'Get Proxy Details'
+                        oc get proxy cluster -oyaml        
                         '''
                         }
                     catch (err) {

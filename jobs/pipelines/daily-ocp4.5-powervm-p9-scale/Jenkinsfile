@@ -123,6 +123,9 @@ pipeline {
 
         CHRONY_CONFIG = "true"
 
+        SETUP_SQUID_PROXY = "false"
+        PROXY_ADDRESS = ""
+
         OCP4_ENV = true
 
         //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
