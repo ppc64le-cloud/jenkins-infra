@@ -116,6 +116,9 @@ pipeline {
 
         CHRONY_CONFIG = "true"
 
+        SETUP_SQUID_PROXY = "false"
+        PROXY_ADDRESS = ""
+
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 

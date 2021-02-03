@@ -42,7 +42,7 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "0.12.23"
+        TERRAFORM_VER = "0.13.0"
         TEST_SUITE = "ppc64le-edge"
         OS = "linux"
         OS_IDENTITY_API_VERSION='3'
@@ -56,11 +56,11 @@ pipeline {
 
 
         // Node Configuration
-        VCPUS_REQ_MASTER = "2"
+        VCPUS_REQ_MASTER = "1"
         MEM_REQ_MASTER = "32"
         PRO_UNIT_REQ_MASTER = ".5"
 
-        VCPUS_REQ_WORKER = "4"
+        VCPUS_REQ_WORKER = "1"
         MEM_REQ_WORKER = "32"
         PRO_UNIT_REQ_WORKER = ".5"
 
@@ -68,7 +68,7 @@ pipeline {
         MEM_REQ_BOOTSTRAP = "16"
         PRO_UNIT_REQ_BOOTSTRAP = ".2"
 
-        VCPUS_REQ_BASTION = "1"
+        VCPUS_REQ_BASTION = "2"
         MEM_REQ_BASTION = "8"
         PRO_UNIT_REQ_BASTION = ".1"
 
@@ -78,17 +78,17 @@ pipeline {
         BASTION_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bastion"
 
         VIR_CHOSE = "PowerVM"
-        HARDWARE_CHOSE = "P8"
-        NODE_OS = "rhcos-45"
+        HARDWARE_CHOSE = "P9"
+        NODE_OS = "rhcos-47"
         BASTION_OS  = "RHEL8.3"
         TIMEOUT = "0"
         OS_NETWORK = "icp_network4"
         OS_PRIVATE_NETWORK = "icp_network4"
-        OCP_RELEASE="4.5"
+        OCP_RELEASE="4.7"
 
         //Makefile variables
         TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The download branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The download branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
         NUM_OF_WORKERS = "2"
@@ -105,19 +105,19 @@ pipeline {
         ENABLE_E2E_TEST = "true"
         E2E_GIT = "https://github.com/openshift/origin"
         E2E_BRANCH="release-${OCP_RELEASE}"
-        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.5-powervm/ocp4.5_power_exclude_list.txt"
+        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${OCP_RELEASE}-powervm/ocp${OCP_RELEASE}_power_exclude_list.txt"
         CS_INSTALL = "false"
         ENABLE_E2E_UPGRADE = "false"
         ENABLE_SCALE_TEST = "false"
-        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
         MOUNT_ETCD_RAMDISK = "true"
         SCALE_NUM_OF_DEPLOYMENTS = "100"
 
         CHRONY_CONFIG = "true"
-
+               
         SETUP_SQUID_PROXY = "false"
-        PROXY_ADDRESS = ""
-
+        PROXY_ADDRESS = "9.114.99.234"
+ 
         OCP4_ENV = true
         //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
 
@@ -137,14 +137,14 @@ pipeline {
             steps {
                 script {
                     step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.5-build.txt',
+                    filter: 'latest-4.7-build.txt',
                     fingerprintArtifacts: true,
                     projectName: 'mirror-openshift-release',
                     target: 'artifactory',
                     selector: lastSuccessful()
                     ])
                     step([  $class: 'CopyArtifact',
-                    filter: 'cicd-rhcos-4.5.latest.txt',
+                    filter: 'cicd-rhcos-4.7.latest.txt',
                     fingerprintArtifacts: true,
                     projectName: 'poll-powervc-images',
                     target: 'artifactory',
@@ -174,12 +174,12 @@ pipeline {
                         MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
                         MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists('artifactory/latest-4.5-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.5-build.txt'
+                        if (fileExists('artifactory/latest-4.7-build.txt')) {
+                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.7-build.txt'
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                         }
-                        if (fileExists('artifactory/cicd-rhcos-4.5.latest.txt')) {
-                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.5.latest.txt'
+                        if (fileExists('artifactory/cicd-rhcos-4.7.latest.txt')) {
+                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.7.latest.txt'
                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
                         }
                         if (env.DEPLOY_MASTER == "false")
@@ -202,19 +202,19 @@ pipeline {
                         if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
                         {
                             echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-install-linux.tar.gz"
+                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-install-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-client-linux.tar.gz"
                         }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
                         if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
                         {
-                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.5.5/openshift-client-linux.tar.gz"
+                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.6.0-0.nightly-2020-10-03-051134/openshift-client-linux.tar.gz"
                         }
-                        env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
+                        env.AVAILABILITY_ZONE= "p9"
                         if ("${AVAILABILITY_ZONE}" == null)
                         {
                             echo "Requested zone could not find in ${env.AUTH_URL}"
@@ -258,6 +258,28 @@ pipeline {
                     catch (err)
                     {
                         echo 'Error ! Template prepration failed !'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Setup terraform plugin') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                        echo ' get the plugin from artifactory repo !'
+                        wget https://github.com/community-terraform-providers/terraform-provider-ignition/releases/download/v2.1.0/terraform-provider-ignition_2.1.0_linux_amd64.zip
+                        mkdir -p ~/.local/share/terraform/plugins/registry.terraform.io/terraform-providers/ignition/
+                        mv terraform-provider-ignition_2.1.0_linux_amd64.zip ~/.local/share/terraform/plugins/registry.terraform.io/terraform-providers/ignition/
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
                         getArtifactsAndCleanOcp4(env.AUTH_URL)
                         throw err
                     }
@@ -324,6 +346,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/deploy
+                            scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/hack/cron.sh root@${BASTION_IP}:
+                            ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 cron.sh;
+                                                                                            echo '0 */2 * * * root ~/cron.sh >> ~/cron.log 2>&1' >> /etc/crontab;
+                                                                                            exit"
+                        '''
+                    } catch (err) {
+                        echo 'Running Crontab script failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+
         stage('Setup and run ansible extra') {
             steps {
                 script {
@@ -368,7 +414,7 @@ pipeline {
                 }
             }
         }
-        stage('Setup Kubectl') {
+        stage('Setup Kubectl and check proxy config') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -377,10 +423,14 @@ pipeline {
                     try {
                         setupKubeconfigOcp4()
                         sh '''
+                        echo 'kubectl version'
+                        oc version
                         echo 'Setting up kubectl!'
                         oc get nodes
                         echo 'Get the Cluster Operators'
                         oc get co
+                        echo 'Get Proxy Details'
+                        oc get proxy cluster -oyaml        
                         '''
                         }
                     catch (err) {
@@ -443,27 +493,30 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'cpu-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'heap-pre.pprof', fingerprint: true, onlyIfSuccessful: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'prometheus.tar.gz', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/cron.log', fingerprint: true, onlyIfSuccessful: false
             script {
                 if (fileExists('deploy/summary.txt')) {
                     E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    if (E2E_SUMMARY.contains('fail')) {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        FAILS = STR[0].split()
-                        PASS = STR[1].split()
-                        SKIP = STR[2].split()
-                        TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
-                    }
-                    else {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        PASS = STR[0].split()
-                        SKIP = STR[1].split()
-                        TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                    if (E2E_SUMMARY?.trim()){
+                        if (E2E_SUMMARY.contains('fail')) {
+                            E2E_SUMMARY = E2E_SUMMARY.trim()
+                            STR = E2E_SUMMARY.split(',')
+                            FAILS = STR[0].split()
+                            PASS = STR[1].split()
+                            SKIP = STR[2].split()
+                            TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
+                            FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                            UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        }
+                        else {
+                            E2E_SUMMARY = E2E_SUMMARY.trim()
+                            STR = E2E_SUMMARY.split(',')
+                            PASS = STR[0].split()
+                            SKIP = STR[1].split()
+                            TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
+                            FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
+                            UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
+                        }
                     }
                 }
                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
@@ -492,7 +545,13 @@ pipeline {
                 else
                 {
                     step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
-                    currentBuild.result = 'FAILURE'
+                    if (fileExists('deploy/summary.txt') && !E2E_SUMMARY?.trim()) {
+                        currentBuild.result = 'UNSTABLE'
+                        E2E_SUMMARY = "E2e test didn't run"
+                     }
+                     else{
+                        currentBuild.result = 'FAILURE'
+                    }
                 }
                 clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
                 clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
