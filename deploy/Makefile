@@ -88,7 +88,7 @@ MANAGER_TEMPLATE ?=
 WORKER_TEMPLATE ?= 
 VA_TEMPLATE ?= 
 PROXY_TEMPLATE ?= 
-GLUSTER_TEMPLATE ?=  
+GLUSTER_TEMPLATE ?=
 
 
 # ---------------------------------
