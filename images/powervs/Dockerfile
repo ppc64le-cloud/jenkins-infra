@@ -11,8 +11,7 @@ RUN apt-get update && apt install curl gnupg2 --yes \
         curl \
 	    sudo \
     && rm -rf /var/lib/apt/lists/*
-RUN pip3 install python-openstackclient
-RUN pip3 install ansible
+RUN pip3 install --upgrade pip ; pip3 install python-openstackclient; pip3 install ansible
 RUN wget --quiet --no-check-certificate -O go.tgz https://golang.org/dl/go1.14.6.linux-amd64.tar.gz && \
 	tar -C /usr/local/ -xzf go.tgz
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
