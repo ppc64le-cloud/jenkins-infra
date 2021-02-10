@@ -82,10 +82,10 @@ def call() {
         //For powerVM
         else {
             clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
-            clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
-            clusterInfo['master_node_mem'] = "${MEM_REQ_MASTER}"
-            clusterInfo['worker_node_cpu'] = "${VCPUS_REQ_WORKER}"
-            clusterInfo['worker_node_mem'] = "${MEM_REQ_WORKER}"
+            clusterInfo['master_node_cpu'] = "${MASTER_VCPUS}"
+            clusterInfo['master_node_mem'] = "${MASTER_MEMORY}"
+            clusterInfo['worker_node_cpu'] = "${WORKER_VCPUS}"
+            clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
             clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
             clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
             clusterInfo['server_type'] = "${HARDWARE_CHOSE}"

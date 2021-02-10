@@ -3,7 +3,7 @@
 
 user_name = "__OS_USERNAME__"
 password = "__OS_PASSWORD__"
-auth_url = "__AUTH_URL__"
+auth_url = "__OS_AUTH_URL__"
 network_name = "__OS_NETWORK__"
 openstack_availability_zone = "__AVAILABILITY_ZONE__"
 tenant_name = "__OS_TENANT_NAME__"
