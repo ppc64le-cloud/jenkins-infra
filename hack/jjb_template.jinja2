@@ -56,6 +56,8 @@
 
         {% elif 'daily-ocp4.7-powervs-frankfurt02-p9-min' in JOB_NAME %}""
 
+        {% elif 'daily-ocp4.8-powervs-saopaulo01-p9-min' in JOB_NAME %}"0 05 * * * "
+
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
         {% elif 'poll-powervs-images' in JOB_NAME %}"@daily"

@@ -57,6 +57,7 @@ pipeline {
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.5\\|45' > rhcos-4.5.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.6\\|46' > rhcos-4.6.txt || true
                     cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.7\\|47' > rhcos-4.7.txt || true
+                    cat images.all.date.sorted.txt| grep rhcos | awk '{print $1}' | grep '4\\.8\\|48' > rhcos-4.8.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep rhcos-43 | tail -n 1  > rhcos-4.3-nightly-latest.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.0'  > rhel-8.0.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel8\\.1'  > rhel-8.1.txt || true
@@ -77,6 +78,7 @@ pipeline {
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.5\\|cicd-rhcos-45' | awk '{print $2" "$1}'|head -n 1 > cicd-rhcos-4.5.latest.txt || true
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.6\\|cicd-rhcos-46' | awk '{print $2" "$1}'|head -n 1 > cicd-rhcos-4.6.latest.txt || true
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.7\\|cicd-rhcos-47' | awk '{print $2" "$1}'|head -n 1 > cicd-rhcos-4.7.latest.txt || true
+                    cat images.scnlcicdcloud.all.date.sorted.txt | grep 'cicd-rhcos-4\\.8\\|cicd-rhcos-48' | awk '{print $2" "$1}'|head -n 1 > cicd-rhcos-4.8.latest.txt || true
 
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'rhel8\\.0'  | awk '{print $2" "$1}'|head -n 1 > cicd-rhel-8.0.latest.txt || true
                     cat images.scnlcicdcloud.all.date.sorted.txt | grep 'rhel8\\.1'  | awk '{print $2" "$1}'|head -n 1 > cicd-rhel-8.1.latest.txt || true
@@ -99,8 +101,9 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("images.all.txt", "images.all.date.sorted.txt", "rhcos-4.3.txt", "rhcos-4.4.txt", "rhcos-4.5.txt",
-                                "rhcos-4.6.txt", "rhcos-4.7.txt", "cicd-rhcos-4.3.latest.txt", "cicd-rhcos-4.4.latest.txt",
+                                "rhcos-4.6.txt", "rhcos-4.7.txt", "rhcos-4.8.txt", "cicd-rhcos-4.3.latest.txt", "cicd-rhcos-4.4.latest.txt",
                                 "cicd-rhcos-4.5.latest.txt", "cicd-rhcos-4.6.latest.txt", "cicd-rhcos-4.7.latest.txt",
+                                "cicd-rhcos-4.8.latest.txt",
                                 "rhel-7.6.txt","rhel-7.7.txt", "rhel-7.8.txt","rhel-8.0.txt","rhel-8.1.txt",
                                 "rhel-8.2.txt","rhel-8.3.txt","cicd-rhel-7.6.latest.txt","cicd-rhel-7.7.latest.txt",
                                 "cicd-rhel-7.8.latest.txt", "cicd-rhel-8.0.latest.txt", "cicd-rhel-8.1.latest.txt",

@@ -20,15 +20,16 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
-        IBM_CLOUD_REGION = "us-east"
-        IBM_CLOUD_ZONE = "us-east"
-        SERVICE_INSTANCE_ID = "8aec6256-b197-4fe5-afcf-7507be7aa77b"
+
+        IBM_CLOUD_REGION = "sao"
+        IBM_CLOUD_ZONE = "sao01"
+        SERVICE_INSTANCE_ID = "84051875-2784-4395-a3bd-802e7dc15fa4"
 
         BASTION_IMAGE = "rhel-83"
-        RHCOS_IMAGE = "rhcos-47"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-washington.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-washington.txt"
-        OCP_RELEASE = "4.7"
+        RHCOS_IMAGE = "rhcos-48"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-toronto-01"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-toronto-01"
+        OCP_RELEASE = "4.8"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
@@ -134,6 +135,11 @@ pipeline {
         stage('Setup and run ansible extra') {
             steps {
                setupAndRunE2e()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
             }
         }
         stage('Gather pprof and prometheus data') {
