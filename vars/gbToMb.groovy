@@ -1,0 +1,17 @@
+def call(){
+    script{
+
+    MEM_WORKER_GB = env.WORKER_MEMORY.toInteger()
+    env.WORKER_MEMORY_MB = MEM_WORKER_GB * 1024
+
+    MEM_MASTER_GB = env.MASTER_MEMORY.toInteger()
+    env.MASTER_MEMORY_MB = MEM_MASTER_GB * 1024
+
+    MEM_BASTION_GB = env.BASTION_MEMORY.toInteger()
+    env.BASTION_MEMORY_MB = MEM_BASTION_GB * 1024
+
+    MEM_BOOTSTRAP_GB = env.BOOTSTRAP_MEMORY.toInteger()
+    env.BOOTSTRAP_MEMORY_MB = MEM_BOOTSTRAP_GB * 1024
+
+    }
+}

@@ -28,8 +28,8 @@ pipeline {
         IBM_CLOUD_ZONE = "tok04"
         SERVICE_INSTANCE_ID = "e4bb3d9d-a37c-4b1f-a923-4537c0c8beb3"
 
-        BASTION_IMAGE_NAME = "rhel-83-12142020"
-        RHCOS_IMAGE_NAME = "rhcos-47-01222021"
+        BASTION_IMAGE_NAME = "rhel-83-02182021"
+        RHCOS_IMAGE_NAME = "rhcos-47-02172021"
         OCP_RELEASE = "4.7"
         ENABLE_E2E_TEST = "false"
 

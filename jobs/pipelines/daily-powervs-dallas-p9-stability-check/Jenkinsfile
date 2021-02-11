@@ -28,7 +28,7 @@ pipeline {
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
         VM_ID_PREFIX = "ltccci"
-        BASTION_IMAGE_NAME = "rhel-83-12142020"
+        BASTION_IMAGE_NAME = "rhel-83-02182021"
 
         SYSTEM_TYPE = "e880"
         NETWORK_NAME = "ocp-net"

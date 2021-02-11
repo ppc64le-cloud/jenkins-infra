@@ -28,7 +28,7 @@ pipeline {
         IBM_CLOUD_ZONE = "syd04"
         SERVICE_INSTANCE_ID = "6d030c4b-64a3-494d-aeed-8c453dd98903"
 
-        BASTION_IMAGE_NAME = "rhel-83-12142020"
+        BASTION_IMAGE_NAME = "rhel-83-02182021"
         RHCOS_IMAGE_NAME = "rhcos-45-09242020"
         OCP_RELEASE = "4.5"
 

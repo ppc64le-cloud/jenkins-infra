@@ -27,8 +27,8 @@ pipeline {
         IBM_CLOUD_ZONE = "tor01"
         SERVICE_INSTANCE_ID = "4a1f10a2-0797-4ac8-9c41-44bc04b2d18f"
 
-        BASTION_IMAGE_NAME = "rhel-83-12142020"
-        RHCOS_IMAGE_NAME = "rhcos-47-01222021"
+        BASTION_IMAGE_NAME = "rhel-83-02182021"
+        RHCOS_IMAGE_NAME = "rhcos-47-02172021"
         OCP_RELEASE = "4.7"
 
         //e2e specific variables
