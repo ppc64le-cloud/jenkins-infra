@@ -1,6 +1,5 @@
 def call()
 {
-    sh (returnStdout: false, script: "/bin/bash ${WORKSPACE}/hack/capture-artifacts-ocp4.sh || true")
     if ( env.POWERVS == "true" ) {
         if ( env.SCRIPT_DEPLOYMENT == "true" ) {
             //PowerVS script

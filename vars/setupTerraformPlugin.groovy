@@ -12,8 +12,7 @@ def call() {
             '''
             }
         catch (err) {
-            echo 'Error ! ENV setup failed!'
-            getArtifactsAndCleanOcp4()
+            echo 'Error ! Terraform setup plugin failed!'
             throw err
         }
     }

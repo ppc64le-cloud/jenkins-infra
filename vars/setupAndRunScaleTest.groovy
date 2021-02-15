@@ -43,8 +43,7 @@ def call(){
             '''
         }
         catch (err) {
-            echo 'Error ! Tearing off the cluster !'
-            getArtifactsAndCleanOcp4()
+            echo 'Error ! Scale test failed to run !'
             throw err
         }
     }

@@ -49,7 +49,7 @@ ocp_release_tag            = "__OCP_RELEASE_TAG__"
 
 installer_log_level         = "info"
 ansible_extra_options       = "-v"
-pull_secret_file            = "data/pull-secret.txt"
+pull_secret_file            = "__PULL_SECRET_FILE__"
 dns_forwarders              = "1.1.1.1; 9.9.9.9"
 rhcos_kernel_options        = []
 

@@ -11,8 +11,7 @@ def call(){
             '''
         }
         catch (err) {
-            echo 'Error ! Tearing off the cluster !'
-            getArtifactsAndCleanOcp4()
+            echo 'Error ! Gather Prometheus Data failed!'
             throw err
         }
     }

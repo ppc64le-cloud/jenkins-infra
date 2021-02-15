@@ -1,12 +1,8 @@
 def call() {
     script {
         def e2e_summary = ""
-        def clusterInfoFields = [:]
-        def clusterInfo = [:]
         int fails_per_threshold
         int unstable_per_threshold
-        boolean infra_issue = false
-        def error_message = ""
         if (fileExists('deploy/summary.txt')) {
             e2e_summary = readFile 'deploy/summary.txt'
             if (e2e_summary?.trim()){
@@ -33,17 +29,8 @@ def call() {
         }
         def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
         def logContent_modified=logContent.toLowerCase()
-        def infra_errors = readFile 'files/infra-issues.txt'
-        infra_errors.split('\n').each { line ->
-            line1=line.toLowerCase()
-            if ( line1  != null) {
-                if (logContent_modified.contains(line1)){
-                    if ( ! DEPLOYMENT_STATUS ){
-                        infra_issue = true
-                        error_message = line1
-                    }
-                }
-            }
+        if ( env.INFRA_ISSUE == "true" ) {
+            e2e_summary = env.ERROR_MESSAGE
         }
         if ( env.OPENSHIFT_IMAGE != ""  ) {
             env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
@@ -66,44 +53,6 @@ def call() {
         }
         else{
             currentBuild.result = 'FAILURE'
-        }
-
-        if ( env.POWERVS == "true"  ) {
-            clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
-            clusterInfo['master_node_cpu'] = "${MASTER_PROCESSORS}"
-            clusterInfo['master_node_mem'] = "${MASTER_MEMORY}"
-            clusterInfo['worker_node_cpu'] = "${WORKER_PROCESSORS}"
-            clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
-            clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
-            clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
-            clusterInfo['system_type']     = "${SYSTEM_TYPE}"
-            clusterInfoFields['clusterinfo'] = clusterInfo
-        }
-        //For powerVM
-        else {
-            clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
-            clusterInfo['master_node_cpu'] = "${MASTER_VCPUS}"
-            clusterInfo['master_node_mem'] = "${MASTER_MEMORY}"
-            clusterInfo['worker_node_cpu'] = "${WORKER_VCPUS}"
-            clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
-            clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
-            clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
-            clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
-            clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
-            clusterInfoFields['clusterinfo'] = clusterInfo
-        }
-
-        if ( ! infra_issue ) {
-            if ( env.POWERVS == "true"  ) {
-                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervs', customDataMap: clusterInfoFields])
-            }
-            else{
-                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
-            }
-        }
-        else{
-            echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
-            e2e_summary = error_message
         }
         OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
         env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "

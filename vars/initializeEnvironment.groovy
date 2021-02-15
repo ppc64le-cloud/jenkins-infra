@@ -14,7 +14,6 @@ def call() {
       }
       catch (err) {
            echo 'Error ! ENV setup failed!'
-           getArtifactsAndCleanOcp4()
            throw err
       }
    }
