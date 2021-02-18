@@ -4,7 +4,7 @@ pipeline {
     agent {
         dockerfile {
             dir 'images/terraform'
-            additionalBuildArgs '--force-rm	--no-cache'
+            additionalBuildArgs '--force-rm	--no-cache --quiet'
             args '-v /etc/resolv.conf:/etc/resolv.conf'
             label 'daily-x86_64'
         }
@@ -23,33 +23,44 @@ pipeline {
         PULL_SECRET = credentials('PULL_SECRET')
 
         //Env constants
-        TERRAFORM_VER = "0.12.13"
         HARDWARE_CHOSE = "P8"
+        TERRAFORM_VER = "0.13.0"
         AVAILABILITY_ZONE = "p8_pvm"
-        OCP_RELEASE="4.4"
+        OCP_RELEASE="4.6"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
         WAIT_FOR_DEBUG = "1"
         REDHAT_RELEASE = "8.3"
 
-        //Makefile variables
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The download branch
-        UPGRADE_DELAY_TIME =  "600"
-        UPGRADE_PAUSE_TIME = "90"
-        UPGRADE_CHANNEL = "fast-4.5"
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.6"//The download branch
+
+        //E2e and Scale specific variables
+        ENABLE_E2E_TEST="true"
+        ENABLE_SCALE_TEST="false"
+        GOLANG_TARBALL = "https://dl.google.com/go/go1.13.12.linux-ppc64le.tar.gz"
 
         // Type of configuration
         CONFIG_TYPE="min"
+
+        //Upgrade Variables
+        UPGRADE_DELAY_TIME =  "600"
+        UPGRADE_PAUSE_TIME = "90"
 	 }
 
     stages {
+        stage('Clone ansible extra') {
+            steps {
+                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
+            }
+        }
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
-                    env.UPGRADE_OCP_RELEASE="4.5"
+                    env.UPGRADE_OCP_RELEASE="4.7"
                     env.MOUNT_ETCD_RAMDISK="false"
                     env.E2E_BRANCH="release-${env.UPGRADE_OCP_RELEASE}"
                     env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_OCP_RELEASE}-powervm/ocp${env.UPGRADE_OCP_RELEASE}_power_exclude_list.txt"
@@ -59,7 +70,7 @@ pipeline {
         stage('pull artifact') {
             steps {
                 script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
                     getArtifacts("mirror-openshift-release", "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")
                     getArtifacts("poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
                     getArtifacts("poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
@@ -87,6 +98,15 @@ pipeline {
                             echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
+                        env.UPGRADE_IMAGE  = ""
+                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
+                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
+                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
+                        }
+                        else {
+                            echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
                             env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt"
                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
@@ -103,15 +123,6 @@ pipeline {
                         }
                         else {
                             echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
-                            throw err
-                        }
-                        env.UPGRADE_IMAGE  = ""
-                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
-                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
-                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
-                        }
-                        else {
-                            echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (env.DEPLOY_MASTER == "false")
@@ -152,9 +163,19 @@ pipeline {
                 crontabCommandCaptureScript()
             }
         }
+        stage('Setup and run ansible extra') {
+            steps {
+               setupAndRunE2e()
+            }
+        }
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                gatherPrometheusData()
             }
         }
     }

@@ -21,10 +21,6 @@ while getopts u:n:p:a:s: option; do
   esac
 done
 
-function install_pvsadm_tool() {
-  curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash
-}
-
 function standardize_object_name() {
   log "Formatting Object name $1"
   local object_original_url=$1
@@ -53,8 +49,6 @@ function standardize_object_name() {
   IMAGE_NAME=$(echo $object_temp_name | sed -e 's/\.//g' -e 's/ppc64le//g' -e 's/openstack//g' -e 's/kvm//g' -e 's/_/-/g' -e 's/---*//g' -e 's/\([0-9]\+\)-GenericCloud-//g' | tr '[:upper:]' '[:lower:]' | grep -o -E '^[a-z]*-[0-9]{2}')-$(date +%m%d%Y)
   OBJECT_NAME=$IMAGE_NAME.${object_extension}
 }
-
-install_pvsadm_tool
 
 #Standerdise object name
 standardize_object_name $URL

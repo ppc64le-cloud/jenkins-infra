@@ -1,11 +1,4 @@
 @Library('pcloud-jenkins-library') _
-//Define global variables
-def E2E_SUMMARY
-def E2E_UPGRADE_SUMMARY
-def JUNIT_E2E
-def JUNIT_E2E_UPGRADE
-env.BASTION_IP = ""
-boolean DEPLOYMENT_STATUS = false
 
 pipeline {
     agent {
@@ -55,13 +48,19 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    env.UPGRADE_OCP_RELEASE="4."4
+                    env.MOUNT_ETCD_RAMDISK="false"
+                    env.E2E_BRANCH="release-${env.UPGRADE_OCP_RELEASE}"
+                    env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_OCP_RELEASE}-powervm/ocp${env.UPGRADE_OCP_RELEASE}_power_exclude_list.txt"
+                }
             }
         }
         stage('pull artifact') {
             steps {
                 script {
                     getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
-                    getArtifacts("mirror-openshift-release", "latest-4.4-stable-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")
                     getArtifacts("poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
                     getArtifacts("poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
@@ -106,13 +105,12 @@ pipeline {
                             echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
-                        if (fileExists('deploy/artifactory/latest-4.4-stable-build.txt')) {
-                            env.UPGRADE_IMAGE  = readFile 'deploy/artifactory/latest-4.4-stable-build.txt'
-                            env.UPGRADE_IMAGE  = env.UPGRADE_IMAGE.trim()
-                            env.UPGRADE_VERSION = env.UPGRADE_IMAGE.split(":")[1]
+                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
+                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
+                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
                         }
                         else {
-                            echo "latest-4.4-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                            echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (env.DEPLOY_MASTER == "false")
@@ -161,40 +159,14 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars" "deploy/e2e-upgrade-summary.txt")
+            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
             cleanupOcp4Cluster()
             checkInfraError()
-            script {
-                if (fileExists('deploy/summary.txt')) {
-                    E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    E2E_SUMMARY = E2E_SUMMARY.trim()
-                }
-                if (fileExists('deploy/e2e-upgrade-summary.txt')) {
-                    E2E_UPGRADE_SUMMARY = readFile 'deploy/e2e-upgrade-summary.txt'
-                    E2E_UPGRADE_SUMMARY = E2E_UPGRADE_SUMMARY.trim()
-                }
-                E2E_SUMMARY = "e2e: " + E2E_SUMMARY + "   e2eUpgrade: " + E2E_UPGRADE_SUMMARY
-                if ( env.OPENSHIFT_IMAGE != ""  ) {
-                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE + " to " + env.UPGRADE_IMAGE
-                }
-                JUNIT_E2E = fileExists 'deploy/junit_e2e.xml'
-                JUNIT_E2E_UPGRADE = fileExists 'deploy/junit_e2e_upgrade.xml'
-                if ( JUNIT_E2E ) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e.xml'])
-                }
-                if ( JUNIT_E2E_UPGRADE ) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'deploy/junit_e2e_upgrade.xml'])
-                }
-                if ( JUNIT_E2E == false &&  JUNIT_E2E_UPGRADE == false ) {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
-                    currentBuild.result = 'FAILURE'
-                }
-                OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
-                message = "e2e summary:`${E2E_SUMMARY}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
-                dbDashboardUpdateE2e()
-            }
+            processE2eResults()
+            dbDashboardUpdateE2e()
+            notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
-            notifyBySlack(currentBuild.result, message)
         }
     }
 }

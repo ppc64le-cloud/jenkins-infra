@@ -1,12 +1,20 @@
 @Library('pcloud-jenkins-library') _
 pipeline {
-    agent { label 'daily-x86_64' }
+    agent {
+        dockerfile {
+            dir 'images/powervs'
+            additionalBuildArgs '--force-rm	--no-cache'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'daily-x86_64'
+        }
+    }
     parameters {
-	string(defaultValue: '', description: 'Rhel Url', name: 'RhelUrl')
-	string(defaultValue: '', description: 'Rhcos Url', name: 'RhcosUrl')
-	string(defaultValue: '', description: 'Centos Url', name: 'CentosUrl')
-	string(defaultValue: '120', description: 'Image Size', name: 'ImageSize')
-	text(defaultValue: '''ocp-addons-toronto-01
+	    string(defaultValue: '', description: 'Rhel Url', name: 'RhelUrl')
+	    string(defaultValue: '', description: 'Rhcos Url', name: 'RhcosUrl')
+	    string(defaultValue: '', description: 'Centos Url', name: 'CentosUrl')
+	    string(defaultValue: '120', description: 'Image Size', name: 'ImageSize')
+          string(defaultValue: '', description: "Specify if don't want to run with latest release version", name: 'pvsadmVersion')
+	    text(defaultValue: '''ocp-addons-toronto-01
                           ocp-addons-frankfurt-01
                           ocp-cicd-dallas
                           ocp-cicd-frankfurt-01
@@ -43,6 +51,7 @@ pipeline {
         CENTOS_URL = "${params.CentosUrl.trim()}"
         RHCOS_URL = "${params.RhcosUrl.trim()}"
         IMAGE_SIZE = "${params.ImageSize.trim()}"
+        PVSADM_VERSION="${params.pvsadmVersion.trim()}"
 	}
 
     stages {
@@ -62,7 +71,11 @@ pipeline {
                             apt-get update
                             apt-get install sshpass
                             sshpass -p ${NODE_PASSWORD} scp -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' ${WORKSPACE}/hack/powervs_create_and_upload_image.sh ${WORKSPACE}/files/powervs_instance_list.txt root@$NODE_IP:
-                            sshpass -p ${NODE_PASSWORD} ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "chmod +x powervs_create_and_upload_image.sh"
+                            cmd="curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash"
+                            if [ -n "${PVSADM_VERSION}" ]; then
+                                 cmd="curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | VERSION=${PVSADM_VERSION} FORCE=1 bash"
+                            fi
+                            sshpass -p ${NODE_PASSWORD} ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "chmod +x powervs_create_and_upload_image.sh;$cmd "
                             if [ -n "${RHEL_URL}" ]; then
                                 sshpass -p $NODE_PASSWORD ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "./powervs_create_and_upload_image.sh -u '${RHEL_URL}' -p ${REDHAT_PASSWORD} -a ${IBMCLOUD_API_KEY} -n ${REDHAT_USERNAME} -s ${IMAGE_SIZE}"
                             fi
