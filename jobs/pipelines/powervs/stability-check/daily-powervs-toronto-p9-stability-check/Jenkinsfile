@@ -33,6 +33,7 @@ pipeline {
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         RHEL_SMT = "4"
+        BASTION_HEALTH_STATUS = "WARNING"
         BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-toronto-01.txt"
 
         //Makefile variables

@@ -12,6 +12,7 @@ rhel_image_name     = "__BASTION_IMAGE_NAME__"
 processor_type      = "shared"
 system_type         = "__SYSTEM_TYPE__"
 network_name        = "__NETWORK_NAME__"
+bastion_health_status = "__BASTION_HEALTH_STATUS__"
 
 rhel_username               = "__RHEL_USERNAME__"
 rhel_smt                    = __RHEL_SMT__

@@ -24,5 +24,5 @@ RUN apt-get update && apt install --yes nodejs imagemagick gifsicle \
 	    sudo \
         time \
     && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --upgrade pip ; pip3 install python-openstackclient ;pip3 install ansible
+RUN pip3 install --upgrade pip ; pip3 install python-openstackclient ;pip3 install ansible ; pip3 install cryptography==3.3.2
 RUN ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa

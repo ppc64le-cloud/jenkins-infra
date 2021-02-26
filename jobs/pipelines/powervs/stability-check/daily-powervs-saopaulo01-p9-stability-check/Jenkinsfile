@@ -33,6 +33,7 @@ pipeline {
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
         RHEL_SMT = "4"
+        BASTION_HEALTH_STATUS = "WARNING"
         BASTION_IMAGE_FILE =  "latest-${BASTION_IMAGE}-ocp-cicd-saopaoulo-01.txt"
         //Makefile variables
         OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH="master" //The download branch
