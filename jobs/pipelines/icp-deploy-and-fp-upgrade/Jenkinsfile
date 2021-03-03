@@ -1022,7 +1022,7 @@ pipeline {
                     }
                     catch (err)
                     {
-                        echo 'Error ! Template prepration failed !'
+                        echo 'Error ! Template preparation failed !'
                         getArtifactsAndClean(env.AUTH_URL)
                         throw err
                     }

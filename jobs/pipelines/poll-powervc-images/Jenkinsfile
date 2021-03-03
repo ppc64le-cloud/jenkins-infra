@@ -1,12 +1,4 @@
 @Library('pcloud-jenkins-library') _
-//Define global variables
-env.DISTRO = ""
-def TIMEOUT_SEC
-def TIMEOUT_MIN
-def TRIGGER
-def BUILD
-def E2E_SUMMARY
-
 pipeline {
     agent {
         dockerfile {
@@ -18,23 +10,9 @@ pipeline {
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
-        GITHUB_USER = credentials('GITHUB_USER')
-        TF_VAR_user_name = credentials('GITHUB_USER')
-        DOCKER_USER = credentials('DOCKER_USER')
-        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
-        TF_VAR_repo_user = credentials('GITHUB_USER')
-        TF_VAR_password = credentials('TF_VAR_password')
-        OS_USERNAME = credentials('GITHUB_USER')
-        OS_PASSWORD = credentials('TF_VAR_password')
-        OS_INSECURE = true
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
-        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
-        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
-        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
-        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-        FVD_USERNAME = credentials('FVD_USERNAME')
-        FVD_PASSWORD = credentials('FVD_PASSWORD')
-
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
 
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P9"
@@ -58,8 +36,6 @@ pipeline {
         OS_VOLUME_API_VERSION=2
         OS_PRIVATE_NETWORK = "icp_network2"
         OS_NETWORK = "icp_network2"
-
-
 	 }
     stages {
         stage('Prepare Terraform Template') {
@@ -122,33 +98,13 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'images.all.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'images.all.date.sorted.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.3.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.4.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.5.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.6.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhcos-4.7.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.3.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.4.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.5.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.6.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhcos-4.7.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.0.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.1.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.2.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-8.3.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.6.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.7.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'rhel-7.8.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-7.6.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-7.7.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-7.8.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-8.0.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-8.1.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-8.2.latest.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'cicd-rhel-8.3.latest.txt', fingerprint: true, onlyIfSuccessful: false
-
+            archiveAllArtifacts("images.all.txt", "images.all.date.sorted.txt", "rhcos-4.3.txt", "rhcos-4.4.txt", "rhcos-4.5.txt",
+                                "rhcos-4.6.txt", "rhcos-4.7.txt", "cicd-rhcos-4.3.latest.txt", "cicd-rhcos-4.4.latest.txt",
+                                "cicd-rhcos-4.5.latest.txt", "cicd-rhcos-4.6.latest.txt", "cicd-rhcos-4.7.latest.txt",
+                                "rhel-7.6.txt","rhel-7.7.txt", "rhel-7.8.txt","rhel-8.0.txt","rhel-8.1.txt",
+                                "rhel-8.2.txt","rhel-8.3.txt","cicd-rhel-7.6.latest.txt","cicd-rhel-7.7.latest.txt",
+                                "cicd-rhel-7.8.latest.txt", "cicd-rhel-8.0.latest.txt", "cicd-rhel-8.1.latest.txt",
+                                "cicd-rhel-8.2.latest.txt", "cicd-rhel-8.3.latest.txt")
             cleanWs()
         }
     }

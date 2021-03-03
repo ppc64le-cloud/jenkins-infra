@@ -1,6 +1,4 @@
 @Library('pcloud-jenkins-library') _
-//Define global variables
-env.DISTRO = ""
 
 pipeline {
     agent {
@@ -18,6 +16,7 @@ pipeline {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
@@ -71,9 +70,9 @@ pipeline {
 
     post {
         always {
-            getArtifactsAndCleanOcp4()
             script {
                 archiveAllArtifacts("deploy/vars.tfvars", "deploy/stability-check.log")
+                cleanupOcp4Cluster()
                 message = "VM Image:`${env.BASTION_IMAGE_NAME}`, System Type: `${env.SYSTEM_TYPE}`, Private Network: `${env.NETWORK_NAME}` "
                 notifyBySlack(currentBuild.result, message)
                 cleanWs()

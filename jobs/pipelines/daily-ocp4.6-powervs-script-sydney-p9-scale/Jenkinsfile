@@ -1,8 +1,4 @@
 @Library('pcloud-jenkins-library') _
-//Define global variables
-env.DISTRO = ""
-env.BASTION_IP = ""
-boolean DEPLOYMENT_STATUS = false
 pipeline {
     agent {
         dockerfile {
@@ -19,6 +15,7 @@ pipeline {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
@@ -42,6 +39,9 @@ pipeline {
         POWERVS = true
         SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "1"
+
+        // Type of configuration
+        CONFIG_TYPE="min"
 	 }
 
     stages {
@@ -49,7 +49,7 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 //Min config with 3 worker nodes
-                setupClusterConfig("min","3")
+                setupClusterConfig("${CONFIG_TYPE}","3")
             }
         }
         stage('pull artifact') {
@@ -66,34 +66,25 @@ pipeline {
                     }
                     try
                     {
+                        pullSecret()
                         env.OPENSHIFT_IMAGE = ""
                         env.OCP_RELEASE_TAG = ""
-                        if (fileExists('artifactory/latest-4.6-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.6-build.txt'
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
-                        {
-                            echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-install-linux.tar.gz"
-                        }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
-                        {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.6.0-0.nightly-ppc64le-2020-10-03-224643/openshift-client-linux.tar.gz"
-                        }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
-                        {
-                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/4.6.0-0.nightly-2020-10-03-051134/openshift-client-linux.tar.gz"
-                        }
                     }
                     catch (err)
                     {
                         echo 'Error ! Template preparation failed !'
-                        getArtifactsAndCleanOcp4()
                         throw err
                     }
                 }
@@ -133,10 +124,12 @@ pipeline {
     }
     post {
         always {
-            getArtifactsAndCleanOcp4()
             archiveAllArtifacts("deploy/time_taken_namespaces", "deploy/time_taken_deployments", "deploy/vars.tfvars",
                 "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz")
+            cleanupOcp4Cluster()
+            checkInfraError()
             processScaleResults()
+            dbDashboardUpdateScale()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }

@@ -1,16 +1,4 @@
 @Library('pcloud-jenkins-library') _
-//Define global variables
-env.DISTRO = ""
-def TIMEOUT_SEC
-def TIMEOUT_MIN
-def E2E_SUMMARY
-def clusterInfoFields = [:]
-def clusterInfo = [:]
-int FAILS_PER_THRESHOLD
-int UNSTABLE_PER_THRESHOLD
-boolean INFRA_ISSUE = false
-env.BASTION_IP = ""
-boolean DEPLOYMENT_STATUS = false
 
 pipeline {
     agent {
@@ -24,133 +12,57 @@ pipeline {
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
-        TF_VAR_user_name = credentials('GITHUB_USER')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
         DOCKER_USER = credentials('DOCKER_USER')
         ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
-        TF_VAR_repo_user = credentials('GITHUB_USER')
-        TF_VAR_password = credentials('TF_VAR_password')
-        OS_USERNAME = credentials('GITHUB_USER')
-        OS_PASSWORD = credentials('TF_VAR_password')
-        OS_INSECURE = true
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
-        TF_VAR_offline_remote_password = credentials('ARTIFACTORY_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-        FVD_USERNAME = credentials('FVD_USERNAME')
-        FVD_PASSWORD = credentials('FVD_PASSWORD')
-
+        PULL_SECRET = credentials('PULL_SECRET')
 
         //Env constants
-        TERRAFORM_VER = "0.12.23"
-        TEST_SUITE = "ppc64le-edge"
-        OS = "linux"
-        OS_IDENTITY_API_VERSION='3'
-        OS_TENANT_NAME="ibm-default"
-        OS_USER_DOMAIN_NAME="default"
-        OS_PROJECT_DOMAIN_NAME="Default"
-        OS_COMPUTE_API_VERSION=2.37
-        OS_NETWORK_API_VERSION=2.0
-        OS_IMAGE_API_VERSION=2
-        OS_VOLUME_API_VERSION=2
-
-
-        // Node Configuration
-        VCPUS_REQ_MASTER = "1"
-        MEM_REQ_MASTER = "16"
-        PRO_UNIT_REQ_MASTER = ".5"
-
-        VCPUS_REQ_WORKER = "1"
-        MEM_REQ_WORKER = "16"
-        PRO_UNIT_REQ_WORKER = ".5"
-
-        VCPUS_REQ_BOOTSTRAP = "1"
-        MEM_REQ_BOOTSTRAP = "16"
-        PRO_UNIT_REQ_BOOTSTRAP = ".2"
-
-        VCPUS_REQ_BASTION = "1"
-        MEM_REQ_BASTION = "8"
-        PRO_UNIT_REQ_BASTION = ".1"
-
-        MASTER_TEMPLATE = "${env.BUILD_TAG}" + "-" + "master"
-        WORKER_TEMPLATE = "${env.BUILD_TAG}" + "-" + "worker"
-        BOOTSTRAP_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bootstrap"
-        BASTION_TEMPLATE = "${env.BUILD_TAG}" + "-" + "bastion"
-
-        VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P9"
-        NODE_OS = "rhcos-43"
-        BASTION_OS  = "RHEL8.3"
-        TIMEOUT = "0"
-        OS_NETWORK = "icp_network4"
-        OS_PRIVATE_NETWORK = "icp_network4"
+        TERRAFORM_VER = "0.12.23"
+        AVAILABILITY_ZONE = "p9_pvm"
         OCP_RELEASE="4.3"
-
-        //Makefile variables
-        TERRAFORM_FORCE_KEYPAIR_CREATION = "0" //For not using build-barnes
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5" //The download branch
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT = "https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
-
-        NUM_OF_WORKERS = "2"
-        NUM_OF_MASTERS = "3"
-
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
-        //OPENSHIFT_INSTALL_TARBALL = " https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-$Release/$Tarball"
-
-        REDHAT_RELEASE = "7.6"
-        RHEL_USERNAME = "root"
-        PULL_SECRET_FILE = "data/pull-secret.txt"
-        CLUSTER_DOMAIN = "redhat.com"
-        INSTANCE_NAME = "ltccci"
-        ENABLE_E2E_TEST = "true"
-        E2E_GIT = "https://github.com/openshift/origin"
-        E2E_BRANCH="release-${OCP_RELEASE}"
-        E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/4.3-powervm/ocp4.3_power_exclude_list.txt"
-        CS_INSTALL = "false"
-        ENABLE_E2E_UPGRADE = "false"
-        ENABLE_SCALE_TEST = "false"
-        GOLANG_TARBALL = "https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
-        MOUNT_ETCD_RAMDISK = "true"
-        SCALE_NUM_OF_DEPLOYMENTS = "100"
-
-        CHRONY_CONFIG = "true"
-
-        SETUP_SQUID_PROXY = "false"
-        PROXY_ADDRESS = ""
-
-        OCP4_ENV = true
-        //IMAGE_FILTER = "${OCP_ENV == true ? "openshift" : "cicd"}"
-
-        //To pick build-harness . Remove once the Makefile.openshift_pvc upstreamed
-        BUILD_HARNESS_ORG="powercloud-cicd"
-        //BUILD_HARNESS_BRANCH="devel"
         POWERVS = false
+        WAIT_FOR_DEBUG = "1"
+        REDHAT_RELEASE = "8.3"
+
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-4.5"//The download branch
+
+        //E2e and Scale specific variables
+        ENABLE_E2E_TEST="true"
+        ENABLE_SCALE_TEST="false"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.12.17.linux-ppc64le.tar.gz"
+
+        // Type of configuration
+        CONFIG_TYPE="min"
 	 }
 
     stages {
         stage('Clone ansible extra') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ansible_extra'], [$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false, timeout: 20]], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.ibm.com:redstack-power/ocp4_ansible_extras.git', credentialsId: 'ibm-github']]])
+                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
+            }
+        }
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
             }
         }
         stage('pull artifact') {
             steps {
                 script {
-                    step([  $class: 'CopyArtifact',
-                    filter: 'latest-4.3-build.txt',
-                    fingerprintArtifacts: true,
-                    projectName: 'mirror-openshift-release',
-                    target: 'artifactory',
-                    selector: lastSuccessful()
-                    ])
-                    step([  $class: 'CopyArtifact',
-                    filter: 'cicd-rhcos-4.3.latest.txt',
-                    fingerprintArtifacts: true,
-                    projectName: 'poll-powervc-images',
-                    target: 'artifactory',
-                    selector: lastSuccessful()
-                    ])
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
+                    getArtifacts("poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                    getArtifacts("poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
             }
         }
@@ -163,314 +75,94 @@ pipeline {
                     }
                     try
                     {
-                        MEM_WORKER_GB = MEM_REQ_WORKER.toInteger()
-                        MEM_REQ_WORKER_MB = MEM_WORKER_GB * 1024
-
-                        MEM_MASTER_GB = MEM_REQ_MASTER.toInteger()
-                        MEM_REQ_MASTER_MB = MEM_MASTER_GB * 1024
-
-                        MEM_BASTION_GB = MEM_REQ_BASTION.toInteger()
-                        MEM_REQ_BASTION_MB = MEM_BASTION_GB * 1024
-
-                        MEM_BOOTSTRAP_GB = MEM_REQ_BOOTSTRAP.toInteger()
-                        MEM_REQ_BOOTSTRAP_MB = MEM_BOOTSTRAP_GB * 1024
+                        gbToMb()
+                        pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists('artifactory/latest-4.3-build.txt')) {
-                            env.OPENSHIFT_IMAGE = readFile 'artifactory/latest-4.3-build.txt'
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
-                        if (fileExists('artifactory/cicd-rhcos-4.3.latest.txt')) {
-                            env.RHCOS_IMAGE_NAME = readFile 'artifactory/cicd-rhcos-4.3.latest.txt'
-                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
+                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
+                            env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhcos-${OCP_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
+                            env.BASTION_IMAGE = readFile "deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE.split()[0].trim()
+                            env.BASTION_IMAGE_ID = env.BASTION_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
                         }
                         if (env.DEPLOY_MASTER == "false")
                         {
                             echo "Cluster cant deploy without master"
                             throw err
                         }
-                        if ( env.VIR_CHOSE == "KVM" )
-                        {
-                            echo 'Setting-up terraform template file for KVM!'
-                            env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/kvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
-                        }
-                        else if ( env.VIR_CHOSE == "PowerVM" )
-                        {
-                            echo 'Setting-up terraform template file for PowerVM!'
-                            env.AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
-                            //env.AUTH_URL=sh(returnStdout: true, script: "grep AUTH_URL conf/infra/pvm.conf|awk 'BEGIN{FS=\"AUTH_URL=\"}{print \$2}'|tr '\n' ' '").trim()
-                        }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_INSTALL_TARBALL}" == "null" )
-                        {
-                            echo "Unable to find openshift install tarball. falling back to default"
-                            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-install-linux.tar.gz"
-                        }
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL}" == "null")
-                        {
-                            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.3.31/openshift-client-linux.tar.gz"
-                        }
                         env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
-                        if ("${env.OPENSHIFT_CLIENT_TARBALL_AMD64}" == "null")
-                        {
-                            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.3.31/openshift-client-linux.tar.gz"
-                        }
-                        env.AVAILABILITY_ZONE=getZone(env.VIR_CHOSE, HARDWARE_CHOSE )
-                        if ("${AVAILABILITY_ZONE}" == null)
-                        {
-                            echo "Requested zone could not find in ${env.AUTH_URL}"
-                            error('Requested zone could not find')
-                        }
-                        env.BASTION_IMAGE_NAME=getTheImage(env.AUTH_URL, env.BASTION_OS, env.IMAGE_FILTER )
-                        env.IMAGE_DISTRO = "${env.DISTRO}"
-                        env.BASTION_IMAGE_ID = getTheImageId(env.AUTH_URL, env.BASTION_IMAGE_NAME)
-                        if ("${BASTION_IMAGE_ID}" == "")
-                        {
-                            echo "Requested image could not find in ${env.AUTH_URL}"
-                            error('Requested image could not find')
-                        }
-                        env.RHCOS_IMAGE_ID = getTheImageId(env.AUTH_URL, env.RHCOS_IMAGE_NAME)
-                        if ("${RHCOS_IMAGE_ID}" == "")
-                        {
-                            echo "Requested image could not find in ${env.AUTH_URL}"
-                            error('Requested image could not find')
-                        }
-                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_MASTER, "${MEM_REQ_MASTER_MB}", env.PRO_UNIT_REQ_MASTER, env.MASTER_TEMPLATE)
-                        if ( status != 0)
-                        {
-                            echo "Unable to create template ${env.MASTER_TEMPLATE}"
-                        }
-                        status=createTemplate(env.AUTH_URL, VCPUS_REQ_WORKER, "${MEM_REQ_WORKER_MB}", PRO_UNIT_REQ_WORKER, WORKER_TEMPLATE)
-                        if ( status != 0)
-                        {
-                            echo "Unable to create template ${env.WORKER_TEMPLATE}"
-                        }
-                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_BASTION, "${MEM_REQ_BASTION_MB}", env.PRO_UNIT_REQ_BASTION, env.BASTION_TEMPLATE)
-                        if ( status != 0)
-                        {
-                            echo "Unable to create template ${env.BASTION_TEMPLATE}"
-                        }
-                        status=createTemplate(env.AUTH_URL, env.VCPUS_REQ_BOOTSTRAP, "${MEM_REQ_BOOTSTRAP_MB}", env.PRO_UNIT_REQ_BOOTSTRAP, env.BOOTSTRAP_TEMPLATE)
-                        if ( status != 0)
-                        {
-                            echo "Unable to create template ${env.BOOTSTRAP_TEMPLATE}"
-                        }
+
+                        createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BOOTSTRAP_VCPUS , "${BOOTSTRAP_MEMORY_MB}", env.BOOTSTRAP_PROCESSORS, env.BOOTSTRAP_TEMPLATE)
                     }
                     catch (err)
                     {
-                        echo 'Error ! Template prepration failed !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        echo 'Error ! Template preparation failed !'
                         throw err
                     }
                 }
+            }
+        }
+        stage('Setup terraform plugin') {
+            steps {
+                setupTerraformPlugin()
             }
         }
         stage('Initialize Environment') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo 'Initializing supporting repos and keys !'
-
-                        cd ${WORKSPACE}/deploy
-                        make init
-                        make keys
-                        make setup-dependencies
-                        '''
-                        }
-                    catch (err) {
-                        echo 'Error ! ENV setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
+                initializeEnvironment()
             }
         }
         stage('Deploy OCP Cluster') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                        echo 'Deploying Cluster!'
-                        export TF_VAR_offline_remote_password=$TF_VAR_password
-                        cd ${WORKSPACE}/deploy
-                        make $TARGET || true
-                        retries=0
-                        until [ "$retries" -ge 3 ]
-                        do
-                                if [ "$retries" -eq 2 ]; then
-                                        make $TARGET:redeploy
-                                        sleep 60
-                                else
-                                        make $TARGET:redeploy || true
-                                fi
-                                retries=$((retries+1))
-                                sleep 10
-                        done
-                        '''
-                        env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
-                        DEPLOYMENT_STATUS = true
-                        }
-                    catch (err) {
-                        echo 'Error ! Tearing off the cluster !'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
+                deployCluster()
+            }
+        }
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                crontabCommandCaptureScript()
             }
         }
         stage('Setup and run ansible extra') {
             steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                       sh '''
-                        echo 'Creating var.yaml'
-                        rm -rf ~/.ansible
-                        ansible all -m setup -a 'gather_subset=!all'
-                        cd ${WORKSPACE}/ansible_extra
-                        cp examples/e2e_vars.yaml vars.yaml
-                        sed -i "s|e2e_tests_enabled:.*$|e2e_tests_enabled: true|g" vars.yaml
-                        sed -i "s|e2e_tests_git:.*$|e2e_tests_git: ${E2E_GIT}|g" vars.yaml
-                        sed -i "s|e2e_tests_git_branch:.*$|e2e_tests_git_branch: ${E2E_BRANCH}|g" vars.yaml
-                        sed -i "s|e2e_tests_exclude_list_url:.*$|e2e_tests_exclude_list_url: ${E2E_EXCLUDE_LIST}|g" vars.yaml
-                        sed -i "s|golang_tarball:.*$|golang_tarball: ${GOLANG_TARBALL}|g" vars.yaml
-                        sed -i "s|github_token:.*$|github_token: ${GITHUB_TOKEN}|g" vars.yaml
-                        cat vars.yaml
-                        cp examples/inventory .
-                        sed -i "s|localhost|${BASTION_IP}|g" inventory
-                        sed -i 's/ansible_connection=local/ansible_connection=ssh/g' inventory
-                        sed -i "s|ssh|ssh ansible_ssh_private_key_file=${WORKSPACE}/deploy/id_rsa|g" inventory
-                        cat inventory
-                        echo "[ssh_connection]" >> ansible.cfg
-                        echo "ssh_args = -C -o ControlMaster=auto -o ControlPersist=120m -o ServerAliveInterval=30" >> ansible.cfg
-                        cat ansible.cfg
-                        ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml
-                       # cd ../
-                       # tar -czvf ansible_extra.tar.gz ansible_extra
-                       # scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa ansible_extra.tar.gz root@${BASTION_IP}:
-                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} tar -zxvf ansible_extra.tar.gz
-                       # ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ansible_extra ; ansible-playbook  -i inventory -e @vars.yaml playbooks/main.yml -vvv"
-                        '''
-                    }
-                    catch (err) {
-                        echo 'Error ! ansible setup failed!'
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                        throw err
-                    }
-                }
-            }
-        }
-        stage('Waiting to timeout') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        TIMEOUT_MIN = TIMEOUT.toInteger()
-                        if ( TIMEOUT_MIN != 0 )
-                        {
-                            TIMEOUT_SEC=TIMEOUT_MIN*60
-                        }
-                        echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
-                        sleep TIMEOUT_SEC
-                        }
-                    finally {
-                        getArtifactsAndCleanOcp4(env.AUTH_URL)
-                    }
-                }
+               setupAndRunE2e()
             }
         }
     }
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/conformance-parallel-out.txt.tar.gz', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/summary.txt', fingerprint: true, onlyIfSuccessful: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy/vars.tfvars', fingerprint: true, onlyIfSuccessful: false
-            script {
-                if (fileExists('deploy/summary.txt')) {
-                    E2E_SUMMARY = readFile 'deploy/summary.txt'
-                    if (E2E_SUMMARY.contains('fail')) {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        FAILS = STR[0].split()
-                        PASS = STR[1].split()
-                        SKIP = STR[2].split()
-                        TOTAL = FAILS[0].toInteger() + PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
-                    }
-                    else {
-                        E2E_SUMMARY = E2E_SUMMARY.trim()
-                        STR = E2E_SUMMARY.split(',')
-                        PASS = STR[0].split()
-                        SKIP = STR[1].split()
-                        TOTAL = PASS[0].toInteger() + SKIP[0].toInteger()
-                        FAILS_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger())
-                        UNSTABLE_PER_THRESHOLD = (TOTAL - SKIP[0].toInteger()) * 0.05 - 1
-                    }
-                }
-                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
-                def logContent_modified=logContent.toLowerCase()
-                def infra_errors = readFile 'files/infra-issues.txt'
-                infra_errors.split('\n').each { line ->
-                   line1=line.toLowerCase()
-                    if ( line1  != null) {
-                        if (logContent_modified.contains(line1)){
-                            if ( ! DEPLOYMENT_STATUS ){
-                                INFRA_ISSUE = true
-                            }
-                        }
-                    }
-                }
-                if ( env.OPENSHIFT_IMAGE != ""  ) {
-                    env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
-                }
-                if ( fileExists('deploy/junit_e2e.xml')) {
-                    sh '''
-                    sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
-                    sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
-                    '''
-                    step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: FAILS_PER_THRESHOLD.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
-                }
-                else
-                {
-                    step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
-                    currentBuild.result = 'FAILURE'
-                }
-                clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
-                clusterInfo['master_node_cpu'] = "${VCPUS_REQ_MASTER}"
-                clusterInfo['master_node_mem'] = "${MEM_REQ_MASTER}"
-                clusterInfo['worker_node_cpu'] = "${VCPUS_REQ_WORKER}"
-                clusterInfo['worker_node_mem'] = "${MEM_REQ_WORKER}"
-                clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
-                clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
-                clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
-                clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME
-
-                clusterInfoFields['clusterinfo'] = clusterInfo
-
-                if ( ! INFRA_ISSUE ) {
-                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
-                }
-                else{
-                    echo "Skipping this run from updating the dashboard database, as this is an infra related issue"
-                    E2E_SUMMARY = "DEPLOYMENT FAILED DUE TO INFRA ISSUE"
-                }
-            OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
-            message = "e2e summary:`${E2E_SUMMARY}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
-            notifyBySlack(currentBuild.result, message)
+            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
+            cleanupOcp4Cluster()
+            checkInfraError()
+            processE2eResults()
+            dbDashboardUpdateE2e()
+            notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
-            }
         }
     }
 }

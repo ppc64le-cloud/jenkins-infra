@@ -46,9 +46,9 @@ def call() {
             if ( timeout_hrs != 0 ) {
                 timeout_sec=timeout_hrs*60*60
             }
-                echo "HOLDING THE VM FOR DEBUGGING, FOR $timeout_hrs Hours"
-                sleep timeout_sec
-                throw err
+            echo "HOLDING THE Cluster FOR DEBUGGING, FOR $timeout_hrs Hours"
+            sleep timeout_sec
+            throw err
         }
     }
 }

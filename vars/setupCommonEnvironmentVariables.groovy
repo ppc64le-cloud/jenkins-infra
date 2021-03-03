@@ -38,6 +38,12 @@ def call() {
 
             //Slack message
             env.MESSAGE=""
+
+            env.DEPLOYMENT_STATUS = false
+            env.BASTION_IP = ""
+
+            //Pull Secret
+            env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
         }
         else {
             //PowerVC ENV Variables
@@ -65,31 +71,39 @@ def call() {
 
             //build harness variables
             env.BUILD_HARNESS_ORG="powercloud-cicd"
-            env.TERRAFORM_FORCE_KEYPAIR_CREATION="0"//For not using build-barnes
-            env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"//The download branch
+            env.TERRAFORM_FORCE_KEYPAIR_CREATION="0"//For not using build-harness
             env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT="https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
             //Cluster and vm details
             env.CLUSTER_DOMAIN="redhat.com"
             env.INSTANCE_NAME="ltccci"
+            env.MOUNT_ETCD_RAMDISK="true"
+            env.CHRONY_CONFIG="true"
 
             //e2e variables
-            env.ENABLE_E2E_TEST="true"
-            env.E2E_GIT="https://github.com/openshift/origin"
-            env.E2E_BRANCH="release-${env.OCP_RELEASE}"
-            env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
-            env.ENABLE_E2E_UPGRADE="false"
+            if ( env.ENABLE_E2E_TEST ) {
+                env.E2E_GIT="https://github.com/openshift/origin"
+                env.E2E_BRANCH="release-${env.OCP_RELEASE}"
+                env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+                env.ENABLE_E2E_UPGRADE="false"
+            }
 
             //Scale test variables
-            env.ENABLE_SCALE_TEST="false"
-            env.GOLANG_TARBALL="https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
-            env.MOUNT_ETCD_RAMDISK="true"
-            env.SCALE_NUM_OF_DEPLOYMENTS="100"
-            env.CHRONY_CONFIG="true"
+            if ( env.ENABLE_SCALE_TEST ) {
+                env.SCALE_NUM_OF_DEPLOYMENTS = "60"
+                env.SCALE_NUM_OF_NAMESPACES = "1000"
+                env.EXPOSE_IMAGE_REGISTRY = "false"
+            }
+
+            //Proxy setup
+            env.SETUP_SQUID_PROXY = "false"
+            env.PROXY_ADDRESS = ""
 
             //Slack message
             env.MESSAGE=""
 
+            env.DEPLOYMENT_STATUS = false
+            env.BASTION_IP = ""
             //Common Service
             env.CS_INSTALL = "false"
 

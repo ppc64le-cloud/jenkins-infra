@@ -21,8 +21,7 @@ def call() {
             '''
         }
         catch (err) {
-            echo 'Error ! Tearing off the vm stability check failed!'
-            getArtifactsAndCleanOcp4()
+            echo 'Error ! Vm stability check failed!'
             throw err
         }
     }

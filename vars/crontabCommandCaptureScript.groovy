@@ -13,7 +13,7 @@ def call(){
             '''
         } catch (err) {
             echo 'Running Crontab script failed!'
-            getArtifactsAndCleanOcp4()
+            cleanupOcp4Cluster()
             throw err
         }
     }

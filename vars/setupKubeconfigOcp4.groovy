@@ -17,7 +17,6 @@ def call() {
         }
         catch (err) {
             echo 'Error ! Kubectl setup  !'
-            getArtifactsAndCleanOcp4()
             throw err
         }
     }

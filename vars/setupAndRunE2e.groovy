@@ -30,7 +30,6 @@ def call(){
         }
         catch (err) {
             echo 'Error ! ansible setup failed!'
-            getArtifactsAndCleanOcp4()
             throw err
         }
     }
