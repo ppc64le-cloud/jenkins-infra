@@ -1,0 +1,32 @@
+OPENSHIFT_POWERVS_SCRIPT_GIT_TF_DEPLOY_PROJECT ?= "https://github.com/ocp-power-automation/openshift-install-power.git"
+OPENSHIFT_POWERVS_SCRIPT_GIT_TF_DEPLOY_BRANCH ?= devel
+OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR ?= .deploy-openshift4-powervs-script/
+OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE ?= .deploy-openshift4-powervs-script.tfvars
+
+.PHONY: deploy\:openshift4\:powervs\:script
+## Deploy openshift4 on powervs
+deploy\:openshift4\:powervs\:script:
+	@$(GIT) clone -b $(OPENSHIFT_POWERVS_SCRIPT_GIT_TF_DEPLOY_BRANCH) $(OPENSHIFT_POWERVS_SCRIPT_GIT_TF_DEPLOY_PROJECT) $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR)
+	@$(shell) cp data/pull-secret.txt $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR)/ && cp id_rsa* $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR)/ &&  cp $(OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE) $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR)/var.tfvars && cd $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR) && ./openshift-install-powervs create -verbose
+
+.PHONY: deploy\:openshift4\:powervs\:script\:redeploy
+## RedoDeploy openshift4 on powervs
+deploy\:openshift4\:powervs\:script\:redeploy: %redeploy:
+	@$(shell) cd $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR) && ./openshift-install-powervs create
+
+.PHONY: deploy\:openshift4\:powervs\:script\:destroy
+## Destroy openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:script\:destroy: %destroy:
+	@$(shell) cd $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR) && ./openshift-install-powervs destroy -force-destroy
+
+.PHONY: deploy\:openshift4\:powervs\:script\:output
+## Get output openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:script\:output: %output:
+	@$(shell) cd $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR) && ./openshift-install-powervs output  $(TERRAFORM_OUTPUT_VAR)
+
+.PHONY: deploy\:openshift4\:powervs\:script\:clean
+## Clean up all openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:script\:clean: %clean: %destroy
+ifeq ($(shell test -d $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR) && echo -n yes),yes)
+	@rm -rf $(OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR)
+endif

@@ -26,12 +26,6 @@ def call() {
             env.E2E_BRANCH="release-${env.OCP_RELEASE}"
             env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
 
-            //Makefile variables
-            env.TERRAFORM_FORCE_KEYPAIR_CREATION = "0"
-
-            //Build Harness org
-            env.BUILD_HARNESS_ORG="powercloud-cicd"
-
             //Scale variables
             env.SCALE_NUM_OF_DEPLOYMENTS = "60"
             env.SCALE_NUM_OF_NAMESPACES = "1000"
@@ -69,9 +63,6 @@ def call() {
             // Pull secrets
             env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
 
-            //build harness variables
-            env.BUILD_HARNESS_ORG="powercloud-cicd"
-            env.TERRAFORM_FORCE_KEYPAIR_CREATION="0"//For not using build-harness
             env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT="https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
 
             //Cluster and vm details

@@ -1,9 +1,0 @@
-management_services:
-  istio: enabled
-  vulnerability-advisor: enabled
-  storage-glusterfs: enabled
-  storage-minio: disabled
-  platform-security-netpols: enabled
-  node-problem-detector-draino: enabled
-  multicluster-endpoint: enabled
-  kmsplugin: disabled

@@ -27,10 +27,9 @@ def call() {
                 }
             }
         }
-        def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
-        def logContent_modified=logContent.toLowerCase()
         if ( env.INFRA_ISSUE == "true" ) {
             e2e_summary = env.ERROR_MESSAGE
+            currentBuild.result = 'FAILURE'
         }
         if ( env.OPENSHIFT_IMAGE != ""  ) {
             env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
@@ -50,9 +49,6 @@ def call() {
         if (fileExists('deploy/summary.txt') && !e2e_summary?.trim()) {
             currentBuild.result = 'UNSTABLE'
             e2e_summary = "E2e test didn't run"
-        }
-        else{
-            currentBuild.result = 'FAILURE'
         }
         OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
         env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
