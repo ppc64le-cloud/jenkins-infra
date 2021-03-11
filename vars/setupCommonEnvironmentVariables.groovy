@@ -24,7 +24,12 @@ def call() {
             //E2e Variables
             env.E2E_GIT = "https://github.com/openshift/origin"
             env.E2E_BRANCH="release-${env.OCP_RELEASE}"
-            env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+            if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.6" ) {
+                env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+            }
+            else{
+                env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+            }
 
             //Makefile variables
             env.TERRAFORM_FORCE_KEYPAIR_CREATION = "0"
