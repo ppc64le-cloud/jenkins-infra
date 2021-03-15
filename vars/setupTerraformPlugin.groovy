@@ -6,13 +6,14 @@ def call() {
         try {
             sh '''
                 echo ' get the plugin from artifactory repo !'
-                wget https://github.com/IBM-Cloud/terraform-provider-ibm/releases/download/v1.9.0/linux_amd64.zip
+                wget https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip
                 mkdir -p ~/.terraform.d/plugins/linux_amd64/
-                unzip -o linux_amd64.zip -d ~/.terraform.d/plugins/linux_amd64/
+                unzip terraform_${TERRAFORM_VER}_linux_amd64.zip -d /usr/local/bin
+                terraform -version
             '''
             }
         catch (err) {
-            echo 'Error ! Terraform setup plugin failed!'
+            echo 'Error ! Terraform setup plugin failed'
             throw err
         }
     }

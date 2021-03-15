@@ -34,7 +34,6 @@ def call(){
         }
         catch (err) {
             echo 'Error ! Tearing off the cluster. Failed to install acmeair !'
-            cleanupOcp4Cluster()
             throw err
         }
     }

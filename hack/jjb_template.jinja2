@@ -58,6 +58,7 @@
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
+        {% elif 'poll-powervs-images' in JOB_NAME %}"@daily"
         {% else %}""
         {% endif %}
     sandbox: true
