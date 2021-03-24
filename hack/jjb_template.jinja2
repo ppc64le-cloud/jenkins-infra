@@ -6,24 +6,26 @@
       - timed: {% if 'daily-ocp4.5-powervm-p8-min-multimasters' in JOB_NAME %}"00 13 * * * "
 
         {% elif 'daily-ocp4.6-powervm-p8-min-multimasters' in JOB_NAME %}"00 14 * * * "
-        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}"00 15 * * * "
+        {% elif 'daily-ocp4.6-powervm-p8-max-multimasters' in JOB_NAME %}" "
         {% elif 'daily-ocp4.7-powervm-p8-min-multimasters' in JOB_NAME %}"00 17 * * * "
-        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}"00 18,00 * * * "
+        {% elif 'daily-ocp4.7-powervm-p8-max-multimasters' in JOB_NAME %}" "
         {% elif 'daily-ocp4.7-powervm-p8-min-vscsi-multimasters' in JOB_NAME %}"00 12 * * 1,4 "
-        {% elif 'daily-ocp4.8-powervm-p8-min-multimasters' in JOB_NAME %}"00 23,05 * * * "
+        {% elif 'daily-ocp4.8-powervm-p8-min-multimasters' in JOB_NAME %}"00 23,05,19 * * * "
         {% elif 'daily-ocp4.6-to-4.7-powervm-p8-min-upgrade' in JOB_NAME %}"00 08 * * 0,2,4,6 "
         {% elif 'daily-ocp4.5-to-4.6-powervm-p8-max-upgrade' in JOB_NAME %}"00 08 * * 1,3,5 "
 
-        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}"00 16 * * * "
-        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}"00 20 * * * "
-        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}"00 00 * * * "
-        {% elif 'daily-ocp4.7-powervm-p9-max-sriov-multimasters' in JOB_NAME %}"00 12 * * 1,4 "
+        {% elif 'daily-ocp4.6-powervm-p9-min-multimasters' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.7-powervm-p9-min-multimasters' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.7-powervm-p9-max-multimasters' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.7-powervm-p9-max-sriov-multimasters' in JOB_NAME %}" "
         {% elif 'daily-ocp4.7-powervm-p9-min-ssp-multimasters' in JOB_NAME %}"00 12 * * 2,5 "
         {% elif 'daily-ocp4.7-powervm-p9-min-extproxy-multimasters' in JOB_NAME %}"00 12 * * 3,6 "
-        {% elif 'daily-ocp4.7-powervm-p9-min-chaos' in JOB_NAME %}"00 20 * * 7 "
         {% elif 'daily-ocp4.8-powervm-p9-max-multimasters' in JOB_NAME %}"00 08,04 * * * "
+        {% elif 'daily-ocp4.8-powervm-p9-min-sriov-multimasters' in JOB_NAME %}"00 12 * * 1,4 "
+        {% elif 'daily-ocp4.8-powervm-p9-min-chaos' in JOB_NAME %}"00 20 * * 7 "
 
         {% elif 'daily-powervs-dallas-p9-stability-check' in JOB_NAME %}""
+        {% elif 'daily-powervs-dallas12-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
         {% elif 'daily-powervs-frankfurt01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
         {% elif 'daily-powervs-frankfurt02-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
         {% elif 'daily-powervs-london-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
@@ -33,7 +35,7 @@
         {% elif 'daily-powervs-tokyo-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
         {% elif 'daily-powervs-saopaulo01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
 
-        {% elif 'daily-ocp4.5-powervs-script-sydney-p9-min' in JOB_NAME %}"0 22 * * * "
+        {% elif 'daily-ocp4.5-powervs-script-sydney-p9-min' in JOB_NAME %}" "
         {% elif 'daily-ocp4.6-powervs-sydney-p9-min' in JOB_NAME %}""
         {% elif 'daily-ocp4.6-powervs-script-sydney-p9-min' in JOB_NAME %}"0 19 * * * "
         {% elif 'daily-ocp4.6-powervs-script-sydney-p9-scale' in JOB_NAME %}"0 16 * * * "
@@ -41,10 +43,11 @@
         {% elif 'daily-ocp4.8-powervs-sydney-p9-min' in JOB_NAME %}"0 06 * * * "
 
         {% elif 'daily-ocp4.5-powervs-script-tokyo-p9-min' in JOB_NAME %}"0 00 * * * "
-        {% elif 'daily-ocp4.6-powervs-tokyo-p9-scale' in JOB_NAME %}"0 20 * * * "
-        {% elif 'daily-ocp4.7-powervs-tokyo-p9-min' in JOB_NAME %}"0 19 * * * "
+        {% elif 'daily-ocp4.6-powervs-tokyo-p9-scale' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.7-powervs-tokyo-p9-min' in JOB_NAME %}" "
         {% elif 'daily-ocp4.7-powervs-script-tokyo-p9-min' in JOB_NAME %}"0 16 * * * "
         {% elif 'daily-ocp4.7-powervs-tokyo-p9-scale' in JOB_NAME %}"0 15 * * * "
+        {% elif 'daily-ocp4.8-powervs-tokyo-p9-scale' in JOB_NAME %}"0 20 * * * "
         {% elif 'daily-ocp4.8-powervs-tokyo-p9-min' in JOB_NAME %}"0 08 * * * "
 
         {% elif 'daily-ocp4.6-powervs-dallas-p9-min' in JOB_NAME %}""
@@ -53,18 +56,22 @@
         {% elif 'daily-ocp4.6-powervs-frankfurt01-p9-min' in JOB_NAME %}""
         {% elif 'daily-ocp4.7-powervs-frankfurt01-p9-min' in JOB_NAME %}""
 
-        {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}"0 04 * * * "
-        {% elif 'daily-ocp4.7-powervs-london-p9-min' in JOB_NAME %}"0 00 * * * "
+        {% elif 'daily-ocp4.6-powervs-london06-p9-min' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.7-powervs-london-p9-min' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.8-powervs-london-p9-min' in JOB_NAME %}"0 04 * * * "
 
         {% elif 'daily-ocp4.7-powervs-toronto-p9-min' in JOB_NAME %}"0 05 * * * "
         {% elif 'daily-ocp4.8-powervs-toronto-p9-min' in JOB_NAME %}"0 09 * * *"
 
 
-        {% elif 'daily-ocp4.7-powervs-washington-p9-min' in JOB_NAME %}"0 05 * * * "
+        {% elif 'daily-ocp4.7-powervs-washington-p9-min' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.8-powervs-washington-p9-min' in JOB_NAME %}"0 05 * * * "
 
         {% elif 'daily-ocp4.7-powervs-frankfurt02-p9-min' in JOB_NAME %}""
 
         {% elif 'daily-ocp4.8-powervs-saopaulo01-p9-min' in JOB_NAME %}"0 05 * * * "
+
+        {% elif 'daily-ocp4.8-powervs-dallas12-p9-min' in JOB_NAME %}"0 05 * * * "
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"

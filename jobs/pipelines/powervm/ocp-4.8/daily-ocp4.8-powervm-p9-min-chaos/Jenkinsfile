@@ -1,0 +1,221 @@
+@Library('pcloud-jenkins-library') _
+
+pipeline {
+    agent {
+        dockerfile {
+            dir 'images/terraform'
+            additionalBuildArgs '--force-rm	--no-cache --quiet'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'daily-x86_64'
+        }
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+        // key and certificate for scnl cicd powervc for chaos tests
+        SCNL_CERT_KEY = credentials('SCNL_CERT_KEY')
+        SCNL_CERT = credentials('SCNL_CERT')
+
+        //Env constants
+        HARDWARE_CHOSE = "P9"
+        TERRAFORM_VER = "0.13.0"
+        AVAILABILITY_ZONE = "p9_pvm"
+        OCP_RELEASE="4.8"
+        TARGET = "deploy-openshift4-powervc"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        POWERVS = false
+        WAIT_FOR_DEBUG = "1"
+        REDHAT_RELEASE = "8.3"
+
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"//The download branch
+
+        //E2e and Scale specific variables
+        ENABLE_E2E_TEST="false"
+        ENABLE_SCALE_TEST="false"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
+
+        // Type of configuration
+        CONFIG_TYPE="min"
+	 }
+
+    stages {
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
+                script{
+                    //Additional parameter for chaos test
+                    env.OS_REGION_NAME="RegionOne"
+                    env.OS_USER_DOMAIN_NAME="Default"
+                    env.OS_COMPUTE_API_VERSION=2.46
+                    //Kraken repository variables
+                    env.OPENSHIFT_CHAOS_GIT_DEPLOY_BRANCH="master" //The download branch
+                    env.OPENSHIFT_CHAOS_GIT_DEPLOY_PROJECT = "https://github.com/cloud-bulldozer/kraken"
+                }
+            }
+        }
+        stage('pull artifact') {
+            steps {
+                script {
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
+                    getArtifacts("poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                    getArtifacts("poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
+                }
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        gbToMb()
+                        pullSecret()
+                        env.OPENSHIFT_IMAGE = ""
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        }
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
+                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
+                            env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhcos-${OCP_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
+                            env.BASTION_IMAGE = readFile "deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE.split()[0].trim()
+                            env.BASTION_IMAGE_ID = env.BASTION_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
+                        }
+                        if (env.DEPLOY_MASTER == "false")
+                        {
+                            echo "Cluster cant deploy without master"
+                            throw err
+                        }
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
+
+                        createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BOOTSTRAP_VCPUS , "${BOOTSTRAP_MEMORY_MB}", env.BOOTSTRAP_PROCESSORS, env.BOOTSTRAP_TEMPLATE)
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                setupTerraformPlugin()
+                initializeEnvironment()
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                deployCluster()
+            }
+        }
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                crontabCommandCaptureScript()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+        stage('Gather pprof and prometheus data') {
+            steps {
+                gatherPrometheusData()
+            }
+        }
+        stage('Clone the Kraken project and run chaos tests') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           cd ${WORKSPACE}
+                           mkdir -p /etc/pki/tls/certs
+                           mkdir -p /etc/pki/tls/private
+                           cp $SCNL_CERT /etc/pki/tls/certs/powervc.crt
+                           cp $SCNL_CERT_KEY /etc/pki/tls/private/powervc.key
+                           chmod a+rx /etc/pki/tls/private/powervc.key
+                           chmod a+rx /etc/pki/tls/certs/powervc.crt
+                           ls -ltrR /etc/pki/tls/
+                           git clone $OPENSHIFT_CHAOS_GIT_DEPLOY_PROJECT
+                           git checkout $OPENSHIFT_CHAOS_GIT_DEPLOY_BRANCH
+                           cd ${WORKSPACE}/kraken
+                           pip3 install -r requirements.txt
+                           cd ${WORKSPACE}/kraken/config
+                           sed -i "s|- scenarios/node_hog_engine.yaml|#- scenarios/node_hog_engine.yaml|g" config.yaml
+                           sed -i "s|- scenarios/time_scenarios_example.yml|#- scenarios/time_scenarios_example.yml|g" config.yaml
+                           cd ${WORKSPACE}/kraken/scenarios
+                           sed -i "s|- node_crash_scenario|#- node_crash_scenario|g" node_scenarios_example.yml
+                           sed -i "s|cloud_type: aws|cloud_type: openstack|g" node_scenarios_example.yml
+                           sed -i "s|timeout: 120|timeout: 300|g" node_scenarios_example.yml
+                           sed -i "s|infra|worker|g" node_scenarios_example.yml
+                           cd ${WORKSPACE}/kraken
+                           export OS_CACERT="/etc/pki/tls/certs/powervc.crt"
+                           export OS_KEY="/etc/pki/tls/private/powervc.key"
+                           python3 run_kraken.py 2>&1 > KrakenOutput.txt
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! Cloning Kraken and running chaos tests failed!'
+                        getArtifactsAndCleanOcp4(env.AUTH_URL)
+                        throw err
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveAllArtifacts("deploy/vars.tfvars","cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz",
+                "deploy/cron.log", "kraken/KrakenOutput.txt",
+                "kraken/config/config.yaml","kraken/scenarios/node_scenarios_example.yml")
+            cleanupOcp4Cluster()
+            checkInfraError()
+            script {
+                OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
+                message = "OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
+                notifyBySlack(currentBuild.result, message)
+            }
+            cleanWs()
+        }
+    }
+}
