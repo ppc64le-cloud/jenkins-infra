@@ -518,14 +518,14 @@ pipeline {
             }
         }
         stage('Setup and run ansible extra') {
-            when { expression { env.ENABLE_E2E_TEST } }
+            when { expression { return env.RUN_ACMEAIR == "true"; } }
             steps {
                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
                setupAndRunE2e()
             }
         }
         stage('Clone and Run Acmeair'){
-            when { expression { env.RUN_ACMEAIR } }
+           when { expression { return env.ENABLE_E2E_TEST == "true"; } }
             steps{
                 runAcmeair()
             }
