@@ -1,13 +1,6 @@
 @Library('pcloud-jenkins-library') _
 pipeline {
-    agent {
-        dockerfile {
-            dir 'images/powervs'
-            additionalBuildArgs '--force-rm	--no-cache'
-            args '-v /etc/resolv.conf:/etc/resolv.conf'
-            label 'daily-x86_64'
-        }
-    }
+    agent any
     parameters {
 	    string(defaultValue: '', description: 'Rhel Url', name: 'RhelUrl')
 	    string(defaultValue: '', description: 'Rhcos Url', name: 'RhcosUrl')
