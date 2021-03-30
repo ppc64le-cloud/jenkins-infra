@@ -1,13 +1,6 @@
 @Library('pcloud-jenkins-library') _
 pipeline {
-    agent {
-        dockerfile {
-            dir 'images/terraform'
-            additionalBuildArgs '--force-rm	--no-cache'
-            args '-v /etc/resolv.conf:/etc/resolv.conf'
-            label 'daily-x86_64'
-        }
-    }
+    agent any
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')

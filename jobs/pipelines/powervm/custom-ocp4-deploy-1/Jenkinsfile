@@ -360,14 +360,7 @@ properties([
 ])
 
 pipeline {
-    agent {
-        dockerfile {
-            dir 'images/terraform'
-            additionalBuildArgs '--force-rm	--no-cache'
-            args '-v /etc/resolv.conf:/etc/resolv.conf'
-            label 'daily-x86_64'
-        }
-    }
+    agent any
     parameters {
         //Master parameters
         string(defaultValue: '1', description: 'Required Number of VCPUs Master', name: 'VcpusMaster')
