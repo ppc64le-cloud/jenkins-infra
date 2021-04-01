@@ -21,5 +21,4 @@ private_key_file            = "id_rsa"
 rhel_subscription_username = "__REDHAT_USERNAME__"
 rhel_subscription_password = "__REDHAT_PASSWORD__"
 storage_type                    = "nfs"
-volume_type                     = "tier3"
 volume_size                     =  300
