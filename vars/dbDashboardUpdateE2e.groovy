@@ -29,10 +29,10 @@ def call() {
 
         if ( env.INFRA_ISSUE == "false" ) {
             if ( env.POWERVS == "true"  ) {
-                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervs', customDataMap: clusterInfoFields])
+                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdb-e2e-powervs', customDataMap: clusterInfoFields])
             }
             else{
-                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+                step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdb-e2e-powervm', customDataMap: clusterInfoFields])
             }
         }
         else{
