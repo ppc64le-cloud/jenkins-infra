@@ -42,7 +42,7 @@ def call() {
             step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: fails_per_threshold.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
         }
         else {
-            step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
+            step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'scripts/dummy-test-summary.xml'])
             currentBuild.result = 'FAILURE'
         }
         //If summary file exists but doesn't have results then marking it as unstable

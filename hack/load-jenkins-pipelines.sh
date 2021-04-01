@@ -10,7 +10,39 @@ INFRA_ROOT="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
 if [[ -z "${WHAT}" ]]; then
     pushd ${INFRA_ROOT}
-    jenkinsfiles=(`find jobs/pipelines -name Jenkinsfile -print`)
+    folders=(`find jobs/pipelines -name Jenkinsfile -print | grep -v powervm | sed "s|jobs/pipelines/||g" | sed "s|/Jenkinsfile||" | xargs -I"{}" dirname {} | uniq`)
+    popd
+else
+    folders=(${WHAT})
+fi
+
+echo "Creating Folders: ${folders[@]}"
+TMP_DIR=$(mktemp -d)
+for folder in "${folders[@]}"
+do
+	IFS=/
+        JOB_FOLDER=""
+	for i in $folder
+	do
+        if [[ "$folder" != "." ]]
+        then
+            unset IFS
+            echo $i
+            JOB_FOLDER+=$i
+            echo "{\"JOB_FOLDER\":${JOB_FOLDER}}" | jinja2 ${INFRA_ROOT}/hack/jjb_template_folder.jinja2 > ${TMP_DIR}/${i}.yml
+            JOB_FOLDER+='/'
+            echo $JOB_FOLDER
+            IFS=/
+        fi
+	done
+	unset IFS
+done
+
+jenkins-jobs --user ${JENKINS_USER} --password ${JENKINS_PASSWORD} update ${TMP_DIR}
+
+if [[ -z "${WHAT}" ]]; then
+    pushd ${INFRA_ROOT}
+    jenkinsfiles=(`find jobs/pipelines -name Jenkinsfile -print | grep -v powervm`)
     popd
 else
     jenkinsfiles=(${WHAT})
@@ -20,9 +52,12 @@ echo "Loading pipelines: ${jenkinsfiles[@]}"
 TMP_DIR=$(mktemp -d)
 for jenkinsfile in "${jenkinsfiles[@]}"
 do
-	JENKINS_FILE=${jenkinsfile}
-	JOB_NAME=$(dirname ${INFRA_ROOT}/${jenkinsfile}| xargs basename)
-	echo "{\"JOB_NAME\":${JOB_NAME},\"JENKINS_FILE\":${JENKINS_FILE}}" | jinja2 ${INFRA_ROOT}/hack/jjb_template.jinja2 > ${TMP_DIR}/${JOB_NAME}.yml
+    JENKINS_FILE=${jenkinsfile}
+    DIR_NAME="$(dirname "${jenkinsfile}")"
+    JOB_NAME=$(dirname ${INFRA_ROOT}/${jenkinsfile}| xargs basename)
+    JOB_FOLDER=$(echo $DIR_NAME | sed "s|jobs/pipelines/||g" | sed "s|/$JOB_NAME||g")
+    if [[ "$JOB_FOLDER" = "$JOB_NAME" ]]; then JOB_PATH="${JOB_NAME}" ;else JOB_PATH="${JOB_FOLDER}/${JOB_NAME}"; fi
+    echo "{\"JOB_NAME\":${JOB_PATH},\"JENKINS_FILE\":${JENKINS_FILE}}" | jinja2 ${INFRA_ROOT}/hack/jjb_template.jinja2 > ${TMP_DIR}/${JOB_NAME}.yml
 done
 
 jenkins-jobs --user ${JENKINS_USER} --password ${JENKINS_PASSWORD} update ${TMP_DIR}

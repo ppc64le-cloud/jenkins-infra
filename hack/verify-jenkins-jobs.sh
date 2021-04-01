@@ -5,7 +5,7 @@ set -o nounset
 set -o pipefail
 
 INFRA_ROOT="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
-GIT_URI="git@github.ibm.com:powercloud-cicd/test-icp-daily.git"
+GIT_URI="git@github.com:ppc64le-cloud/jenkins-infra.git"
 
 pushd ${INFRA_ROOT}
 jenkinsfiles=($(find . -name Jenkinsfile -print|sed 's|./||'))
