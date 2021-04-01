@@ -34,10 +34,10 @@ def call () {
             clusterInfoFields['clusterinfo'] = clusterInfo
             if ( env.INFRA_ISSUE == "false" ) {
                 if ( env.POWERVS == "true"  ) {
-                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmollypowervsscale', customDataMap: clusterInfoFields])
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdb-scale-powervs', customDataMap: clusterInfoFields])
                 }
                 else {
-                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdbmolly', customDataMap: clusterInfoFields])
+                    step([$class: 'InfluxDbPublisher', selectedTarget: 'influxdb-scale-powervm', customDataMap: clusterInfoFields])
                 }
             }
             else{
