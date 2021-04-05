@@ -5,7 +5,7 @@ def call() {
         }
         try {
             // Run the script to setup kube config
-            sh (returnStdout: false, script: "/bin/bash ${WORKSPACE}/hack/setupkubeconfig_ocp4.sh || true")
+            sh (returnStdout: false, script: "/bin/bash ${WORKSPACE}/scripts/setupkubeconfig-ocp4.sh || true")
             sh '''
                 echo 'oc version'
                 oc version

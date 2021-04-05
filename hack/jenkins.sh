@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INFRA_ROOT="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
-TEST_INFRA_IMAGE=powercloud-cicd/test-icp-daily-amd64:0.1
+TEST_INFRA_IMAGE=ppc64le-cloud/jenkins-infra-amd64:0.1
 
 docker_run()
 {

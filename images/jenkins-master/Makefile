@@ -1,7 +1,7 @@
 all: build
 
 VERSION?=0.1
-PREFIX?=powercloud-cicd
+PREFIX?=ppc64le-cloud
 ARCH?=amd64
 TEMP_DIR:=$(shell mktemp -d)
 

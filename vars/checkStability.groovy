@@ -13,7 +13,7 @@ def call() {
                 BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
                 [ $? -ne 0 ] && exit 1
                 if [ ! -z "${BASTION_IP}" ]; then
-                    scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/hack/stability-check.sh root@${BASTION_IP}:
+                    scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/scripts/stability-check.sh root@${BASTION_IP}:
                     ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 stability-check.sh;
                     ./stability-check.sh 2>&1 | tee -a stability-check.log;
                     exit"

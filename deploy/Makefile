@@ -13,28 +13,19 @@ DATE ?= $(shell date +%Y%m%d)
 GITHUB_USER := $(shell echo $(GITHUB_USER) | sed 's/@/%40/g')
 GITHUB_TOKEN ?=
 
-DOCKER_USER ?=
-DOCKER_PASS ?=
 export SELF ?= make
 export GIT ?= git
-ARTIFACTORY_URL ?= na.artifactory.swg-devops.com
 ARTIFACTORY_USER ?=
 ARTIFACTORY_TOKEN ?=
-TERRAFORM_STATE_ARTIFACTORY_TOKEN ?= $(ARTIFACTORY_TOKEN)
 
-TRAVIS_BUILD_NUMBER ?= $(shell date +%H%M%S)
-
-IMAGE ?=
 TAG ?= latest-$(DATE)-$(TRAVIS_BUILD_NUMBER)
 
-CANARY_DEPLOY_DIR ?=.$(TARGET)
-
-ifeq ($(CANARY_DEPLOY_DIR),.)
-$(error CANARY_DEPLOY_DIR is not set - this is used to further define TERRAFORM_DIR and TERRAFORM_VARS_FILE)
+ifeq ($(TARGET),.)
+$(error TARGET is not set - this is used to further define TERRAFORM_DIR and TERRAFORM_VARS_FILE)
 endif
 
-TERRAFORM_DIR ?=$(CANARY_DEPLOY_DIR)
-TERRAFORM_VARS_FILE ?= $(CANARY_DEPLOY_DIR).tfvars
+TERRAFORM_DIR ?=.$(TARGET)
+TERRAFORM_VARS_FILE ?= .$(TARGET).tfvars
 
 ##---------- SSH specific parameters ---------
 SSH := $(shell which ssh)
@@ -166,7 +157,6 @@ deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
         -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
-##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
 	@$(SELF) -s deploy:openshift4:powervs:script OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
 .PHONY: deploy-openshift4-powervs-script\:output
@@ -209,7 +199,6 @@ deploy-openshift4-powervs: %deploy-openshift4-powervs:
         -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" -e "s|__PULL_SECRET_FILE__|$(PULL_SECRET_FILE)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
-##@$(shell ../hack/prepare_template.sh  "$${ICP_ADDITIONAL_CONFIG}" "${TERRAFORM_VARS_FILE}" "${SKIP_ICP_INSTALL}")
 	@$(SELF) -s deploy:openshift4:powervs OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
 
 .PHONY: deploy-openshift4-powervs\:redeploy

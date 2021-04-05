@@ -35,7 +35,7 @@ def call() {
         }
         else
         {
-            step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'hack/dummy-test-summary.xml'])
+            step([$class: 'JUnitResultArchiver', allowEmptyResults: true,  testResults: 'scripts/dummy-test-summary.xml'])
             currentBuild.result = 'FAILURE'
             summary = "Scale test didn't run"
         }
