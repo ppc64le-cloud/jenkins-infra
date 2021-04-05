@@ -61,9 +61,9 @@
     pipeline-scm:
       scm:
         - git:
-            url: git@github.com:ppc64le-cloud/jenkins-infra.git
+            url: https://github.com/ppc64le-cloud/jenkins-infra.git
             branches:
               - master
-            credentials-id: ibm-github
+            credentials-id: github
             clean: true
       script-path: {{ JENKINS_FILE }}
