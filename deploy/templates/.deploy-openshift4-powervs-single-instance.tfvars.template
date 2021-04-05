@@ -1,0 +1,24 @@
+### Configure the IBM Cloud provider
+ibmcloud_api_key    = "__IBMCLOUD_API_KEY__"
+ibmcloud_region     = "__IBM_CLOUD_REGION__"
+ibmcloud_zone       = "__IBM_CLOUD_ZONE__"
+service_instance_id = "__SERVICE_INSTANCE_ID__"
+
+### Configure VM details
+vm_id_prefix = "__VM_ID_PREFIX__"
+vm_id        = ""
+bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__", "count"   = 1}
+rhel_image_name     = "__BASTION_IMAGE_NAME__"
+processor_type      = "shared"
+system_type         = "__SYSTEM_TYPE__"
+network_name        = "__NETWORK_NAME__"
+bastion_health_status = "__BASTION_HEALTH_STATUS__"
+
+rhel_username               = "__RHEL_USERNAME__"
+rhel_smt                    = __RHEL_SMT__
+public_key_file             = "id_rsa.pub"
+private_key_file            = "id_rsa"
+rhel_subscription_username = "__REDHAT_USERNAME__"
+rhel_subscription_password = "__REDHAT_PASSWORD__"
+storage_type                    = "nfs"
+volume_size                     =  300

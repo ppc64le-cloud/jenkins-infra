@@ -1,0 +1,121 @@
+@Library('pcloud-jenkins-library') _
+pipeline {
+    agent any
+    parameters {
+	    string(defaultValue: '', description: 'Rhel Url', name: 'RhelUrl')
+	    string(defaultValue: '', description: 'Rhcos Url', name: 'RhcosUrl')
+	    string(defaultValue: '', description: 'Centos Url', name: 'CentosUrl')
+	    string(defaultValue: '120', description: 'Image Size', name: 'ImageSize')
+          string(defaultValue: '', description: "Specify if don't want to run with latest release version", name: 'pvsadmVersion')
+	    text(defaultValue: '''ocp-addons-toronto-01
+                          ocp-addons-frankfurt-01
+                          ocp-cicd-dallas
+                          ocp-cicd-frankfurt-01
+                          ocp-cicd-frankfurt-02
+                          ocp-cicd-london-06
+                          ocp-cicd-toronto-01
+                          ocp-cicd-washington
+                          ocp-cicd-sydney-04
+                          ocp-cicd-tokyo-04
+                          ocp-dev-frankfurt-01
+                          ocp-internal-frankfurt-01
+                          ocp-internal-london-04
+                          ocp-internal-toronto
+                          ocp-ocs-london-06
+                          ocp-validation-frankfurt-02
+                          ocp-validation-sydney-04
+                          ocp-validation-toronto-01
+                          ocp-garage-frankfurt-01
+                          ocp-garage-sydney-04
+                          ocp-garage-toronto-01
+                          ocp-powervs-tor01
+                          upstream-core-lon04''',
+                          name: 'instance_list')
+	}
+    environment {
+        //Credentials. All must be defined in Jenkins Credentials
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        NODE_PASSWORD = credentials('POWERVS_NODE_PASSWORD')
+        NODE_IP = "9.47.90.173"
+        //Parameters
+        RHEL_URL = "${params.RhelUrl.trim()}"
+        CENTOS_URL = "${params.CentosUrl.trim()}"
+        RHCOS_URL = "${params.RhcosUrl.trim()}"
+        IMAGE_SIZE = "${params.ImageSize.trim()}"
+        PVSADM_VERSION="${params.pvsadmVersion.trim()}"
+	}
+
+    stages {
+        stage('Run script to upload image') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        def text=""
+                        params.instance_list.split("\n").each {
+                           instance -> text=text + "${instance.trim()}" + "\n"
+                        }
+                        writeFile file: 'files/powervs_instance_list.txt', text: text+"\n"
+                        sh '''
+                            apt-get update
+                            apt-get install sshpass
+                            sshpass -p ${NODE_PASSWORD} scp -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' ${WORKSPACE}/scripts/powervs_create_and_upload_image.sh ${WORKSPACE}/files/powervs_instance_list.txt root@$NODE_IP:
+                            cmd="curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | FORCE=1 bash"
+                            if [ -n "${PVSADM_VERSION}" ]; then
+                                 cmd="curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | VERSION=${PVSADM_VERSION} FORCE=1 bash"
+                            fi
+                            sshpass -p ${NODE_PASSWORD} ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "chmod +x powervs_create_and_upload_image.sh;$cmd "
+                            if [ -n "${RHEL_URL}" ]; then
+                                sshpass -p $NODE_PASSWORD ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "./powervs_create_and_upload_image.sh -u '${RHEL_URL}' -p ${REDHAT_PASSWORD} -a ${IBMCLOUD_API_KEY} -n ${REDHAT_USERNAME} -s ${IMAGE_SIZE}"
+                            fi
+                            if [ -n "${CENTOS_URL}" ]; then
+                                sshpass -p $NODE_PASSWORD ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "./powervs_create_and_upload_image.sh -u '${CENTOS_URL}' -a ${IBMCLOUD_API_KEY} -s ${IMAGE_SIZE}"
+                            fi
+                            if [ -n "${RHCOS_URL}" ]; then
+                                sshpass -p $NODE_PASSWORD ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "./powervs_create_and_upload_image.sh -u '${RHCOS_URL}' -a ${IBMCLOUD_API_KEY} -s ${IMAGE_SIZE}"
+                            fi
+                        '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Cleanup and fetch artifacts') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                       sh '''
+                         cd ${WORKSPACE}
+                         sshpass -p ${NODE_PASSWORD} scp -o StrictHostKeyChecking=no root@${NODE_IP}:~/image_list.txt .
+                         sshpass -p ${NODE_PASSWORD} scp -o StrictHostKeyChecking=no root@${NODE_IP}:~/instance_list_output.txt .
+                         sshpass -p ${NODE_PASSWORD} ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval 60' -o 'ServerAliveCountMax 100' root@${NODE_IP} "rm -f ~/image_list.txt ~/powervs_create_and_upload_image.sh ~/powervs_instance_list.txt ~/instance_list_output.txt"
+                       '''
+                        }
+                    catch (err) {
+                        echo 'Error ! ENV setup failed!'
+                        throw err
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'image_list.txt', fingerprint: true, onlyIfSuccessful: true
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'instance_list_output.txt', fingerprint: true, onlyIfSuccessful: true
+            cleanWs()
+            notifyBySlack(currentBuild.result, " ")
+        }
+    }
+}

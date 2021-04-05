@@ -1,0 +1,34 @@
+OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_PROJECT ?= "https://github.com/ocp-power-automation/infra.git"
+OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH ?= master
+OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR ?= .deploy-openshift4-powervs-single-instance/
+OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE ?= .deploy-openshift4-powervs-single-instance.tfvars
+
+.PHONY: deploy\:openshift4\:powervs\:single\:instance
+## Deploy openshift4 on powervs
+deploy\:openshift4\:powervs\:single\:instance:
+	@$(GIT) clone -b $(OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH) $(OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_PROJECT) $(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+	@$(shell) cp -a ./$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)/infra-node/. ./$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)/ 
+	@$(SELF) terraform:init TERRAFORM_DIR=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+	@$(SELF) terraform:apply TERRAFORM_VARS_FILE=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE) TERRAFORM_DIR=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+
+.PHONY: deploy\:openshift4\:powervs\:single\:instance\:redeploy
+## RedoDeploy openshift4 on powervs
+deploy\:openshift4\:powervs\:single\:instance\:redeploy: %redeploy:
+	@$(SELF) terraform:apply TERRAFORM_VARS_FILE=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE) TERRAFORM_DIR=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+
+.PHONY: deploy\:openshift4\:powervs\:single\:instance\:destroy
+## Destroy openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:single\:instance\:destroy: %destroy:
+	@$(SELF) terraform:destroy TERRAFORM_VARS_FILE=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_TERRAFORM_VARS_FILE) TERRAFORM_DIR=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+
+.PHONY: deploy\:openshift4\:powervs\:single\:instance\:output
+## output openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:single\:instance\:output: %output:
+	@$(SELF) terraform:output TERRAFORM_DIR=$(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR) TERRAFORM_OUTPUT_VAR=$(TERRAFORM_OUTPUT_VAR)
+
+.PHONY: deploy\:openshift4\:powervs\:single\:instance\:clean
+## Clean up all openshift4 on powervs deployment resources
+deploy\:openshift4\:powervs\:single\:instance\:clean: %clean: %destroy
+ifeq ($(shell test -d $(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR) && echo -n yes),yes)
+	@rm -rf $(OPENSHIFT_POWERVS_SINGLE_INSTANCE_DEPLOY_DIR)
+endif

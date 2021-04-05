@@ -1,0 +1,65 @@
+### Configure the IBM Cloud provider
+ibmcloud_api_key    = "__IBMCLOUD_API_KEY__"
+ibmcloud_region     = "__IBM_CLOUD_REGION__"
+ibmcloud_zone       = "__IBM_CLOUD_ZONE__"
+service_instance_id = "__SERVICE_INSTANCE_ID__"
+
+### Configure the Instance details
+bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__", "count"   = 1}
+bootstrap                   = {memory      = "__BOOTSTRAP_MEMORY__",   processors  = "__BOOTSTRAP_PROCESSORS__",  "count"   = 1}
+master                      = {memory      = "__MASTER_MEMORY__",   processors  = "__MASTER_PROCESSORS__",  "count"   = __NUM_OF_MASTERS__}
+worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = __NUM_OF_WORKERS__}
+rhel_image_name     = "__BASTION_IMAGE_NAME__"
+rhcos_image_name    = "__RHCOS_IMAGE_NAME__"
+processor_type      = "shared"
+system_type         = "__SYSTEM_TYPE__"
+network_name        = "__NETWORK_NAME__"
+
+rhel_username               = "__RHEL_USERNAME__"
+rhel_smt                    = __RHEL_SMT__
+rhel_subscription_username = "__REDHAT_USERNAME__"
+rhel_subscription_password = "__REDHAT_PASSWORD__"
+
+
+### OpenShift variables
+openshift_install_tarball =  "__OPENSHIFT_INSTALL_TARBALL__"
+openshift_client_tarball = "__OPENSHIFT_CLIENT_TARBALL__"
+
+release_image_override = "__OPENSHIFT_IMAGE__"
+
+
+cluster_domain = "__CLUSTER_DOMAIN__"
+cluster_id_prefix = "__INSTANCE_NAME__"
+
+### Local registry variables
+enable_local_registry       = "__ENABLE_LOCAL_REGISTRY__"  #Set to true to enable usage of local registry for restricted network install.
+
+local_registry_image       = "__LOCAL_REGISTRY_IMAGE__"
+ocp_release_tag            = "__OCP_RELEASE_TAG__"
+
+
+
+#helpernode_repo             = "__HELPERNODE_REPO__"
+#helpernode_tag             = "__HELPERNODE_TAG__"
+#install_playbook_repo       = "__INSTALL_PLAYBOOK_REPO__"
+#install_playbook_tag       = "__INSTALL_PLAYBOOK_TAG__"
+
+installer_log_level         = "info"
+ansible_extra_options       = "-v"
+pull_secret_file            = "__PULL_SECRET_FILE__"
+dns_forwarders              = "1.1.1.1; 9.9.9.9"
+rhcos_kernel_options        = []
+
+## Uncomment any one of the below formats to use proxy. Default 'port' will be 3128 if not specified. Not authenticated if 'user' is not specified.
+#proxy = {}
+#proxy = {server = "hostname_or_ip"}
+#proxy = {server = "hostname_or_ip", port = "3128", user = "pxuser", password = "pxpassword"}
+setup_squid_proxy = "__SETUP_SQUID_PROXY__"
+
+storage_type                = "nfs"
+volume_size                 = "300" # Value in GB
+volume_type                 = "tier3"
+
+upgrade_image = "__UPGRADE_IMAGE__"
+upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
+upgrade_delay_time = "__UPGRADE_DELAY_TIME__"

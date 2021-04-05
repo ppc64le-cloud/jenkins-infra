@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="1" tests="1" time="1">
+    <testcase name="dummy" classname="dummy" time="1">
+    <failure message="Dumay failure" type="failure">
+    </failure>
+    <system-out>dummy STDOUT dump</system-out>
+    <system-err>dummy STDERR dump</system-err>
+    </testcase>
+</testsuite>

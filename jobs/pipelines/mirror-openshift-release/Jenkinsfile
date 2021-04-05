@@ -1,0 +1,189 @@
+@Library('pcloud-jenkins-library') _
+pipeline {
+    agent any
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        DOCKER_PASSWORD = "${ARTIFACTORY_TOKEN}"
+        CI_OCP_TOKEN = credentials('CI_OCP_TOKEN')
+        CI_OCP_TOKEN_2 = credentials('CI_OCP_TOKEN_2')
+    }
+    stages {
+        stage('Clone mirror-openshift-releases') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openshift_ws'], [$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.ibm.com:powercloud-openshift/mirror-openshift-releases.git' , credentialsId: 'ibm-github']]])
+            }
+        }
+
+        stage('Get images and push') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                    sh '''
+                        apt update
+                        apt install docker docker.io jq -y
+                        cd ${WORKSPACE}/openshift_ws
+                        docker login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                        wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.3/linux/oc.tar.gz -O /tmp/oc.tar.gz
+                        tar zvxf /tmp/oc.tar.gz
+                        chmod +x oc
+                        export PATH=$PATH:$PWD
+                        oc login https://api.ci.openshift.org --token=${CI_OCP_TOKEN}
+                        oc registry login --skip-check
+                        ./mirror-images.sh || true
+                        oc login --token=${CI_OCP_TOKEN_2} --server=https://api.ci.l2s4.p1.openshiftapps.com:6443
+                        oc registry login --skip-check
+                        ./mirror-images.sh || true
+                    '''
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Mirroring Failed!'
+                        throw err
+                    }
+                }
+            }
+        }
+
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                    sh '''
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r > builds.raw.txt
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.3\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.3-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.4\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.4-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.5\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.5-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.6\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.6-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.7\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.7-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.8\\.0' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.8-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.3\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.3-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.4\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.4-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.5\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.5-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.6\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.6-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.7\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.7-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.8\\.0' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.8-build.txt;
+                    done
+
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.3\\.[1-9]\\+[0-9]*' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.3-stable-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.4\\.[1-9]\\+[0-9]*' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.4-stable-builds.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.5\\.[1-9]\\+[0-9]*' > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> all-4.5-stable-builds.txt;
+                    done
+                    
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.3\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.3-stable-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.4\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.4-stable-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.5\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.5-stable-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.6\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.6-stable-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.7\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.7-stable-build.txt;
+                    done
+                    curl https://openshift-release-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/ | grep -A 2 '<td class="text-monospace"' | grep -v '^--' | awk 'NR%3{printf "%s ",$0;next;}1' | grep "<td" | grep "href=" | sed 's/<\\/a//' |awk  'BEGIN{FS="href="}{print $2}' | awk 'BEGIN{FS=">"}{print $2} {print $5} {print $6}'|awk 'NR%3{printf "%s ",$0;next;}1'| sed 's/<\\/a//' | sed 's/<td title="//'|sed 's/\"//g' | sed 's/<\\/td//' | grep -v 'Failed' | sort -k3 -r | awk '{print $1}'| grep '^4\\.8\\.[1-9]\\+[0-9]*' |  head -n 1 > builds.txt
+                    for i in `cat builds.txt`;
+                        do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.8-stable-build.txt;
+                    done
+
+                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.4" | head -n 1 | awk '{print $1" "}')" > candidate-4.5.latest.txt
+                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.5" | head -n 1 | awk '{print $1" "}' >> candidate-4.5.latest.txt
+
+                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.4" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.3" | head -n 1 | awk '{print $1" "}')" > candidate-4.4.latest.txt
+                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.4" | head -n 1 | awk '{print $1" "}' >> candidate-4.4.latest.txt
+
+                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.6" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.5" | head -n 1 | awk '{print $1" "}')" > candidate-4.6.latest.txt
+                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.6" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.6" | head -n 1 | awk '{print $1" "}' >> candidate-4.6.latest.txt
+                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.7" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.6" | head -n 1 | awk '{print $1" "}')" > candidate-4.7.latest.txt
+                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.7" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.7" | head -n 1 | awk '{print $1" "}' >> candidate-4.7.latest.txt
+                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.8" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.7" | head -n 1 | awk '{print $1" "}')" > candidate-4.8.latest.txt
+                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.8" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.8" | head -n 1 | awk '{print $1" "}' >> candidate-4.8.latest.txt
+                    '''
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        throw err
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveAllArtifacts("builds.raw.txt", "all-builds.txt", "all-4.3-builds.txt", "all-4.4-builds.txt", "all-4.5-builds.txt",
+                                 "all-4.6-builds.txt", "all-4.7-builds.txt","all-4.8-builds.txt","latest-4.3-build.txt", "latest-4.4-build.txt",
+                                  "latest-4.5-build.txt","latest-4.6-build.txt","latest-4.7-build.txt","latest-4.8-build.txt","all-4.3-stable-builds.txt",
+                                  "all-4.4-stable-builds.txt","all-4.5-stable-builds.txt","all-4.6-stable-builds.txt","all-4.7-stable-builds.txt","all-4.8-stable-builds.txt",
+                                  "latest-4.3-stable-build.txt","latest-4.4-stable-build.txt","latest-4.5-stable-build.txt",
+                                  "latest-4.6-stable-build.txt","latest-4.7-stable-build.txt","latest-4.8-stable-build.txt","candidate-4.4.latest.txt",
+                                  "candidate-4.5.latest.txt","candidate-4.6.latest.txt")
+            cleanWs()
+        }
+    }
+}

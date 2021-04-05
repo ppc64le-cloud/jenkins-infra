@@ -1,0 +1,89 @@
+@Library('pcloud-jenkins-library') _
+
+pipeline {
+    agent any
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+
+        //Env constants
+        TERRAFORM_VER = "0.13.4"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd04"
+        SERVICE_INSTANCE_ID = "6d030c4b-64a3-494d-aeed-8c453dd98903"
+
+        BASTION_MEMORY = "8"
+        BASTION_PROCESSORS = ".5"
+
+        BASTION_IMAGE = "rhel-83"
+        VM_ID_PREFIX = "ltccci"
+        SYSTEM_TYPE = "s922"
+        NETWORK_NAME = "ocp-net"
+        RHEL_USERNAME = "root"
+        RHEL_SMT = "4"
+        BASTION_HEALTH_STATUS = "WARNING"
+        BASTION_IMAGE_FILE =  "latest-${BASTION_IMAGE}-ocp-cicd-sydney-04.txt"
+
+        //Makefile variables
+        OPENSHIFT_POWERVS_SINGLE_INSTANCE_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+
+        TARGET = "deploy-openshift4-powervs-single-instance"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+
+        POWERVS = true
+        SCRIPT_DEPLOYMENT = false
+        WAIT_FOR_DEBUG = "0"
+	}
+
+    stages {
+        stage('Pull PowerVS Image'){
+            steps{
+                getArtifacts("poll-powervs-image", "${BASTION_IMAGE_FILE}" )
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                initializeEnvironment()
+                setupTerraformPlugin()
+                script{
+                    if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
+                            env.BASTION_IMAGE_NAME = readFile "deploy/artifactory/${BASTION_IMAGE_FILE}"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE_NAME.trim()
+                    }
+                    else{
+                        echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Deploy VM') {
+            steps {
+                deployCluster()
+            }
+        }
+
+        stage('Stability Check') {
+            steps {
+                checkStability()
+             }
+        }
+    }
+
+    post {
+        always {
+            script {
+                archiveAllArtifacts("deploy/vars.tfvars", "deploy/stability-check.log")
+                cleanupOcp4Cluster()
+                message = "VM Image:`${env.BASTION_IMAGE_NAME}`, System Type: `${env.SYSTEM_TYPE}`, Private Network: `${env.NETWORK_NAME}` "
+                notifyBySlack(currentBuild.result, message)
+                cleanWs()
+            }
+        }
+    }
+}

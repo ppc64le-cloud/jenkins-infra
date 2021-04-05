@@ -1,0 +1,101 @@
+## If any variables are unset, terraform will look for `TF_VAR_variable_name`
+## These parameters are needed for all deployments
+
+user_name = "__OS_USERNAME__"
+password = "__OS_PASSWORD__"
+auth_url = "__OS_AUTH_URL__"
+network_name = "__OS_NETWORK__"
+openstack_availability_zone = "__AVAILABILITY_ZONE__"
+tenant_name = "__OS_TENANT_NAME__"
+domain_name = "Default"
+network_type = "__NETWORK_TYPE__"
+
+public_key_file = "id_rsa.pub"
+private_key_file  = "id_rsa"
+
+private_key = ""
+public_key  = ""
+
+bastion = { instance_type  = "__BASTION_TEMPLATE__", image_id = "__BASTION_IMAGE_ID__" }
+bootstrap = { instance_type  = "__BOOTSTRAP_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = 1 }
+master = { instance_type  = "__MASTER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_MASTERS__ }
+worker = { instance_type  = "__WORKER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_WORKERS__ }
+
+## RedHat Subscription credentials
+rhel_subscription_username = "__REDHAT_USERNAME__"
+rhel_subscription_password = "__REDHAT_PASSWORD__"
+
+rhel_username = "__RHEL_USERNAME__"
+
+openshift_install_tarball =  "__OPENSHIFT_INSTALL_TARBALL__"
+openshift_client_tarball = "__OPENSHIFT_CLIENT_TARBALL__"
+release_image_override = "__OPENSHIFT_IMAGE__"
+pull_secret_file = "__PULL_SECRET_FILE__"
+cluster_domain = "__CLUSTER_DOMAIN__"
+cluster_id_prefix = "__INSTANCE_NAME__"
+
+storage_type    = "nfs"
+volume_size = "300"
+mount_etcd_ramdisk  = "__MOUNT_ETCD_RAMDISK__"
+
+scg_id = "__SCG_ID__"
+volume_storage_template = "__VOLUME_STORAGE_TEMPLATE__"
+  
+e2e_tests_git = "__E2E_GIT__"
+
+e2e_tests_git_branch = "__E2E_BRANCH__"
+
+e2e_tests_exclude_list_url = "__E2E_EXCLUDE_LIST__"
+
+e2e_tests_enabled = "__ENABLE_E2E_TEST__"
+
+e2e_upgrade_enabled = "__ENABLE_E2E_UPGRADE__"
+
+e2e_upgrade_image = "__OPENSHIFT_UPGRADE_IMAGE__"
+
+github_username = "__GITHUB_USER__"
+
+github_token = "__GITHUB_TOKEN__"
+
+golang_tarball = "__GOLANG_TARBALL__"
+
+scale_test_enabled = "__ENABLE_SCALE_TEST__"
+
+scale_num_of_deployments = "__SCALE_NUM_OF_DEPLOYMENTS__"
+
+upgrade_image = "__UPGRADE_IMAGE__"
+
+upgrade_version = "__UPGRADE_VERSION__"
+
+upgrade_channel = "__UPGRADE_CHANNEL__"
+
+upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
+
+upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
+
+chrony_config = "__CHRONY_CONFIG__"
+
+ocp4_extras_playbook_tag = "335a0dc1b329c3f05e3b48409441d9eb1420c27b"
+
+chrony_config_servers = [ {server = "0.centos.pool.ntp.org", options = "iburst"}, {server = "1.centos.pool.ntp.org", options = "iburst"} ]
+
+setup_squid_proxy = "__SETUP_SQUID_PROXY__"
+proxy = {server = "__PROXY_ADDRESS__"}
+
+cs_install                  = __CS_INSTALL__
+cs_project_name             = "ibm-common-services"
+cs_subscription_channel     = "stable-v1"
+cs_subscription_strategy    = "Automatic"
+cs_operand_list = [
+        "ibm-cert-manager-operator",
+        "ibm-mongodb-operator",
+        "ibm-iam-operator",
+        "ibm-monitoring-exporters-operator",
+        "ibm-monitoring-prometheusext-operator",
+        "ibm-monitoring-grafana-operator",
+        "ibm-healthcheck-operator",
+        "ibm-management-ingress-operator",
+        "ibm-metering-operator",
+        "ibm-commonui-operator",
+        "ibm-ingress-nginx-operator"
+    ]

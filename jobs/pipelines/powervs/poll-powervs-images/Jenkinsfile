@@ -1,0 +1,60 @@
+@Library('pcloud-jenkins-library') _
+//Define Global variable
+def INSTANCE_NAME_LIST = ["ocp-cicd-dallas",
+                    "ocp-cicd-frankfurt-01",
+                    "ocp-cicd-frankfurt-02",
+                    "ocp-cicd-london-06",
+                    "ocp-cicd-sydney-04",
+                    "ocp-cicd-tokyo-04",
+                    "ocp-cicd-toronto-01",
+                    "ocp-cicd-washington",
+                    "ocp-cicd-saopaulo-01",
+                    "ocp-cicd-dallas-12"]
+pipeline {
+    agent any
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        PVSADM_VERSION = "v0.1.1-alpha.2"
+    }
+    stages {
+        stage('Pull PowerVS Images') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                        sh(returnStatus: false, returnStdout: false, script: "curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | VERSION=${PVSADM_VERSION} FORCE=1 bash; pvsadm version")
+                            INSTANCE_NAME_LIST.each { item ->
+                            sh """
+                                pvsadm purge images --dry-run --instance-name '${item}' |grep 'active' > images_all_'${item}'.txt
+                                cat images_all_'${item}'.txt | grep 'rhel-83'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*'|xargs > latest-rhel-83-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'centos-83'  |sort -t'|' -k5 -r|head -1|grep -o 'centos-83-[[:alnum:]]*'|xargs > latest-centos-83-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-45' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-45-[[:alnum:]]*'|xargs > latest-rhcos-45-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-46' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-46-[[:alnum:]]*'|xargs > latest-rhcos-46-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-47' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-47-[[:alnum:]]*'|xargs > latest-rhcos-47-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-48' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-48-[[:alnum:]]*'|xargs > latest-rhcos-48-'${item}'.txt || true
+                            """
+                        }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script{
+                INSTANCE_NAME_LIST.each { item ->
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "images_all_${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-83-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-centos-83-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-45-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-46-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-47-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-48-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                }
+            }
+            cleanWs()
+        }
+    }
+}
+
