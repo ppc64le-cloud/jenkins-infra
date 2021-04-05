@@ -41,7 +41,7 @@ pipeline {
     stages {
         stage('Pull PowerVS Image'){
             steps{
-                getArtifacts("poll-powervs-image", "${BASTION_IMAGE_FILE}" )
+                getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}" )
             }
         }
         stage('Initialize Environment') {

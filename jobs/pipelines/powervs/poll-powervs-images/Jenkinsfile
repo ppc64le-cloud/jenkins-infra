@@ -12,6 +12,9 @@ def INSTANCE_NAME_LIST = ["ocp-cicd-dallas",
                     "ocp-cicd-dallas-12"]
 pipeline {
     agent any
+    options {
+        copyArtifactPermission('*');
+    }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')

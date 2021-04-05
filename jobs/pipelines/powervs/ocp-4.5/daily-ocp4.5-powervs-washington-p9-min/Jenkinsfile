@@ -59,8 +59,8 @@ pipeline {
         stage('pull artifact') {
             steps {
                 getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
-                getArtifacts("poll-powervs-image", "${BASTION_IMAGE_FILE}")
-                getArtifacts("poll-powervs-image", "${RHCOS_IMAGE_FILE}" )
+                getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
+                getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
             }
         }
         //Checkout the installer git repo
