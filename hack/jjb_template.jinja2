@@ -58,6 +58,9 @@
         {% endif %}
     sandbox: true
     concurrent: true
+    properties:
+      - copyartifact:
+          projects: "*"
     pipeline-scm:
       scm:
         - git:
