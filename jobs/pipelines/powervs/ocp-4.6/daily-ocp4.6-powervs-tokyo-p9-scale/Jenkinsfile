@@ -122,12 +122,6 @@ pipeline {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Run crontab script for capturing outputs of multiple commands') {
-            steps {
-                crontabCommandCaptureScript()
-            }
-        }
-
         stage('Run scale test') {
             steps {
                 setupAndRunScaleTest()
