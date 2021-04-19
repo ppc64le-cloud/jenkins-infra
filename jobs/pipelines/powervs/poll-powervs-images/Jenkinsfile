@@ -9,7 +9,8 @@ def INSTANCE_NAME_LIST = ["ocp-cicd-dallas",
                     "ocp-cicd-toronto-01",
                     "ocp-cicd-washington",
                     "ocp-cicd-saopaulo-01",
-                    "ocp-cicd-dallas-12"]
+                    "ocp-cicd-dallas-12",
+                    "ocp-cicd-osaka-21"]
 pipeline {
     agent any
     options {
@@ -18,7 +19,7 @@ pipeline {
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
-        PVSADM_VERSION = "v0.1.1-alpha.2"
+        PVSADM_VERSION = "v0.1.1-alpha.5"
     }
     stages {
         stage('Pull PowerVS Images') {
