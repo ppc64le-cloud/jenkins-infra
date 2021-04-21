@@ -18,8 +18,8 @@ def call () {
             clusterInfo['worker_node_mem'] = "${WORKER_MEMORY}"
             clusterInfo['server_type'] = "${HARDWARE_CHOSE}"
             }
-
-            clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
+            def build=env.OPENSHIFT_IMAGE.split("/")[2]
+            clusterInfo['ocp_build'] = "${build}"
             clusterInfo['cluster_masters'] = "${NUM_OF_MASTERS}"
             clusterInfo['cluster_workers'] = "${NUM_OF_WORKERS}"
             clusterInfo['coreos_build'] = env.RHCOS_IMAGE_NAME

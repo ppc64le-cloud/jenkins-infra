@@ -3,7 +3,8 @@ def call() {
         def clusterInfoFields = [:]
         def clusterInfo = [:]
         if ( env.POWERVS == "true"  ) {
-            clusterInfo['ocp_build'] = env.OPENSHIFT_INSTALL_TARBALL
+            def build=env.OPENSHIFT_IMAGE.split("/")[2]
+            clusterInfo['ocp_build'] = "${build}"
             clusterInfo['master_node_cpu'] = "${MASTER_PROCESSORS}"
             clusterInfo['master_node_mem'] = "${MASTER_MEMORY}"
             clusterInfo['worker_node_cpu'] = "${WORKER_PROCESSORS}"
