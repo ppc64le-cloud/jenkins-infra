@@ -2,7 +2,7 @@ def call() {
     script {
         //VMs setup
         if ( env.POWERVS == "true" ) {
-            env.INSTANCE_NAME = "ltccci"
+            env.INSTANCE_NAME = "ocp-cicd"
             env.NETWORK_NAME = "ocp-net"
             env.RHEL_USERNAME = "root"
             env.RHEL_SMT = "4"
@@ -72,7 +72,7 @@ def call() {
 
             //Cluster and vm details
             env.CLUSTER_DOMAIN="redhat.com"
-            env.INSTANCE_NAME="ltccci"
+            env.INSTANCE_NAME = "ocp-cicd"
             env.MOUNT_ETCD_RAMDISK="true"
             env.CHRONY_CONFIG="true"
 
