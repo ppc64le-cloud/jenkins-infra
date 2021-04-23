@@ -19,7 +19,7 @@ pipeline {
 
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
-        VM_ID_PREFIX = "ocpcicdstable"
+        VM_ID_PREFIX = "ocpcicdst"
         BASTION_IMAGE = "rhel-83"
 
         SYSTEM_TYPE = "e880"
