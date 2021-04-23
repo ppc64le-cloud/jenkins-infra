@@ -6,19 +6,12 @@ pipeline {
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
-        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
         ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
-        DOCKER_PASSWORD = "${ARTIFACTORY_TOKEN}"
         CI_OCP_TOKEN = credentials('CI_OCP_TOKEN')
         CI_OCP_TOKEN_2 = credentials('CI_OCP_TOKEN_2')
     }
     stages {
-        stage('Clone mirror-openshift-releases') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openshift_ws'], [$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.ibm.com:powercloud-openshift/mirror-openshift-releases.git' , credentialsId: 'ibm-github']]])
-            }
-        }
-
         stage('Get images and push') {
             steps {
                 script {
@@ -28,10 +21,8 @@ pipeline {
                     try
                     {
                     sh '''
-                        apt update
-                        apt install docker docker.io jq -y
-                        cd ${WORKSPACE}/openshift_ws
-                        docker login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                        cd ${WORKSPACE}/scripts
+                        nerdctl login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} sys-powercloud-docker-local.artifactory.swg-devops.com
                         wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.3/linux/oc.tar.gz -O /tmp/oc.tar.gz
                         tar zvxf /tmp/oc.tar.gz
                         chmod +x oc

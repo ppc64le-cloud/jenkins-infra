@@ -7,7 +7,6 @@ pipeline {
         GITHUB_USER = credentials('GITHUB_USER')
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         OS_USERNAME = credentials('OS_USERNAME_JUP')
-        OS_USERNAME = credentials('GITHUB_USER')
         OS_PASSWORD = credentials('OS_PASSWORD_JUP')
         DOCKER_USER = credentials('DOCKER_USER')
         ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')

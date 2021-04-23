@@ -131,8 +131,7 @@ pipeline {
         }
         stage('Setup Kubectl') {
             steps {
-                script {
-                    setupKubeconfigOcp4()
+                setupKubeconfigOcp4()
             }
         }
         stage('Gather pprof and prometheus data') {
