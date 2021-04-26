@@ -1,4 +1,5 @@
 Scripts and infra configuration files for Jenkins CD Pipelines for OpenShift on IBM Power
+The CICD pipelines runs on POWERVS and POWERVM environment
 
 ## Load the jenkins jobs
 
