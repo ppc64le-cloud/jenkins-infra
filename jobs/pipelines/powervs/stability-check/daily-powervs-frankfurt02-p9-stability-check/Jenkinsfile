@@ -21,7 +21,7 @@ pipeline {
         BASTION_PROCESSORS = ".5"
 
         BASTION_IMAGE = "rhel-83"
-        VM_ID_PREFIX = "ocpcicdst"
+        VM_ID_PREFIX = "rdr-cicds"
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
         RHEL_USERNAME = "root"
