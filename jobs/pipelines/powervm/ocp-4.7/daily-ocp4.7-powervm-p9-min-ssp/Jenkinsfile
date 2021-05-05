@@ -26,10 +26,6 @@ pipeline {
         WAIT_FOR_DEBUG = "1"
         REDHAT_RELEASE = "8.3"
 
-        //ssp specific variables
-        SCG_ID = "74919986-66d6-4a25-8128-b1feadd43256"
-        VOLUME_STORAGE_TEMPLATE = "ocp_ssp base template"
-
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"//The download branch
 
@@ -52,6 +48,11 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    //ssp specific variables
+                    env.SCG_ID = "74919986-66d6-4a25-8128-b1feadd43256"
+                    env.VOLUME_STORAGE_TEMPLATE = "ocp_ssp base template"
+                }
             }
         }
         stage('pull artifact') {
