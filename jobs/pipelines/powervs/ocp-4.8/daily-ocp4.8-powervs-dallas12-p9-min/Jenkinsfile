@@ -26,7 +26,7 @@ pipeline {
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
-        GOLANG_TARBALL = "https://golang.org/dl/go1.15.2.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://golang.org/dl/go1.16.4.linux-ppc64le.tar.gz"
 
         //Makefile variables
         OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
