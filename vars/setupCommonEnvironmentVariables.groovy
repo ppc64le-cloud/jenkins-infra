@@ -14,12 +14,30 @@ def call() {
 
             // Bellow 4 variables are not used. Disabled in template
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
-            env.HELPERNODE_TAG = "5eab3db53976bb16be582f2edc2de02f7510050d"
+            env.HELPERNODE_TAG = "1ac7f276b537cd734240eda9ed554a254ba80629"
             env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-            env.INSTALL_PLAYBOOK_TAG = "d2509c4b4a67879daa6338f68e8e7eb1e15d05e2"
+            switch (env.OCP_RELEASE) {
+                case "4.8":
+                    env.INSTALL_PLAYBOOK_TAG = "64fd5edadf380820f71e44bb6bca93e9b083fe5c"
+                    break
+                case "4.7":
+                    env.INSTALL_PLAYBOOK_TAG = "1d4c9cad20d7559392d34990ccde5813fdb855a1"
+                    break
+                case "4.6":
+                    env.INSTALL_PLAYBOOK_TAG = "e89bef76cec089a481d6de2b7fa07944ae0481a5"
+                    break
+                case "4.5":
+                    env.INSTALL_PLAYBOOK_TAG = "15d226e52b0bae11943e3127206dd454891032c8"
+                    break
+                default:
+                     env.INSTALL_PLAYBOOK_TAG = "64fd5edadf380820f71e44bb6bca93e9b083fe5c"
+            }
+
+            //Upgrade variables
             env.UPGRADE_IMAGE = ""
             env.UPGRADE_PAUSE_TIME = ""
             env.UPGRADE_DELAY_TIME = ""
+
 
             //E2e Variables
             env.E2E_GIT = "https://github.com/openshift/origin"
