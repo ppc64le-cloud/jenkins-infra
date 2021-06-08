@@ -22,7 +22,7 @@
         BASTION_IP=$(make $TARGET:output  TERRAFORM_OUTPUT_VAR=bastion_ip )
         [ $? -ne 0 ] && exit 1
     else
-        BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+        BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip | grep -Eo '[0-9]{1,3}(.[0-9]{1,3}){3}' )
         [ $? -ne 0 ] && exit 1
     fi
     if [ ! -z "${BASTION_IP}" ]; then
