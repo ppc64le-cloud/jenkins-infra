@@ -27,9 +27,6 @@ pipeline {
                         tar zvxf /tmp/oc.tar.gz
                         chmod +x oc
                         export PATH=$PATH:$PWD
-                        oc login https://api.ci.openshift.org --token=${CI_OCP_TOKEN}
-                        oc registry login --skip-check
-                        ./mirror-images.sh || true
                         oc login --token=${CI_OCP_TOKEN_2} --server=https://api.ci.l2s4.p1.openshiftapps.com:6443
                         oc registry login --skip-check
                         ./mirror-images.sh || true
