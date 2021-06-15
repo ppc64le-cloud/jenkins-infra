@@ -121,7 +121,7 @@ pipeline {
                 crontabCommandCaptureScript()
             }
         }
-        stage('Setup Kubectl') {
+        stage('Setup Kubectl and Validate CO') {
             steps {
                 setupKubeconfigOcp4()
             }
@@ -150,7 +150,7 @@ pipeline {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
                 "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/cron_longevity.log",
                 "cerberus/cerberus.report","cerberus/cerberus_output.txt", "cerberus/config/cerberus-config.yaml",
-                "cerberus/custom_checks/custom_check_res_usage.py")
+                "cerberus/custom_checks/custom_check_res_usage.py", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             cleanWs()
         }

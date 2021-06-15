@@ -1,6 +1,7 @@
 def call() {
     script {
         def e2e_summary = ""
+        def co_status = ""
         int fails_per_threshold
         int unstable_per_threshold
         if (fileExists('deploy/summary.txt')) {
@@ -50,7 +51,10 @@ def call() {
             currentBuild.result = 'UNSTABLE'
             e2e_summary = "E2e test didn't run"
         }
+        if (fileExists('co_status.txt')) {
+            co_status = readFile(file: 'co_status.txt')
+        }
         OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
-        env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` "
+        env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` `${co_status}` "
     }
 }

@@ -125,14 +125,14 @@ pipeline {
                 crontabCommandCaptureScript()
             }
         }
+        stage('Setup Kubectl and Validate CO') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
         stage('Setup and run ansible extra') {
             steps {
                setupAndRunE2e()
-            }
-        }
-        stage('Setup Kubectl') {
-            steps {
-                setupKubeconfigOcp4()
             }
         }
         stage('Gather pprof and prometheus data') {
@@ -144,7 +144,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
