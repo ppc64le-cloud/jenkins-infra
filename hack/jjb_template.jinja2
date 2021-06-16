@@ -61,6 +61,7 @@
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervs-images' in JOB_NAME %}"@daily"
+        {% elif 'daily-jenkins-backup-job' in JOB_NAME %}"@daily"
         {% else %}""
         {% endif %}
     sandbox: true

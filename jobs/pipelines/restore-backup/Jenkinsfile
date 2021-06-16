@@ -1,0 +1,57 @@
+@Library('pcloud-jenkins-library') _
+
+pipeline {
+	agent {
+        kubernetes {
+      	    label 'jenkins-backup-job'
+      		defaultContainer 'jnlp'
+      		yamlFile 'hack/ibmcloud-build-pod.yaml'
+    	}
+    }
+    parameters {
+	    string(defaultValue: '', description: 'Cluster Id', name: 'ClusterId')
+	    string(defaultValue: '', description: 'Jenkins Backup File', name: 'JenkinsBackupFile')
+	    string(defaultValue: '', description: 'Influx DB Backup File', name: 'InfluxDbBackupFile')
+	}
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        CLUSTER_ID = "${params.ClusterId.trim()}"
+        JENKINS_BACKUP_FILE = "${params.JenkinsBackupFile.trim()}"
+        INFLUX_BACKUP_FILE = "${params.InfluxDbBackupFile.trim()}"
+        CRN = "crn:v1:bluemix:public:cloud-object-storage:global:a/65b64c1f1c29460e8c2e4bbfbd893c2c:8aeefa98-c07b-4d22-aa7a-1694374ae275::"
+	    JENKINS_BUCKET = "jenkins-backup-storage"
+        INFLUXDB_BUCKET = "influxdb-backup-storage"
+	}
+
+    stages {
+        stage('Create Backup') {
+            steps {
+                 container('ibmcloud'){
+		            script {
+		               sh '''#!/bin/bash
+		                     echo "IBM cloud login"
+                             ibmcloud login -a cloud.ibm.com -r us-south -g prow-resource-group -q --apikey=${IBMCLOUD_API_KEY}
+                             ibmcloud cos config crn --crn "${CRN}"
+
+                             if [ -z "${CLUSTER_ID}" ] ; then
+                               echo "Please pass cluster id prefix"
+                               exit 1
+                             fi
+                             echo "Login to cluster"
+                             ibmcloud ks cluster config --cluster "${CLUSTER_ID}"
+                             chmod +x ./scripts/restore-backup.sh
+                             ./scripts/restore-backup.sh 2>&1  | tee restore-backup.log
+		               '''
+		            }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveAllArtifacts("restore-backup.log")
+            cleanWs()
+        }
+    }
+}

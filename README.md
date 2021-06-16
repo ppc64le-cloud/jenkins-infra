@@ -21,3 +21,6 @@ Jenkins Url: https://jenkins.ppc64le-cloud.org/
 3) The Jenkins scheduler runs jobs according to schedule mentioned in [jinja template file](hack/jjb_template.jinja2)
 4) The JNLP agents are created that runs pipeline job which creates cluster, performs tests.
 5) After successful cluster creation and running of tests, the test results are stored in influx db which is used for grafana dashboard creation
+
+###Backup Job details
+Please see [Backup doc](docs/BACKUP_README.md) for details.
