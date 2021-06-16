@@ -32,7 +32,7 @@ pipeline {
                             INSTANCE_NAME_LIST.each { item ->
                             sh """
                                 pvsadm purge images --dry-run --instance-name '${item}' |grep 'tier3' |grep 'active' > images_all_'${item}'.txt
-                                cat images_all_'${item}'.txt | grep 'rhel-84'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*'|xargs > latest-rhel-83-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhel-83'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*'|xargs > latest-rhel-83-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhel-84'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-84-[[:alnum:]]*'|xargs > latest-rhel-84-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'centos-83'  |sort -t'|' -k5 -r|head -1|grep -o 'centos-83-[[:alnum:]]*'|xargs > latest-centos-83-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhcos-45' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-45-[[:alnum:]]*'|xargs > latest-rhcos-45-'${item}'.txt || true
