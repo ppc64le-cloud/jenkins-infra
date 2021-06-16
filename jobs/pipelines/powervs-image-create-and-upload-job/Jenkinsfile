@@ -97,7 +97,6 @@ pipeline {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'scripts/output.txt', fingerprint: true, onlyIfSuccessful: true
             archiveArtifacts allowEmptyArchive: true, artifacts: 'scripts/logs.tar.gz', fingerprint: true, onlyIfSuccessful: true
             cleanWs()
-            notifyBySlack(currentBuild.result, " ")
         }
     }
 }
