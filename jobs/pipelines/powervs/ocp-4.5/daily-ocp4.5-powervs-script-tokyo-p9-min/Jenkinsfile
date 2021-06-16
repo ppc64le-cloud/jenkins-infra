@@ -107,6 +107,7 @@ pipeline {
                     catch (err)
                     {
                         echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
                         throw err
                     }
                 }

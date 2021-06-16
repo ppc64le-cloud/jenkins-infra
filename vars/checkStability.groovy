@@ -22,6 +22,7 @@ def call() {
         }
         catch (err) {
             echo 'Error ! Vm stability check failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

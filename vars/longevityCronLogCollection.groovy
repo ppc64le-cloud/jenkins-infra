@@ -20,6 +20,7 @@ def call() {
         }
         catch (err) {
             echo 'Error ! Fetching Cron log failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

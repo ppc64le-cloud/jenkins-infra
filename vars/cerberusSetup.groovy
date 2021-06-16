@@ -25,6 +25,7 @@ def call() {
         }
         catch (err) {
             echo 'Error ! Cerberus monitoring failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

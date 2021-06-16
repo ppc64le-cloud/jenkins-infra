@@ -30,6 +30,7 @@ def call(){
         }
         catch (err) {
             echo 'Error ! ansible setup failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

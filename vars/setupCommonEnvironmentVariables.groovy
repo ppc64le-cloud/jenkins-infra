@@ -1,5 +1,7 @@
 def call() {
     script {
+        //Failed stage
+        env.FAILED_STAGE=""
         //VMs setup
         if ( env.POWERVS == "true" ) {
             env.INSTANCE_NAME = "rdr-cicd"

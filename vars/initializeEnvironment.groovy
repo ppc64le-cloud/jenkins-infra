@@ -14,6 +14,7 @@ def call() {
       }
       catch (err) {
            echo 'Error ! ENV setup failed!'
+           env.FAILED_STAGE=env.STAGE_NAME
            throw err
       }
    }
