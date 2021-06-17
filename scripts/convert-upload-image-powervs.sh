@@ -37,6 +37,7 @@ EOF
 
 #Final Output Logs
 OUTPUT_LOG_FILE='output.txt'
+IGNORE_OS=1
 
 #-------------------------------------------------------------------------
 # Import images from the given COS bucket
