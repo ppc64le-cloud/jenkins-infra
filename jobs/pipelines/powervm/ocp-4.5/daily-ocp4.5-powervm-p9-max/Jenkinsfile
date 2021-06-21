@@ -115,6 +115,7 @@ pipeline {
                     catch (err)
                     {
                         echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
                         throw err
                     }
                 }
@@ -122,8 +123,12 @@ pipeline {
         }
         stage('Initialize Environment') {
             steps {
-                setupTerraformPlugin()
                 initializeEnvironment()
+            }
+        }
+        stage('Setup Terraform Plugin') {
+            steps {
+                setupTerraformPlugin()
             }
         }
         stage('Deploy OCP Cluster') {
@@ -144,6 +149,11 @@ pipeline {
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
+            }
+        }
+        stage('Validate CO status') {
+            steps {
+                validateCoStatus()
             }
         }
         stage('Gather pprof and prometheus data') {

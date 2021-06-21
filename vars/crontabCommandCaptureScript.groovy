@@ -13,6 +13,7 @@ def call(){
             '''
         } catch (err) {
             echo 'Running Crontab script failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

@@ -44,6 +44,7 @@ def call(){
         }
         catch (err) {
             echo 'Error ! Scale test failed to run !'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

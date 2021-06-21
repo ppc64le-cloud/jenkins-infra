@@ -7,7 +7,8 @@
     fi
     # setup oc client
     if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
-        wget "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+        wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+        [ $? -ne 0 ] && echo "unable to get oc tarball" && exit 1
         cp kubectl oc /usr/bin/
     fi
     # Capturing Terraform template

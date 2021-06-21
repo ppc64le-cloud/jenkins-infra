@@ -41,6 +41,7 @@ def call() {
             env.DEPLOYMENT_STATUS = true
         }
         catch (err) {
+            env.FAILED_STAGE=env.STAGE_NAME
 	        def timeout_sec=0
             def timeout_hrs =  env.WAIT_FOR_DEBUG.toInteger()
             if ( timeout_hrs != 0 ) {

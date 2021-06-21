@@ -12,6 +12,7 @@ def call(){
         }
         catch (err) {
             echo 'Error ! Gather Prometheus Data failed!'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

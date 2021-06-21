@@ -28,6 +28,9 @@ def call() {
                 }
             }
         }
+        else {
+            e2e_summary = "e2e test didn't run"
+        }
         if ( env.INFRA_ISSUE == "true" ) {
             e2e_summary = env.ERROR_MESSAGE
             currentBuild.result = 'FAILURE'
@@ -49,12 +52,18 @@ def call() {
         //If summary file exists but doesn't have results then marking it as unstable
         if (fileExists('deploy/summary.txt') && !e2e_summary?.trim()) {
             currentBuild.result = 'UNSTABLE'
-            e2e_summary = "E2e test didn't run"
+            e2e_summary = "e2e test didn't run"
         }
         if (fileExists('co_status.txt')) {
-            co_status = readFile(file: 'co_status.txt')
+            co_status = readFile(file: 'co_status.txt').trim()
         }
         OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
-        env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}` `${co_status}` "
+        if ( env.FAILED_STAGE != ""  ) {
+            env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}`, Cluster Status: `${co_status}`, Failed Stage: `${env.FAILED_STAGE}` "
+        }
+        else {
+            env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}`, Cluster Status: `${co_status}` "
+        }
+
     }
 }
