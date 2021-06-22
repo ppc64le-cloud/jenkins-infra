@@ -145,11 +145,6 @@ pipeline {
                 crontabCommandCaptureScript()
             }
         }
-        stage('Setup and run ansible extra') {
-            steps {
-               setupAndRunE2e()
-            }
-        }
         stage('Setup Kubectl and check proxy') {
             steps {
                 setupKubeconfigOcp4()
@@ -157,6 +152,16 @@ pipeline {
                     echo 'Get Proxy Details'
                     oc get proxy cluster -oyaml
                 }
+            }
+        }
+        stage('Validate CO status') {
+            steps {
+                validateCoStatus()
+            }
+        }
+        stage('Setup and run ansible extra') {
+            steps {
+               setupAndRunE2e()
             }
         }
         stage('Gather pprof and prometheus data') {
@@ -168,7 +173,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()

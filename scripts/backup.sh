@@ -32,7 +32,7 @@ if [ $? -ne 0 ] ; then
 fi
 echo "Upload to ibm cloud InfluxDb"
 ibmcloud cos upload --bucket "${INFLUXDB_BUCKET}" --key influxdb_backup_$(date +%Y%m%d%H%M).tar.gz  --file influxdb_backup.tar.gz
-kubectl exec -n grafana-dashboard $influx_pod_id -- bash -c 'rm -rf /var/jenkins_backup'
+kubectl exec -n grafana-dashboard $influx_pod_id -- bash -c 'rm -rf /var/lib/influxdb_backup'
 
 echo "Keeping only last 5 backups Removing rest from jenkins cloud storage bucket"
 while IFS= read -r object_name; do

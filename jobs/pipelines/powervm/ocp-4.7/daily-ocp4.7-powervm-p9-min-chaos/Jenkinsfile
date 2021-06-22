@@ -210,7 +210,7 @@ pipeline {
         always {
             archiveAllArtifacts("deploy/vars.tfvars","cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz",
                 "deploy/cron.log", "kraken/KrakenOutput.txt",
-                "kraken/config/config.yaml","kraken/scenarios/node_scenarios_example.yml")
+                "kraken/config/config.yaml","kraken/scenarios/node_scenarios_example.yml", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             script {
