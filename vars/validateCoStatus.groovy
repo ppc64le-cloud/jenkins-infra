@@ -10,6 +10,10 @@ def call() {
                 oc version
                 echo 'Setting up kubectl!'
                 oc get nodes
+                cd ${WORKSPACE}
+                echo "Gathering logs"
+                oc adm must-gather
+                tar -czvf must-gather.tar.gz ./must-gather*
                 sleep_time=300
                 flag=0
                 for((i=0;i<18;++i)) do
@@ -28,10 +32,6 @@ def call() {
                         echo "All cluster operators are up and running"
                         echo "All cluster operators were up and running" > ${WORKSPACE}/co_status.txt
                         oc get co
-                        cd ${WORKSPACE}l
-                        echo "Gathering logs"
-                        oc adm must-gather
-                        tar -czvf must-gather.tar.gz ./must-gather*
                         break
                     fi
                 done

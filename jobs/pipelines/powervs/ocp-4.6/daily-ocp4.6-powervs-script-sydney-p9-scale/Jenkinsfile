@@ -114,6 +114,11 @@ pipeline {
                 deployCluster()
             }
         }
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                crontabCommandCaptureScript()
+            }
+        }
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
@@ -122,11 +127,6 @@ pipeline {
         stage('Validate CO status') {
             steps {
                 validateCoStatus()
-            }
-        }
-        stage('Run crontab script for capturing outputs of multiple commands') {
-            steps {
-                crontabCommandCaptureScript()
             }
         }
         stage('Run scale test') {
@@ -144,7 +144,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/time_taken_namespaces", "deploy/time_taken_deployments", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processScaleResults()

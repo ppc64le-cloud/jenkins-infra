@@ -128,6 +128,16 @@ pipeline {
                 deployCluster()
             }
         }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+        stage('Validate CO status') {
+            steps {
+                validateCoStatus()
+            }
+        }
         stage('Setup and run ansible extra') {
             steps {
                setupAndRunE2e()
@@ -142,7 +152,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
