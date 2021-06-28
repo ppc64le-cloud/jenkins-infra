@@ -26,7 +26,7 @@ pipeline {
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
-        GOLANG_TARBALL = "https://golang.org/dl/go1.16.4.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://golang.org/dl/go1.16.5.linux-ppc64le.tar.gz"
 
         //Makefile variables
         OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
@@ -44,7 +44,7 @@ pipeline {
     stages {
         stage('Clone ansible extra') {
             steps {
-                cloneRepo("git@github.ibm.com:sudeeshjohn/ocp4_ansible_extras.git", "ansible_extra")
+                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
             }
         }
         stage('Setup Common Environment Variables') {

@@ -32,7 +32,7 @@ pipeline {
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"
         ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.16.4.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.16.5.linux-ppc64le.tar.gz"
 
         // Type of configuration
         CONFIG_TYPE="max"
