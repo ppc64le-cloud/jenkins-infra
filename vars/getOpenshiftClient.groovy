@@ -9,14 +9,10 @@ def call(release){
     build.eachLine{
         if (it =~ /^<tr/) {
             String lst = it.findAll(/<a href=".*/)
-            if (lst.contains("client")) {
-                if (lst.contains("linux")) {
-                    if ( ! lst.contains("ppc64le")) {
+            if (lst.contains("openshift-client-linux.tar.gz")) {
                         ls = ls + " " + (lst - min1)
                         ls = ls - min3
                         ls = ls - min4
-                    }
-                }
             }
         }
     }
