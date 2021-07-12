@@ -183,7 +183,7 @@ pipeline {
             archiveAllArtifacts("builds.raw.txt", "all-builds.txt", "all-4.3-builds.txt", "all-4.4-builds.txt", "all-4.5-builds.txt",
                                  "all-4.6-builds.txt", "all-4.7-builds.txt","all-4.8-builds.txt","all-4.9-builds.txt","latest-4.3-build.txt", "latest-4.4-build.txt",
                                   "latest-4.5-build.txt","latest-4.6-build.txt","latest-4.7-build.txt","latest-4.8-build.txt","latest-4.9-build.txt","all-4.3-stable-builds.txt",
-                                  "all-4.4-stable-builds.txt","all-4.5-stable-builds.txt","all-4.6-stable-builds.txt","all-4.7-stable-builds.txt","all-4.8-stable-builds.txt","all-4.9-stable-builds.txt"
+                                  "all-4.4-stable-builds.txt","all-4.5-stable-builds.txt","all-4.6-stable-builds.txt","all-4.7-stable-builds.txt","all-4.8-stable-builds.txt","all-4.9-stable-builds.txt",
                                   "latest-4.3-stable-build.txt","latest-4.4-stable-build.txt","latest-4.5-stable-build.txt",
                                   "latest-4.6-stable-build.txt","latest-4.7-stable-build.txt","latest-4.8-stable-build.txt","latest-4.9-stable-build.txt","candidate-4.4.latest.txt",
                                   "candidate-4.5.latest.txt","candidate-4.6.latest.txt")
