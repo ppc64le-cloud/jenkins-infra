@@ -10,7 +10,8 @@ def INSTANCE_NAME_LIST = ["ocp-cicd-dallas",
                     "ocp-cicd-washington",
                     "ocp-cicd-saopaulo-01",
                     "ocp-cicd-dallas-12",
-                    "ocp-cicd-osaka-21"]
+                    "ocp-cicd-osaka-21",
+                    "ocp-cicd-montreal-01"]
 pipeline {
     agent any
     options {
