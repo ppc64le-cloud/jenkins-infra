@@ -20,7 +20,7 @@ pipeline {
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
 
-        BASTION_IMAGE = "rhel-84"
+        BASTION_IMAGE = "rhel-83"
         VM_ID_PREFIX = "rdr-cicd-stability"
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
