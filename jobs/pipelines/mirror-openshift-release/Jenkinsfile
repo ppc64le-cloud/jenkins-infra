@@ -153,19 +153,6 @@ pipeline {
                     for i in `cat builds.txt`;
                         do echo "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$i" >> latest-4.9-stable-build.txt;
                     done
-
-                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.4" | head -n 1 | awk '{print $1" "}')" > candidate-4.5.latest.txt
-                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.5" | head -n 1 | awk '{print $1" "}' >> candidate-4.5.latest.txt
-
-                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.4" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.3" | head -n 1 | awk '{print $1" "}')" > candidate-4.4.latest.txt
-                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.5" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.4" | head -n 1 | awk '{print $1" "}' >> candidate-4.4.latest.txt
-
-                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.6" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.5" | head -n 1 | awk '{print $1" "}')" > candidate-4.6.latest.txt
-                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.6" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.6" | head -n 1 | awk '{print $1" "}' >> candidate-4.6.latest.txt
-                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.7" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.6" | head -n 1 | awk '{print $1" "}')" > candidate-4.7.latest.txt
-                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.7" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.7" | head -n 1 | awk '{print $1" "}' >> candidate-4.7.latest.txt
-                    echo -n "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:$(curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.8" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.7" | head -n 1 | awk '{print $1" "}')" > candidate-4.8.latest.txt
-                    curl -sH 'Accept: application/json' "https://api.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.8" | jq -r '.nodes[] | "\\(.version) \\(.metadata.url)" ' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' '| grep "4\\.8" | head -n 1 | awk '{print $1" "}' >> candidate-4.8.latest.txt
                     '''
                     }
                     catch (err)
@@ -185,8 +172,7 @@ pipeline {
                                   "latest-4.5-build.txt","latest-4.6-build.txt","latest-4.7-build.txt","latest-4.8-build.txt","latest-4.9-build.txt","all-4.3-stable-builds.txt",
                                   "all-4.4-stable-builds.txt","all-4.5-stable-builds.txt","all-4.6-stable-builds.txt","all-4.7-stable-builds.txt","all-4.8-stable-builds.txt","all-4.9-stable-builds.txt",
                                   "latest-4.3-stable-build.txt","latest-4.4-stable-build.txt","latest-4.5-stable-build.txt",
-                                  "latest-4.6-stable-build.txt","latest-4.7-stable-build.txt","latest-4.8-stable-build.txt","latest-4.9-stable-build.txt","candidate-4.4.latest.txt",
-                                  "candidate-4.5.latest.txt","candidate-4.6.latest.txt")
+                                  "latest-4.6-stable-build.txt","latest-4.7-stable-build.txt","latest-4.8-stable-build.txt","latest-4.9-stable-build.txt")
             cleanWs()
         }
     }
