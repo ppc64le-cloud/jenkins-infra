@@ -33,15 +33,15 @@ pipeline {
                         sh(returnStatus: false, returnStdout: false, script: "curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | VERSION=${PVSADM_VERSION} FORCE=1 bash; pvsadm version")
                             INSTANCE_NAME_LIST.each { item ->
                             sh """
-                                pvsadm purge images --dry-run --instance-name '${item}' |grep 'tier3' |grep 'active' > images_all_'${item}'.txt
-                                cat images_all_'${item}'.txt | grep 'rhel-83'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*'|xargs > latest-rhel-83-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhel-84'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-84-[[:alnum:]]*'|xargs > latest-rhel-84-'${item}'.txt || true
-                                #cat images_all_'${item}'.txt | grep 'centos-83'  |sort -t'|' -k5 -r|head -1|grep -o 'centos-83-[[:alnum:]]*'|xargs > latest-centos-83-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-45' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-45-[[:alnum:]]*'|xargs > latest-rhcos-45-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-46' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-46-[[:alnum:]]*'|xargs > latest-rhcos-46-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-47' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-47-[[:alnum:]]*'|xargs > latest-rhcos-47-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-48' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-48-[[:alnum:]]*'|xargs > latest-rhcos-48-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-49' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-49-[[:alnum:]]*'|xargs > latest-rhcos-49-'${item}'.txt || true
+                                pvsadm purge images --dry-run --instance-name '${item}' |grep 'tier1' |grep 'active' > images_all_'${item}'.txt
+                                cat images_all_'${item}'.txt | grep 'rhel-83'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*-tier1'|xargs > latest-rhel-83-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhel-84'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-84-[[:alnum:]]*-tier1'|xargs > latest-rhel-84-'${item}'.txt || true
+                                #cat images_all_'${item}'.txt | grep 'centos-83'  |sort -t'|' -k5 -r|head -1|grep -o 'centos-83-[[:alnum:]]*-tier1'|xargs > latest-centos-83-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-45' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-45-[[:alnum:]]*-tier1'|xargs > latest-rhcos-45-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-46' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-46-[[:alnum:]]*-tier1'|xargs > latest-rhcos-46-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-47' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-47-[[:alnum:]]*-tier1'|xargs > latest-rhcos-47-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-48' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-48-[[:alnum:]]*-tier1'|xargs > latest-rhcos-48-'${item}'.txt || true
+                                cat images_all_'${item}'.txt | grep 'rhcos-49' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-49-[[:alnum:]]*-tier1'|xargs > latest-rhcos-49-'${item}'.txt || true
                             """
                         }
                 }
