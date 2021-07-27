@@ -15,6 +15,8 @@ if [ $? -ne 0 ] ; then
   kubectl -n jenkins cp jenkins/${jenkins_pod_id}:/var/jenkins_backup/jenkins_backup.tar.gz jenkins_backup.tar.gz
 fi
 echo "Upload Jenkins backup to ibm cloud"
+#Login again as session gets terminated due to inactivity
+ibmcloud login -a cloud.ibm.com -r us-south -g prow-resource-group -q --apikey=${IBMCLOUD_API_KEY}
 ibmcloud cos upload --bucket "${JENKINS_BUCKET}" --key jenkins_backup_$(date +%Y%m%d%H%M).tar.gz  --file jenkins_backup.tar.gz
 kubectl exec -n jenkins $jenkins_pod_id -- bash -c 'rm -rf /var/jenkins_backup'
 
@@ -31,6 +33,8 @@ if [ $? -ne 0 ] ; then
   kubectl -n grafana-dashboard cp grafana-dashboard/${influx_pod_id}:/var/lib/influxdb_backup/influxdb_backup.tar.gz influxdb_backup.tar.gz
 fi
 echo "Upload to ibm cloud InfluxDb"
+#Login again as session gets terminated due to inactivity
+ibmcloud login -a cloud.ibm.com -r us-south -g prow-resource-group -q --apikey=${IBMCLOUD_API_KEY}
 ibmcloud cos upload --bucket "${INFLUXDB_BUCKET}" --key influxdb_backup_$(date +%Y%m%d%H%M).tar.gz  --file influxdb_backup.tar.gz
 kubectl exec -n grafana-dashboard $influx_pod_id -- bash -c 'rm -rf /var/lib/influxdb_backup'
 
