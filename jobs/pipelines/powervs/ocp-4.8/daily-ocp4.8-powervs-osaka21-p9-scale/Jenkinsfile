@@ -26,7 +26,7 @@ pipeline {
         ENABLE_E2E_TEST = "false"
 
         //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.8" //The download branch
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"

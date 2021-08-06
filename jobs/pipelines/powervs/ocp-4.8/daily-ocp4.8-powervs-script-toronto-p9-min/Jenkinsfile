@@ -13,28 +13,27 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
-
-        IBM_CLOUD_REGION = "osa"
-        IBM_CLOUD_ZONE = "osa21"
-        SERVICE_INSTANCE_ID = "06f2a2b0-5bca-481a-8aa7-1f267beba862"
+        IBM_CLOUD_REGION = "tor"
+        IBM_CLOUD_ZONE = "tor01"
+        SERVICE_INSTANCE_ID = "4a1f10a2-0797-4ac8-9c41-44bc04b2d18f"
 
         BASTION_IMAGE = "rhel-83"
         RHCOS_IMAGE = "rhcos-48"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-osaka-21.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-osaka-21.txt"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-toronto-01.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-toronto-01.txt"
         OCP_RELEASE = "4.8"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
         GOLANG_TARBALL = "https://golang.org/dl/go1.16.5.linux-ppc64le.tar.gz"
 
-        //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.8" //The download branch
+        //Script arguments
+        RELEASE_VER="4.8"
 
-        TARGET = "deploy-openshift4-powervs"
+        TARGET = "deploy-openshift4-powervs-script"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
-        SCRIPT_DEPLOYMENT = false
+        SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "1"
 
         // Type of configuration
@@ -94,8 +93,8 @@ pipeline {
                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
                         }
                         else{
-                             echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
-                             throw err
+                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
                         }
                         env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
                         env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
@@ -154,7 +153,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()

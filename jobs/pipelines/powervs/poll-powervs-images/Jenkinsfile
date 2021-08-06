@@ -37,7 +37,6 @@ pipeline {
                                 cat images_all_'${item}'.txt | grep 'rhel-83'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-83-[[:alnum:]]*-tier1'|xargs > latest-rhel-83-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhel-84'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-84-[[:alnum:]]*-tier1'|xargs > latest-rhel-84-'${item}'.txt || true
                                 #cat images_all_'${item}'.txt | grep 'centos-83'  |sort -t'|' -k5 -r|head -1|grep -o 'centos-83-[[:alnum:]]*-tier1'|xargs > latest-centos-83-'${item}'.txt || true
-                                cat images_all_'${item}'.txt | grep 'rhcos-45' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-45-[[:alnum:]]*-tier1'|xargs > latest-rhcos-45-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhcos-46' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-46-[[:alnum:]]*-tier1'|xargs > latest-rhcos-46-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhcos-47' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-47-[[:alnum:]]*-tier1'|xargs > latest-rhcos-47-'${item}'.txt || true
                                 cat images_all_'${item}'.txt | grep 'rhcos-48' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-48-[[:alnum:]]*-tier1'|xargs > latest-rhcos-48-'${item}'.txt || true
@@ -56,7 +55,6 @@ pipeline {
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-83-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-84-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     //archiveArtifacts allowEmptyArchive: true, artifacts: "latest-centos-83-${item}.txt", fingerprint: true, onlyIfSuccessful: false
-                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-45-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-46-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-47-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-48-${item}.txt", fingerprint: true, onlyIfSuccessful: false
