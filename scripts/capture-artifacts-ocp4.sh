@@ -18,13 +18,6 @@
         cp ${TARGET}.tfvars vars.tfvars
         tar -czvf ${WORKSPACE}/deploy/logs.tar.gz ${WORKSPACE}/deploy/.${TARGET}/logs
     fi
-    if [ ${POWERVS} == "false" ] ; then
-        BASTION_IP=$(make $TARGET:output  TERRAFORM_OUTPUT_VAR=bastion_ip )
-        [ $? -ne 0 ] && exit 1
-    else
-        BASTION_IP=$(make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip | grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}' )
-        [ $? -ne 0 ] && exit 1
-    fi
     if [ ! -z "${BASTION_IP}" ]; then
         ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} exit
         rc=$?
