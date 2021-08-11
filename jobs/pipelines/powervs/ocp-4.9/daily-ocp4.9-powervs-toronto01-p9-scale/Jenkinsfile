@@ -1,5 +1,6 @@
 @Library('pcloud-jenkins-library') _
 
+
 pipeline {
     agent any
     environment {
@@ -13,40 +14,31 @@ pipeline {
 
         //Env constants
         TERRAFORM_VER = "0.13.4"
-
-        IBM_CLOUD_REGION = "osa"
-        IBM_CLOUD_ZONE = "osa21"
-        SERVICE_INSTANCE_ID = "06f2a2b0-5bca-481a-8aa7-1f267beba862"
+        IBM_CLOUD_REGION = "tor"
+        IBM_CLOUD_ZONE = "tor01"
+        SERVICE_INSTANCE_ID = "4a1f10a2-0797-4ac8-9c41-44bc04b2d18f"
 
         BASTION_IMAGE = "rhel-83"
-        RHCOS_IMAGE = "rhcos-48"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-osaka-21.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-osaka-21.txt"
-        OCP_RELEASE = "4.8"
-
-        //e2e specific variables
-        ENABLE_E2E_TEST = "true"
-        GOLANG_TARBALL = "https://golang.org/dl/go1.16.5.linux-ppc64le.tar.gz"
+        RHCOS_IMAGE = "rhcos-49"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-toronto-01.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-toronto-01.txt"
+        OCP_RELEASE = "4.9"
+        ENABLE_E2E_TEST = "false"
 
         //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.8" //The download branch
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
         SCRIPT_DEPLOYMENT = false
-        WAIT_FOR_DEBUG = "1"
+        WAIT_FOR_DEBUG = "0"
 
         // Type of configuration
         CONFIG_TYPE="min"
 	 }
 
     stages {
-        stage('Clone ansible extra') {
-            steps {
-                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
-            }
-        }
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
@@ -140,12 +132,13 @@ pipeline {
                 validateCoStatus()
             }
         }
-        stage('Setup and run ansible extra') {
+        stage('Run scale test') {
             steps {
-               setupAndRunE2e()
+                setupAndRunScaleTest()
             }
         }
-        stage('Gather pprof and prometheus data') {
+
+        stage('Gather post pprof and prometheus data') {
             steps {
                 gatherPrometheusData()
             }
@@ -153,12 +146,12 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+            archiveAllArtifacts("deploy/time_taken_namespaces", "deploy/time_taken_deployments", "deploy/vars.tfvars",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
-            processE2eResults()
-            dbDashboardUpdateE2e()
+            processScaleResults()
+            dbDashboardUpdateScale()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
