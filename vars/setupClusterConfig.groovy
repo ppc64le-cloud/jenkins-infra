@@ -19,13 +19,13 @@ def call(String config, String noOfWorkers="2"){
             env.WORKER_PROCESSORS = ".5"
             env.WORKER_VCPUS = "1" // for powervc
 
-            if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.4" || OCP_RELEASE == "4.3") {
-                env.MASTER_MEMORY = "16"
-                env.WORKER_MEMORY = "16"
-            }
-            else {
+            if (OCP_RELEASE == "4.6" || OCP_RELEASE == "4.7") {
                 env.MASTER_MEMORY = "32"
                 env.WORKER_MEMORY = "32"
+            }
+            else {
+                env.MASTER_MEMORY = "16"
+                env.WORKER_MEMORY = "16"
             }
         }
         //Max Config
