@@ -1,0 +1,186 @@
+@Library('pcloud-jenkins-library') _
+
+pipeline {
+    agent any
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+
+        //Env constants
+        TERRAFORM_VER = "0.13.4"
+
+        IBM_CLOUD_REGION   = "mon"
+        IBM_CLOUD_ZONE     = "mon01"
+        SERVICE_INSTANCE_ID = "bc895dc9-f626-41c0-bfd3-94a0d8942a5f"
+
+        BASTION_IMAGE = "rhel-84"
+        RHCOS_IMAGE = "rhcos-49"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-validation-montreal-01.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-validation-montreal-01.txt"
+        OCP_RELEASE = "4.9"
+
+        //e2e specific variables
+        ENABLE_E2E_TEST = "false"
+        GOLANG_TARBALL = "https://golang.org/dl/go1.16.5.linux-ppc64le.tar.gz"
+
+        //Makefile variables
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+
+        TARGET = "deploy-openshift4-powervs"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        POWERVS = true
+        SCRIPT_DEPLOYMENT = false
+        WAIT_FOR_DEBUG = "1"
+
+        // Type of configuration
+        CONFIG_TYPE="min"
+
+        //Variables for Cerberus repository
+        OPENSHIFT_CERBERUS_GIT_DEPLOY_PROJECT = "https://github.com/cloud-bulldozer/cerberus"
+        OPENSHIFT_CERBERUS_GIT_DEPLOY_BRANCH  = "master"
+ 
+        //Time in seconds for 8 HRS
+        SLEEP_TIME_FOR_CRON_LOG_GATHER=28800
+        //The log collection activity will run for 84 * 28800 = 4 Weeks
+        TIME_TO_GATHER_LOGS=84
+	 }
+
+
+    stages {
+        stage('Clone ansible extra') {
+            steps {
+                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
+            }
+        }
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
+            }
+        }
+        stage('pull artifact') {
+            steps {
+               getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+               getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
+               getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        pullSecret()
+                        env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        }
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
+                            env.BASTION_IMAGE_NAME = readFile "deploy/artifactory/${BASTION_IMAGE_FILE}"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE_NAME.trim()
+                       }
+                        else{
+                            echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${RHCOS_IMAGE_FILE}")) {
+                            env.RHCOS_IMAGE_NAME = readFile "deploy/artifactory/${RHCOS_IMAGE_FILE}"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        }
+                        else{
+                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                        env.OPENSHIFT_INSTALL_TARBALL=getOpenshiftBuild(OCP_RELEASE)
+                        env.OPENSHIFT_CLIENT_TARBALL=getOpenshiftClient(OCP_RELEASE)
+                        env.OPENSHIFT_CLIENT_TARBALL_AMD64=getOpenshiftClientAMD(OCP_RELEASE)
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                initializeEnvironment()
+            }
+        }
+        stage('Setup Terraform Plugin') {
+            steps {
+                setupTerraformPlugin()
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                deployCluster()
+            }
+        }
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                crontabCommandCaptureScript()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+        stage('Validate CO status') {
+            steps {
+                validateCoStatus()
+            }
+        }
+
+        stage('Longevity test - collect cronjob log and monitor the cluster with cerberus') {
+            steps {
+                parallel(
+                    a: {
+                        longevityCronLogCollection()
+                    },
+                    b:  {
+                    echo "cerberus step skip for now"
+                       // cerberusSetup()
+                    }
+                )
+            }
+        }
+        
+        stage('Gather pprof and prometheus data') {
+            steps {
+                gatherPrometheusData()
+            }
+        }
+    }
+    
+
+    post {
+        always {
+            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/cron_longevity.log",
+                "cerberus/cerberus.report","cerberus/cerberus_output.txt", "cerberus/config/cerberus-config.yaml",
+                "cerberus/custom_checks/custom_check_res_usage.py", "must-gather.tar.gz")
+            cleanupOcp4Cluster()
+            cleanWs()
+        }
+    }
+}

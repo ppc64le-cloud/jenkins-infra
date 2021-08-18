@@ -18,6 +18,7 @@ def call() {
                 cd ${WORKSPACE}
                 cp ${WORKSPACE}/custom_check_res_usage.py ${WORKSPACE}/cerberus/custom_checks/
                 cp ${WORKSPACE}/cerberus-config.yaml ${WORKSPACE}/cerberus/config/
+                cp ${WORKSPACE}/files/kubeconfig ${WORKSPACE}/cerberus
                 export KUBECONFIG=${WORKSPACE}/files/kubeconfig
                 cd ${WORKSPACE}/cerberus
                 python3 start_cerberus.py --config ./config/cerberus-config.yaml 2>&1 > cerberus_output.txt
