@@ -25,12 +25,11 @@ pipeline {
 		            sh '''#!/bin/bash
 		            echo "IBM cloud login"
                     ibmcloud login -a cloud.ibm.com -r us-south -g prow-resource-group -q --apikey=${IBMCLOUD_API_KEY}
-                    ibmcloud cos config crn --crn "${CRN}"
 
                     echo "Login to cluster"
                     ibmcloud ks cluster config --cluster "${CLUSTER_ID}"
-                    chmod +x ./scripts/backup.sh
-                    ./scripts/backup.sh 2>&1 | tee backup.log
+                    chmod +x ./scripts/prepare-backup.sh
+                    ./scripts/prepare-backup.sh 2>&1 | tee backup.log
 		            '''
 		            }
                 }
