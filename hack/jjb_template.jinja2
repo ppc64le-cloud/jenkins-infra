@@ -27,6 +27,15 @@
     properties:
       - copyartifact:
           projects: "*"
+      {% if 'mirror-openshift-release' in JOB_NAME %}
+      - build-discarder:
+          days-to-keep: 200
+          artifact-days-to-keep: 200
+      {% else %}
+      - build-discarder:
+          days-to-keep: 30
+          artifact-days-to-keep: 30
+      {% endif %}
     pipeline-scm:
       scm:
         - git:
