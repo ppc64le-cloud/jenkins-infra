@@ -42,7 +42,7 @@ pipeline {
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
-                setupClusterConfig("${CONFIG_TYPE}")
+                setupClusterConfig("${CONFIG_TYPE}","3")
             }
         }
         stage('pull artifact') {
@@ -146,7 +146,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/time_taken_namespaces", "deploy/time_taken_deployments", "deploy/vars.tfvars",
+            archiveAllArtifacts("time_taken_namespaces", "time_taken_deployments", "deploy/vars.tfvars",
                 "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "deploy/logs.tar.gz", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
