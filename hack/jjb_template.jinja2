@@ -4,18 +4,14 @@
     project-type: pipeline
     triggers:
       - timed: {% if 'daily-powervs-toronto-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
-        {% elif 'daily-powervs-saopaulo01-p9-stability-check' in JOB_NAME %}"0 */5 * * * "
 
         {% elif 'daily-ocp4.8-powervs-london-p9-min' in JOB_NAME %}"0 04 * * * "
 
+        {% elif 'daily-ocp4.6-powervs-script-toronto01-p9-min' in JOB_NAME %}"0 00 * * * "
         {% elif 'daily-ocp4.7-powervs-script-toronto01-p9-min' in JOB_NAME %}"0 05 * * * "
         {% elif 'daily-ocp4.8-powervs-script-toronto-p9-min' in JOB_NAME %}"0 09 * * *"
         {% elif 'daily-ocp4.9-powervs-toronto01-p9-scale' in JOB_NAME %}"0 17 * * *"
         {% elif 'daily-ocp4.9-powervs-toronto-p9-min' in JOB_NAME %}"0 13 * * *"
-
-        {% elif 'daily-ocp4.6-powervs-script-saopaulo01-p9-min' in JOB_NAME %}"0 16 * * * "
-        {% elif 'daily-ocp4.8-powervs-script-saopaulo01-p9-min' in JOB_NAME %}"0 05 * * * "
-        {% elif 'daily-ocp4.9-powervs-saopaulo01-p9-min' in JOB_NAME %}"0 00 * * * "
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervs-images' in JOB_NAME %}"@daily"
