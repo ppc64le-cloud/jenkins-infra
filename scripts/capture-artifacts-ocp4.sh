@@ -22,7 +22,7 @@
         ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} exit
         rc=$?
         if [ $? -eq 0 ] ; then
-            ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czvf ~/e2e_tests_results/conformance-parallel-out.txt.tar.gz ~/e2e_tests_results
+            ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/e2e_tests_results/conformance-parallel-out.txt.tar.gz ~/e2e_tests_results > /dev/null 2>&1
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/e2e_tests_results/conformance-parallel-out.txt.tar.gz .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/e2e_tests_results/summary.txt .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/e2e_tests_results/e2e-upgrade-summary.txt .

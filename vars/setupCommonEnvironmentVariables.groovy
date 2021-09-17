@@ -71,17 +71,17 @@ def call() {
             env.OS_TENANT_NAME="ibm-default"
             env.OS_USER_DOMAIN_NAME="default"
             env.OS_PROJECT_DOMAIN_NAME="Default"
-            env.OS_COMPUTE_API_VERSION=2.37
+            env.OS_COMPUTE_API_VERSION=2.46
             env.OS_NETWORK_API_VERSION=2.0
             env.OS_IMAGE_API_VERSION=2
             env.OS_VOLUME_API_VERSION=2
-            env.OS_AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
+            env.OS_AUTH_URL="https://scnlcicdpowervc.pok.stglabs.ibm.com:5000/v3/"
             env.OS_NETWORK="icp_network4"
             env.OS_PRIVATE_NETWORK="icp_network4"
-            env.MASTER_TEMPLATE="${env.BUILD_TAG}"+"-"+"master"
-            env.WORKER_TEMPLATE="${env.BUILD_TAG}"+"-"+"worker"
-            env.BOOTSTRAP_TEMPLATE="${env.BUILD_TAG}"+"-"+"bootstrap"
-            env.BASTION_TEMPLATE="${env.BUILD_TAG}"+"-"+"bastion"
+            env.MASTER_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"mas"
+            env.WORKER_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"wor"
+            env.BOOTSTRAP_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"boo"
+            env.BASTION_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"bas"
             env.RHEL_USERNAME = "root"
             env.OS_INSECURE = true
 
@@ -95,6 +95,8 @@ def call() {
             env.INSTANCE_NAME = "rdr-cicd"
             env.MOUNT_ETCD_RAMDISK="true"
             env.CHRONY_CONFIG="true"
+            env.SCG_ID = "259fb507-3ac0-49bd-973b-c27da9ed0537"
+            env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
 
             //e2e variables
             if ( env.ENABLE_E2E_TEST ) {

@@ -6,7 +6,11 @@ def INSTANCE_NAME_LIST = [
                     "ocp-validation-montreal-01"
                     ]
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
     options {
         copyArtifactPermission('*');
     }

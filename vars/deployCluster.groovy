@@ -4,19 +4,43 @@ def call() {
             echo ""
         }
         try {
+            env.CLUSTER_ID=""
             sh '''
                 echo 'Deploying Cluster!'
                 if [ "${SCRIPT_DEPLOYMENT}" = false ]; then
                     cd ${WORKSPACE}/deploy
-                    make $TARGET || true
+                    exit_status=0
+                    make $TARGET || exit_status=$?
                     retries=0
                     until [ "$retries" -ge 3 ]
                     do
                         if [ "$retries" -eq 2 ]; then
+                            if [ "$exit_status" -ne 0 ] ;then
+                                if [ "${POWERVS}" = false  ]; then
+                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id")
+                                    if ! [ "$CLUSTER_ID" = "" ]; then
+                                        SERVER_LIST=$(openstack server list --insecure | grep "$CLUSTER_ID" | grep -v "bastion\\|bootstrap" | awk '{print $4}')
+                                        echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+                                    fi
+                                fi
+                                exit_status=0
+                            fi
                             make $TARGET:redeploy
                             sleep 60
                         else
-                            make $TARGET:redeploy || true
+                            if [ "$exit_status" -ne 0 ]; then
+                                if [ "${POWERVS}" = false  ]; then
+                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id")
+                                    if ! [ "$CLUSTER_ID" = "" ]; then
+                                        SERVER_LIST=$(openstack server list --insecure | grep "$CLUSTER_ID" | grep -v "bastion\\|bootstrap" | awk '{print $4}')
+                                        echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+                                    fi
+                                fi
+                                exit_status=0
+                            fi
+                            make $TARGET:redeploy|| exit_status=$?
                         fi
                         retries=$((retries+1))
                         sleep 10

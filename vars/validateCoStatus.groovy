@@ -11,9 +11,9 @@ def call() {
                 echo 'Setting up kubectl!'
                 oc get nodes
                 cd ${WORKSPACE}
-                echo "Gathering logs"
-                oc adm must-gather
-                tar -czvf must-gather.tar.gz ./must-gather*
+                #echo "Gathering logs"
+                #ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "oc adm must-gather; tar -czf must-gather.tar.gz ./must-gather*"
+                #scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/must-gather.tar.gz .
                 sleep_time=300
                 flag=0
                 for((i=0;i<18;++i)) do

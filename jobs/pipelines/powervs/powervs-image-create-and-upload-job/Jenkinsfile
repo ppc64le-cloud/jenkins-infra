@@ -1,6 +1,10 @@
 @Library('pcloud-jenkins-library') _
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
     parameters {
 	    string(defaultValue: '', description: 'Rhel Url', name: 'RhelUrl')
 	    string(defaultValue: '', description: 'Rhcos Url', name: 'RhcosUrl')

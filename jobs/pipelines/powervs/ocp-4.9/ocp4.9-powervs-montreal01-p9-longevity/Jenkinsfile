@@ -1,7 +1,11 @@
 @Library('pcloud-jenkins-library') _
 
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')

@@ -10,7 +10,7 @@ INFRA_ROOT="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
 if [[ -z "${WHAT}" ]]; then
     pushd ${INFRA_ROOT}
-    folders=(`find jobs/pipelines -name Jenkinsfile -print | grep -v powervm | sed "s|jobs/pipelines/||g" | sed "s|/Jenkinsfile||" | xargs -I"{}" dirname {} | uniq`)
+    folders=(`find jobs/pipelines -name Jenkinsfile -print | sed "s|jobs/pipelines/||g" | sed "s|/Jenkinsfile||" | xargs -I"{}" dirname {} | uniq`)
     popd
 else
     folders=(${WHAT})
@@ -22,6 +22,7 @@ for folder in "${folders[@]}"
 do
 	IFS=/
         JOB_FOLDER=""
+        file_name=""
 	for i in $folder
 	do
         if [[ "$folder" != "." ]]
@@ -29,7 +30,8 @@ do
             unset IFS
             echo $i
             JOB_FOLDER+=$i
-            echo "{\"JOB_FOLDER\":${JOB_FOLDER}}" | jinja2 ${INFRA_ROOT}/hack/jjb_template_folder.jinja2 > ${TMP_DIR}/${i}.yml
+            file_name+=$i
+            echo "{\"JOB_FOLDER\":${JOB_FOLDER}}" | jinja2 ${INFRA_ROOT}/hack/jjb_template_folder.jinja2 > ${TMP_DIR}/$file_name.yml
             JOB_FOLDER+='/'
             echo $JOB_FOLDER
             IFS=/
@@ -42,7 +44,7 @@ jenkins-jobs --user ${JENKINS_USER} --password ${JENKINS_PASSWORD} update ${TMP_
 
 if [[ -z "${WHAT}" ]]; then
     pushd ${INFRA_ROOT}
-    jenkinsfiles=(`find jobs/pipelines -name Jenkinsfile -print | grep -v powervm`)
+    jenkinsfiles=(`find jobs/pipelines -name Jenkinsfile -print`)
     popd
 else
     jenkinsfiles=(${WHAT})
