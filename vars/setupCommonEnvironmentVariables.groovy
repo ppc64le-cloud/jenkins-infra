@@ -75,7 +75,6 @@ def call() {
             env.OS_NETWORK_API_VERSION=2.0
             env.OS_IMAGE_API_VERSION=2
             env.OS_VOLUME_API_VERSION=2
-            env.OS_AUTH_URL="https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
             env.OS_NETWORK="icp_network4"
             env.OS_PRIVATE_NETWORK="icp_network4"
             env.MASTER_TEMPLATE="${env.BUILD_TAG}"+"-"+"master"

@@ -14,6 +14,7 @@ pipeline {
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('PULL_SECRET')
+        OS_AUTH_URL=credentials('URL_SCNLCICDCLOUD')
 
         //Env constants
         HARDWARE_CHOSE = "P9"

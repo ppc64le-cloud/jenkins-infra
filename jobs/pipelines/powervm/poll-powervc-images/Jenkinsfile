@@ -6,6 +6,9 @@ pipeline {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         OS_USERNAME = credentials('OS_USERNAME')
         OS_PASSWORD = credentials('OS_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+        URL_SCNLCICDCLOUD=credentials('URL_SCNLCICDCLOUD')
+        URL_SCNLPOWERCLOUD=credentials('URL_SCNLPOWERCLOUD')
 
         VIR_CHOSE = "PowerVM"
         HARDWARE_CHOSE = "P9"
@@ -13,7 +16,6 @@ pipeline {
         BASTION_OS  = "RHEL8.0"
         TIMEOUT = "0"
         RELEASE="4.4"
-        //OS_AUTH_URL = "https://scnlpowercloud.pok.stglabs.ibm.com:5000/v3/"
 
         FUNCTIONAL_TEST_REPO = "icp-sanity-bats"
         TERRAFORM_VER = "0.11.13"
@@ -39,7 +41,7 @@ pipeline {
                     }
                     try
                     {
-                    env.OS_AUTH_URL = "https://scnlpowercloud.pok.stglabs.ibm.com:5000/v3/"
+                    env.OS_AUTH_URL = env.URL_SCNLPOWERCLOUD
                     sh '''
                     openstack image list --insecure --format value -c Name > images.all.txt
                     for i in `cat images.all.txt`; do  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $i" " >> images.all.date.txt; echo $create_date >> images.all.date.txt ;done
@@ -60,7 +62,7 @@ pipeline {
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel7\\.7'  > rhel-7.7.txt || true
                     cat images.all.date.sorted.txt| awk '{print $1}'| grep 'rhel7\\.8'  > rhel-7.8.txt || true
                     '''
-                    env.OS_AUTH_URL = "https://scnlcicdcloud.pok.stglabs.ibm.com:5000/v3/"
+                    env.OS_AUTH_URL = env.URL_SCNLCICDCLOUD
                     sh '''
                     openstack image list --insecure --format value -c Name -c ID > images.scnlcicdcloud.all.txt
                     for i in `cat images.scnlcicdcloud.all.txt|awk '{print $2}'`; do line=$(grep $i images.scnlcicdcloud.all.txt) ;  create_date=$(openstack image show $i --insecure | grep created_at | awk  'BEGIN{FS="|"}{print $3}' | sed 's/ *$//') ; echo -n  $line" " >> images.scnlcicdcloud.all.date.txt; echo $create_date >> images.scnlcicdcloud.all.date.txt ;done
