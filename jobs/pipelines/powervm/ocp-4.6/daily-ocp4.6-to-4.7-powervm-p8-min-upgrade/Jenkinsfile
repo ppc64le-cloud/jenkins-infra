@@ -103,6 +103,7 @@ pipeline {
                         if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
                             env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
                             env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
+                            env.UPGRADE_VERSION = env.UPGRADE_IMAGE.split(":")[1].trim()
                         }
                         else {
                             echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"

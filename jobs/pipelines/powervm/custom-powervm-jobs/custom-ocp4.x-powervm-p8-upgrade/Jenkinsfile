@@ -216,6 +216,7 @@ pipeline {
                         if (env.UPGRADE_BUILD?.trim()) {
                             if (!env.UPGRADE_BUILD.contains('quay')) {
                                 env.UPGRADE_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.UPGRADE_BUILD}"
+                                env.UPGRADE_VERSION = env.UPGRADE_IMAGE.split(":")[1].trim()
                                 sh '''
                                     docker login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
                                     docker pull ${UPGRADE_IMAGE}

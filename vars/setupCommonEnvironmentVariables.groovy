@@ -14,7 +14,6 @@ def call() {
             env.LOCAL_REGISTRY_IMAGE = "docker.io/ibmcom/registry-ppc64le:2.6.2.5"
             env.SETUP_SQUID_PROXY = "true"
 
-            // Bellow 4 variables are not used. Disabled in template
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
             env.HELPERNODE_TAG = "324e09e3d303101874f540730c993cd986ddbc04"
             env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
@@ -127,6 +126,30 @@ def call() {
             env.BASTION_IP = ""
             //Common Service
             env.CS_INSTALL = "false"
+
+            // Bellow 4 variables are not used. Disabled in template
+            env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
+            env.HELPERNODE_TAG = "324e09e3d303101874f540730c993cd986ddbc04"
+            env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+            switch (env.OCP_RELEASE) {
+                case "4.10":
+                    env.INSTALL_PLAYBOOK_TAG = "7c5c0158fb96df7816b79da2274ff21b2fd61c1c"
+                    break
+                case "4.9":
+                    env.INSTALL_PLAYBOOK_TAG = "7c5c0158fb96df7816b79da2274ff21b2fd61c1c"
+                    break
+                case "4.8":
+                    env.INSTALL_PLAYBOOK_TAG = "7c5c0158fb96df7816b79da2274ff21b2fd61c1c"
+                    break
+                case "4.7":
+                    env.INSTALL_PLAYBOOK_TAG = "de8b4bf5f243f40dae91a3a0cc67a55c571d210e"
+                    break
+                case "4.6":
+                    env.INSTALL_PLAYBOOK_TAG = "2888fad354e72af39af1be4f75efaea224187b6b"
+                    break
+                default:
+                     env.INSTALL_PLAYBOOK_TAG = "7c5c0158fb96df7816b79da2274ff21b2fd61c1c"
+            }
 
             // Compute Template Variables
             env.WORKER_MEMORY_MB=""
