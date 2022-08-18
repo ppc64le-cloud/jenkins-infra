@@ -8,14 +8,14 @@ pipeline {
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
-        IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
         GITHUB_USER = credentials('GITHUB_USER')
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         PULL_SECRET = credentials('PULL_SECRET')
         IBMID="ltccci@in.ibm.com"
-        IBMCLOUD_OCCMIBCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
-        IBMCLOUD_OIOCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
-        IBMCLOUD_OMAPCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
+        IBMCLOUD_OCCMIBCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+        IBMCLOUD_OIOCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+        IBMCLOUD_OMAPCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
 
         //PowerVS specific variables
         POWERVS_REGION = "lon"
