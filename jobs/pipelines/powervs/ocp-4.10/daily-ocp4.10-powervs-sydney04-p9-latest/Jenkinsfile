@@ -18,7 +18,7 @@ pipeline {
 	ACCESS_KEY_POWERVS = credentials('ACCESS_KEY_POWERVS_UPSTREAM_CI')
 
         //Env constants
-        TERRAFORM_VER = "0.13.4"
+        TERRAFORM_VER = "1.2.0"
 
         IBM_CLOUD_REGION = "tor"
         IBM_CLOUD_ZONE = "tor01"

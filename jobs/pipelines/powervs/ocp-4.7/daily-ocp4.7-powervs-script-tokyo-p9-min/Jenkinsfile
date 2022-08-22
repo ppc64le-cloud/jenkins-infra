@@ -16,7 +16,7 @@ pipeline {
         PULL_SECRET = credentials('PULL_SECRET')
 
         //Env constants
-        TERRAFORM_VER = "0.13.4"
+        TERRAFORM_VER = "1.2.0"
         IBM_CLOUD_REGION = "tok"
         IBM_CLOUD_ZONE = "tok04"
         SERVICE_INSTANCE_ID = "74818206-a37d-4aa9-9d22-09e09fbf1224"
