@@ -10,7 +10,7 @@ def call() {
                 else
                     exit 1
                 fi
-                BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip )
+                BASTION_IP=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_public_ip | grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}')
                 [ $? -ne 0 ] && exit 1
                 if [ ! -z "${BASTION_IP}" ]; then
                     scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/scripts/stability-check.sh root@${BASTION_IP}:
