@@ -60,7 +60,7 @@ def call() {
                 }
             }
             else {
-                 env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip").trim()
+                 env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip | grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}'").trim()
             }
             env.DEPLOYMENT_STATUS = true
         }
