@@ -110,7 +110,7 @@ pipeline {
                         env.INSTANCE_NAME = "${BUILD_USER_FIRST_NAME}"
                         env.INSTANCE_NAME = env.INSTANCE_NAME.toLowerCase()
                     }
-                    env.TERRAFORM_VER = "0.13.0"
+                    env.TERRAFORM_VER = "1.2.0"
                     env.OS_TENANT_NAME="icp-test"
                     env.OS_NETWORK = "workload"
                     env.OS_PRIVATE_NETWORK = "workload"

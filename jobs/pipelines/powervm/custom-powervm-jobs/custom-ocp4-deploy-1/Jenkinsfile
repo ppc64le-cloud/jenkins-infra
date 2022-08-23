@@ -396,7 +396,7 @@ pipeline {
         OS_AUTH_URL=credentials('URL_SCNLPOWERCLOUD')
 
         //Env constants
-        TERRAFORM_VER = "0.13.0"
+        TERRAFORM_VER = "1.2.0"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
