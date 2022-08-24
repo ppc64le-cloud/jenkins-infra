@@ -176,7 +176,7 @@ pipeline {
                 #Get DHCP
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
                 ./powervs-hack/scripts/get-dhcp.sh || true
-                dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 5 {print $1}')
+                dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
                 ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || true
                 '''
             }
