@@ -50,7 +50,7 @@ pipeline {
         stage('Clone ansible extra') {
             steps {
                 cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
-                cloneRepo("git@github.ibm.com:redstack-power/ocp_ansible_validation.git", "ocp_ansible_validation")
+                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", branch="*/main")
             }
         }
         stage('Setup Common Environment Variables') {

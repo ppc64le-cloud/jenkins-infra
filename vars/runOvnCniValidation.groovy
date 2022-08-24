@@ -8,7 +8,7 @@ def call(){
                 echo 'Creating var.yaml'
                 rm -rf ~/.ansible
                 ansible all -m setup -a 'gather_subset=!all'
-                cd ${WORKSPACE}/ocp_ansible_validation
+                cd ${WORKSPACE}/ocp4-playbooks-extras
                 cp examples/ocp_ovnkube_cni_vars.yaml vars.yaml
                 sed -i "s|ocp_ovnkube_cni:.*$|ocp_ovnkube_cni: true|g" vars.yaml
                 sed -i "s|ovnkube_cni_tests_enabled:.*$|ovnkube_cni_tests_enabled: true|g" vars.yaml
