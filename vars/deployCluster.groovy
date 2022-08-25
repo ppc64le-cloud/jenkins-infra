@@ -17,9 +17,9 @@ def call() {
                         if [ "$retries" -eq 2 ]; then
                             if [ "$exit_status" -ne 0 ] ;then
                                 if [ "${POWERVS}" = false  ]; then
-                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id")
+                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
                                     if ! [ "$CLUSTER_ID" = "" ]; then
-                                        SERVER_LIST=$(openstack server list --insecure | grep "$CLUSTER_ID" | grep -v "bastion" | awk '{print $4}')
+                                        SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
                                         echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
                                     fi
@@ -31,9 +31,9 @@ def call() {
                         else
                             if [ "$exit_status" -ne 0 ]; then
                                 if [ "${POWERVS}" = false  ]; then
-                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id")
+                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id"| tr -d '"')
                                     if ! [ "$CLUSTER_ID" = "" ]; then
-                                        SERVER_LIST=$(openstack server list --insecure | grep "$CLUSTER_ID" | grep -v "bastion\\|bootstrap" | awk '{print $4}')
+                                        SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
                                         echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
                                     fi

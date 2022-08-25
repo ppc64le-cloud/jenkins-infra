@@ -78,14 +78,16 @@ def call() {
         else {
             //PowerVC ENV Variables
             env.OS="linux"
-            env.OS_IDENTITY_API_VERSION='3'
-            env.OS_TENANT_NAME="ibm-default"
-            env.OS_USER_DOMAIN_NAME="default"
+            env.OS_IDENTITY_API_VERSION="3"
+            env.OS_REGION_NAME="RegionOne"
             env.OS_PROJECT_DOMAIN_NAME="Default"
-            env.OS_COMPUTE_API_VERSION=2.46
-            env.OS_NETWORK_API_VERSION=2.0
-            env.OS_IMAGE_API_VERSION=2
-            env.OS_VOLUME_API_VERSION=2
+            env.OS_PROJECT_NAME="ibm-default"
+            env.OS_TENANT_NAME="ibm-default"
+            env.OS_USER_DOMAIN_NAME="Default"
+            env.OS_COMPUTE_API_VERSION="2.46"
+            env.OS_NETWORK_API_VERSION="2.0"
+            env.OS_IMAGE_API_VERSION="2"
+            env.OS_VOLUME_API_VERSION="3"
             env.OS_NETWORK="icp_network4"
             env.OS_PRIVATE_NETWORK="icp_network4"
             env.MASTER_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"mas"
