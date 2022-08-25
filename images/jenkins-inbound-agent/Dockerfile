@@ -12,6 +12,7 @@ RUN apt-get update && apt install curl gnupg2 --yes \
         curl \
         sudo \
         rsync \
+        dnsutils \
     && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --upgrade pip ; pip3 install python-openstackclient; pip3 install ansible
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
