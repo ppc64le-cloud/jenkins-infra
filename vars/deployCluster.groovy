@@ -20,8 +20,13 @@ def call() {
                                     CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
                                     if ! [ "$CLUSTER_ID" = "" ]; then
                                         SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
-                                        echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
+                                        echo "$SERVER_LIST" | grep "master"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+                                        echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+
                                     fi
                                 fi
                                 exit_status=0
@@ -34,7 +39,11 @@ def call() {
                                     CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id"| tr -d '"')
                                     if ! [ "$CLUSTER_ID" = "" ]; then
                                         SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
-                                        echo "$SERVER_LIST" | while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+                                        echo "$SERVER_LIST" | grep "master"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
+                                        sleep 180
+                                        echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
                                     fi
                                 fi
