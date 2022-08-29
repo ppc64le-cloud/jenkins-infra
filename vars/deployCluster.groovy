@@ -16,9 +16,9 @@ def call() {
                     do
                         if [ "$retries" -eq 2 ]; then
                             if [ "$exit_status" -ne 0 ] ;then
-                                if [ "${POWERVS}" = false  ]; then
-                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
-                                    if ! [ "$CLUSTER_ID" = "" ]; then
+                                CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
+                                if ! [ "$CLUSTER_ID" = "" ]; then
+                                    if [ "${POWERVS}" = false  ]; then
                                         SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
                                         echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
@@ -26,7 +26,17 @@ def call() {
                                         sleep 180
                                         echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
-
+                                    else
+                                         ibmcloud login -a cloud.ibm.com  -q -r us-south --apikey=${IBMCLOUD_API_KEY}
+                                         ibmcloud pi ins| grep  $CLUSTER_ID | grep  -v "bastion" | awk -v OFS='\t' '{print $1, $2}' > server_list.txt
+                                         cat  server_list.txt| grep "bootstrap"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
+                                         cat  server_list.txt| grep "master"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 1000
+                                         cat  server_list.txt| grep "worker-0"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
+                                         cat  server_list.txt| grep "worker-1"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
                                     fi
                                 fi
                                 exit_status=0
@@ -35,9 +45,9 @@ def call() {
                             sleep 60
                         else
                             if [ "$exit_status" -ne 0 ]; then
-                                if [ "${POWERVS}" = false  ]; then
-                                    CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id"| tr -d '"')
-                                    if ! [ "$CLUSTER_ID" = "" ]; then
+                               CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
+                                if ! [ "$CLUSTER_ID" = "" ]; then
+                                    if [ "${POWERVS}" = false  ]; then
                                         SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
                                         echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
@@ -45,6 +55,17 @@ def call() {
                                         sleep 180
                                         echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
                                         sleep 180
+                                    else
+                                         ibmcloud login -a cloud.ibm.com  -q -r us-south --apikey=${IBMCLOUD_API_KEY}
+                                         ibmcloud pi ins| grep  $CLUSTER_ID | grep  -v "bastion" | awk -v OFS='\t' '{print $1, $2}' > server_list.txt
+                                         cat  server_list.txt| grep "bootstrap"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
+                                         cat  server_list.txt| grep "master"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 1000
+                                         cat  server_list.txt| grep "worker-0"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
+                                         cat  server_list.txt| grep "worker-1"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
+                                         sleep 180
                                     fi
                                 fi
                                 exit_status=0

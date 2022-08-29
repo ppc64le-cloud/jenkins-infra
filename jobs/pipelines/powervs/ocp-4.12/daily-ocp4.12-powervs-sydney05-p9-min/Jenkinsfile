@@ -18,14 +18,14 @@ pipeline {
         //Env constants
         TERRAFORM_VER = "1.2.0"
 
-        IBM_CLOUD_REGION = "lon"
-        IBM_CLOUD_ZONE = "lon06"
-        SERVICE_INSTANCE_ID = "86c41f82-81ef-430e-a589-9ada7a118773"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd05"
+        SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
 
         BASTION_IMAGE = "rhel-86"
         RHCOS_IMAGE = "rhcos-412"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-london06.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-london06.txt"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-sydney05.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-sydney05.txt"
         OCP_RELEASE = "4.12"
 
         //e2e specific variables
