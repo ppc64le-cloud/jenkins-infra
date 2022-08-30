@@ -27,14 +27,14 @@ pipeline {
         TERRAFORM_VER = "0.11.13"
         TEST_SUITE = "ppc64le-edge"
         OS = "linux"
-        OS_IDENTITY_API_VERSION='3'
+        OS_IDENTITY_API_VERSION="3"
         OS_TENANT_NAME="ibm-default"
         OS_USER_DOMAIN_NAME="default"
         OS_PROJECT_DOMAIN_NAME="Default"
-        OS_COMPUTE_API_VERSION=2.37
-        OS_NETWORK_API_VERSION=2.0
-        OS_IMAGE_API_VERSION=2
-        OS_VOLUME_API_VERSION=2
+        OS_COMPUTE_API_VERSION="2.37"
+        OS_NETWORK_API_VERSION="2.0"
+        OS_IMAGE_API_VERSION="2"
+        OS_VOLUME_API_VERSION="3"
         OS_PRIVATE_NETWORK = "icp_network2"
         OS_NETWORK = "icp_network2"
 	 }
