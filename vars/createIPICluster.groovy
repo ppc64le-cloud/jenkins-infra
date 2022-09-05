@@ -6,8 +6,6 @@ def call(){
             }
             sh '''
                 cd ${WORKSPACE}/deploy
-                ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
-                ibmcloud pi service-target ${SERVICE_INSTANCE_CRN}
                 ./powervs-hack/scripts/create-cluster.sh
                 cp ${CLUSTER_DIR}/metadata.json ./
             '''

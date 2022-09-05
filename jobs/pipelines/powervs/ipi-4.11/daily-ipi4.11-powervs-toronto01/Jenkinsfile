@@ -21,7 +21,6 @@ pipeline {
         POWERVS_REGION = "tor"
         POWERVS_ZONE = "tor01"
         SERVICE_INSTANCE_GUID = "a63fdc6a-5b72-423d-be16-d0def1572cd9"
-        SERVICE_INSTANCE_CRN ="crn:v1:bluemix:public:power-iaas:tor01:a/7cfbd5381a434af7a09289e795840d4e:a63fdc6a-5b72-423d-be16-d0def1572cd9::"
         VPCREGION= "ca-tor"
         RESOURCE_GROUP="ibm-internal-cicd-resource-group"
         SERVICE_INSTANCE="rdr-ipi-cicd-toronto01"
@@ -33,7 +32,7 @@ pipeline {
         CLUSTER_DIR="./ipi-install"
         OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux-amd64.tar.gz"
         OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
-        IPI_INSTALL="true"
+        POWERVS = true
 	 }
 
     stages {
@@ -45,7 +44,7 @@ pipeline {
 
         stage('Initialize Environment') {
             steps {
-                initializeEnvironment()
+                initializeEnvironment("${VPCREGION}","${RESOURCE_GROUP}")
             }
         }
         //Checkout the installer git repo
@@ -73,11 +72,6 @@ pipeline {
                                 git clone https://github.com/hamzy/powervs-hack.git
                                 curl -L "${OPENSHIFT_INSTALLER_URL}" > openshift-install-linux.tar.gz
                                 tar -xvf openshift-install-linux.tar.gz  -C /usr/local/bin
-                                wget https://download.clis.cloud.ibm.com/ibm-cloud-cli/2.1.1/IBM_Cloud_CLI_2.1.1_amd64.tar.gz
-                                tar -xvzf "./IBM_Cloud_CLI_2.1.1_amd64.tar.gz"
-                                ./Bluemix_CLI/install
-                                ibmcloud update -f
-                                ibmcloud plugin install power-iaas -f
                                  # setup oc client
                                 if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
                                     wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
@@ -174,8 +168,11 @@ pipeline {
                   openshift-install destroy cluster  --log-level=debug --dir ${CLUSTER_DIR} || true
                   retries=$((retries+1))
                 done
-                #Get DHCP
+                #Get connections
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
+                cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
+                while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
+                #Get DHCP
                 ./powervs-hack/scripts/get-dhcp.sh || true
                 dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
                 ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || true
