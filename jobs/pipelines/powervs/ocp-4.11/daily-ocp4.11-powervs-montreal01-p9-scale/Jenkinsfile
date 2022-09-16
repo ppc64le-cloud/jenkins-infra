@@ -29,13 +29,13 @@ pipeline {
         OCP_RELEASE = "4.11"
         ENABLE_E2E_TEST = "false"
 
-        //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+        //Script arguments
+        RELEASE_VER="4.11"
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
-        SCRIPT_DEPLOYMENT = false
+        SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "0"
 
         // Type of configuration

@@ -18,27 +18,28 @@ pipeline {
         //Env constants
         TERRAFORM_VER = "1.2.0"
 
-        IBM_CLOUD_REGION = "tor"
-        IBM_CLOUD_ZONE = "tor01"
-        SERVICE_INSTANCE_ID = "007e0e92-91d5-4f30-bc63-ca515660a4c2"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd05"
+        SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
 
         BASTION_IMAGE = "rhel-86"
-        RHCOS_IMAGE = "rhcos-411"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-toronto01.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-toronto01.txt"
-        OCP_RELEASE = "4.11"
+        RHCOS_IMAGE = "rhcos-412"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-sydney05.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-sydney05.txt"
+        OCP_RELEASE = "4.12"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
-        GOLANG_TARBALL = "https://golang.org/dl/go1.17.6.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL = "https://golang.org/dl/go1.18.6.linux-ppc64le.tar.gz"
 
-        //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+         //Script arguments
+        RELEASE_VER="4.12"
+        ARTIFACTS_VERSION="master"
 
-        TARGET = "deploy-openshift4-powervs"
+        TARGET = "deploy-openshift4-powervs-script"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
-        SCRIPT_DEPLOYMENT = false
+        SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "1"
 
         // Type of configuration
@@ -55,6 +56,9 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    env.SYSTEM_TYPE = "e980"
+                }
             }
         }
         stage('pull artifact') {
@@ -150,7 +154,7 @@ pipeline {
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz", "deploy/logs.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()

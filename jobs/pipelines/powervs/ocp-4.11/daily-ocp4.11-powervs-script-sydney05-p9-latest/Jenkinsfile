@@ -2,11 +2,11 @@
 
 pipeline {
     agent {
-        kubernetes {
+         kubernetes {
             inheritFrom 'jenkins-agent'
         }
     }
-    environment {
+       environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
         IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
@@ -14,6 +14,8 @@ pipeline {
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('PULL_SECRET')
+        SECRET_KEY_POWERVS = credentials('SECRET_KEY_POWERVS_UPSTREAM_CI')
+	ACCESS_KEY_POWERVS = credentials('ACCESS_KEY_POWERVS_UPSTREAM_CI')
 
         //Env constants
         TERRAFORM_VER = "1.2.0"
@@ -22,30 +24,41 @@ pipeline {
         IBM_CLOUD_ZONE = "syd05"
         SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
 
-        BASTION_IMAGE = "rhel-86"
-        RHCOS_IMAGE = "rhcos-412"
+        BASTION_IMAGE = "rhel-84"
+        RHCOS_IMAGE = "rhcos-ci-411"
         BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-sydney05.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-sydney05.txt"
-        OCP_RELEASE = "4.12"
+        OCP_RELEASE = "4.11"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
         GOLANG_TARBALL = "https://golang.org/dl/go1.17.6.linux-ppc64le.tar.gz"
 
-        //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+        //Script arguments
+        RELEASE_VER="4.11"
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
-        SCRIPT_DEPLOYMENT = false
-        WAIT_FOR_DEBUG = "1"
+        SCRIPT_DEPLOYMENT = true
+        WAIT_FOR_DEBUG = "0"
 
         // Type of configuration
         CONFIG_TYPE="min"
+        PVSADM_VERSION="v0.1.5"
+        CRN_OBJECT = "crn:v1:bluemix:public:cloud-object-storage:global:a/7cfbd5381a434af7a09289e795840d4e:28b5b206-4182-4324-8f5d-0d9234989a92::"
+        BUCKET_NAME="ibm-internal-cicd-ocp-bucket"
 	 }
 
     stages {
+        stage('Download and upload latest rhcos image') {
+            steps {
+                script {
+                    env.RHCOS_IMAGE_NAME=sh(returnStdout:true, script: '''echo "${RHCOS_IMAGE}-$(date +%m%d%Y)" ''').trim()
+                    sh(returnStatus: false, returnStdout: false, script: "curl -sL https://raw.githubusercontent.com/ppc64le-cloud/pvsadm/master/get.sh | VERSION=${PVSADM_VERSION} FORCE=1 bash")
+                    downloadAndUploadImage()
+                }
+            }
+        }
         stage('Clone ansible extra') {
             steps {
                 cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
@@ -56,7 +69,8 @@ pipeline {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
-                    env.SYSTEM_TYPE = "e980"
+                  env.INSTALL_PLAYBOOK_TAG=sh(returnStdout:true, script: '''git ls-remote "${INSTALL_PLAYBOOK_REPO}" refs/heads/master | cut -f1''').trim()
+                  env.HELPERNODE_TAG=sh(returnStdout:true, script: '''git ls-remote "${HELPERNODE_REPO}" refs/heads/master | cut -f1''').trim()
                 }
             }
         }
@@ -64,7 +78,6 @@ pipeline {
             steps {
                 getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
                 getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
-                getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
             }
         }
         //Checkout the installer git repo
@@ -94,14 +107,6 @@ pipeline {
                         }
                         else{
                             echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
-                            throw err
-                        }
-                        if (fileExists("deploy/artifactory/${RHCOS_IMAGE_FILE}")) {
-                            env.RHCOS_IMAGE_NAME = readFile "deploy/artifactory/${RHCOS_IMAGE_FILE}"
-                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
-                        }
-                        else{
-                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
                             throw err
                         }
                     }
@@ -159,8 +164,29 @@ pipeline {
             processE2eResults()
             dbDashboardUpdateE2e()
             cleanupPowerVSResources()
+            cleanupImage()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
     }
+}
+
+def downloadAndUploadImage() {
+  sh'''
+      region="us-south"
+      curl -L https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/${OCP_RELEASE}/latest/rhcos-powervs.ppc64le.ova.gz -o "${RHCOS_IMAGE_NAME}.ova.gz"
+      pvsadm image upload --bucket "${BUCKET_NAME}" -f ./${RHCOS_IMAGE_NAME}.ova.gz -r $region
+      pvsadm image import -b "${BUCKET_NAME}" -r "$region" -i "${SERVICE_INSTANCE_ID}" -o "${RHCOS_IMAGE_NAME}.ova.gz" --pvs-image-name "${RHCOS_IMAGE_NAME}" --pvs-storagetype tier1 --accesskey "${ACCESS_KEY_POWERVS}" --secretkey "${SECRET_KEY_POWERVS}" -w
+      #Adding sleep as sometimes the image is not picked by terraform
+      sleep 300
+  '''
+}
+
+def cleanupImage() {
+    sh '''
+        ibmcloud plugin install cloud-object-storage -f
+        ibmcloud cos config crn --crn "${CRN_OBJECT}"
+        ibmcloud cos object-delete --bucket "${BUCKET_NAME}" --key "${RHCOS_IMAGE_NAME}.ova.gz" --force
+        pvsadm purge images -i "${SERVICE_INSTANCE_ID}" --regexp "${RHCOS_IMAGE_NAME}" --no-prompt
+    '''
 }

@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.6-1.5'
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf -v /var/run/docker.sock:/var/run/docker.sock'
             label 'jump-vpc-x86_64'
         }
@@ -67,12 +67,7 @@ pipeline {
                     env.UPGRADE_DELAY_TIME = "600"
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
-                    if ( env.OCP_RELEASE == "4.6"||env.OCP_RELEASE == "4.7")  {
-                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-${env.OCP_RELEASE}" //The download branch
-                    }
-                    else {
-                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The download branch
-                    }
+                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"
                 }
             }
         }

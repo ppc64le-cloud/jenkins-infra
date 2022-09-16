@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.6-1.5'
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf'
             label 'jump-vpc-x86_64'
         }
@@ -40,7 +40,7 @@ pipeline {
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"
         ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.17.6.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.18.6.linux-ppc64le.tar.gz"
 
         // Type of configuration
          CONFIG_TYPE="min"

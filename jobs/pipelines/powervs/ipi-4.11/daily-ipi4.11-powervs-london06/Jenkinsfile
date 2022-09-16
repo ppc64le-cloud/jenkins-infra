@@ -78,6 +78,7 @@ pipeline {
                                     [ $? -ne 0 ] && echo "unable to get oc tarball" && exit 1
                                     cp kubectl oc /usr/bin/
                                 fi
+                                sed -i "s|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE.*$|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=\\"${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}\\"|g" ./powervs-hack/scripts/create-cluster.sh
                             '''
                     }
                     catch (err)
@@ -165,13 +166,15 @@ pipeline {
                 retries=0
                 until [ "$retries" -ge 3 ]
                 do
+                  cp -f ${CLUSTER_DIR}/metadata.json ./metadata_copy.json
                   openshift-install destroy cluster  --log-level=debug --dir ${CLUSTER_DIR} || true
+                  mv -f ./metadata_copy.json ${CLUSTER_DIR}/metadata.json
                   retries=$((retries+1))
                 done
                 #Get connections
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
                 cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
-                while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
+                echo "$cons"| while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
                 #Get DHCP
                 ./powervs-hack/scripts/get-dhcp.sh || true
                 dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
