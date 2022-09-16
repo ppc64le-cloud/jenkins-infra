@@ -24,6 +24,11 @@ def call(String region="us-south",resource_group="ibm-internal-cicd-resource-gro
                 CRN=$(ibmcloud pi service-list  | grep "${SERVICE_INSTANCE_ID}" |awk '{print $1}')
                 ibmcloud pi service-target "$CRN"
             fi
+            # Setting oc client
+	    if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
+	 	wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+		cp kubectl oc /usr/bin/
+	    fi
            '''
       }
       catch (err) {

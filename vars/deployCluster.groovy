@@ -62,10 +62,7 @@ def call() {
                                          sleep 180
                                          cat  server_list.txt| grep "master"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
                                          sleep 1000
-                                         cat  server_list.txt| grep "worker-0"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
-                                         cat  server_list.txt| grep "worker-1"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
+                                         cat  server_list.txt| grep "worker"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line && sleep 180; done || true
                                     fi
                                 fi
                                 exit_status=0

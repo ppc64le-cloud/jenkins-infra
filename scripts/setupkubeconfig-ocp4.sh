@@ -5,12 +5,6 @@
     else
         exit 1 
     fi
-    # setup oc client
-    if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
-        wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
-        [ $? -ne 0 ] && echo "unable to get oc tarball" && exit 1
-        cp kubectl oc /usr/bin/
-    fi
     # Capturing Terraform template
     if [ ! -z "${BASTION_IP}" ]; then
         ssh -q -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} exit

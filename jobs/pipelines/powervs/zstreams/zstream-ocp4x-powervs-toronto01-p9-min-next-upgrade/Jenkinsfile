@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.6-1.5'
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf'
             label 'jump-vpc-x86_64'
         }
@@ -33,6 +33,8 @@ pipeline {
         IBM_CLOUD_REGION = "tor"
         IBM_CLOUD_ZONE = "tor01"
         SERVICE_INSTANCE_ID = "54903e51-c4d2-42be-bfa1-d31c708ddf31"
+        VPCREGION = "ca-tor"
+        RESOURCE_GROUP = "upi-resource-group"
 
         OCP_RELEASE = "${params.Release}"
         UPGRADE_RELEASE="${params.UpgradeRelease}"
@@ -175,7 +177,7 @@ pipeline {
         }
         stage('Initialize Environment') {
             steps {
-                initializeEnvironment()
+                initializeEnvironment("${VPCREGION}","${RESOURCE_GROUP}")
             }
         }
         stage('Setup Terraform Plugin') {
