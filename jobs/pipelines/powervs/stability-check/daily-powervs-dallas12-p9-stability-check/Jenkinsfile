@@ -24,7 +24,7 @@ pipeline {
         BASTION_MEMORY = "8"
         BASTION_PROCESSORS = ".5"
 
-        BASTION_IMAGE = "rhel-86"
+        BASTION_IMAGE = "rhel-9"
         VM_ID_PREFIX = "rdr-cicd-stability"
         SYSTEM_TYPE = "s922"
         NETWORK_NAME = "ocp-net"
@@ -46,7 +46,7 @@ pipeline {
         POWERVS = true
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "0"
-        BASTION_IMPORT_IMAGE_NAME="rhel-ci-86"
+        BASTION_IMPORT_IMAGE_NAME="rhel-ci-9"
 	 }
 
     stages {
