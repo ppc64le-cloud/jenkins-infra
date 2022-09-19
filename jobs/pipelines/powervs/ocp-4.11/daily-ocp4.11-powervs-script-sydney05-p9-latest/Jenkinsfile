@@ -2,8 +2,10 @@
 
 pipeline {
     agent {
-         kubernetes {
-            inheritFrom 'jenkins-agent'
+        docker {
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'jump-vpc-x86_64'
         }
     }
        environment {
@@ -24,7 +26,7 @@ pipeline {
         IBM_CLOUD_ZONE = "syd05"
         SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
 
-        BASTION_IMAGE = "rhel-84"
+        BASTION_IMAGE = "rhel-86"
         RHCOS_IMAGE = "rhcos-ci-411"
         BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-sydney05.txt"
         OCP_RELEASE = "4.11"
