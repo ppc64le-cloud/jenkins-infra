@@ -33,7 +33,7 @@ pipeline {
         GOLANG_TARBALL = "https://golang.org/dl/go1.17.6.linux-ppc64le.tar.gz"
 
         //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.8" //The download branch
+        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.10" //The download branch
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
