@@ -70,10 +70,6 @@ endif
 ## Generate ssh key pair
 keys:
 	@$(SSH_KEYGEN) -t rsa -b 2048 -f $(SSH_KEY_FILE) -P ""
-	@echo -e "\nContents of id_rsa:"
-	@cat $(SSH_KEY_FILE)
-	@echo -e "\nContents of id_rsa.pub:"
-	@cat $(SSH_KEY_FILE).pub
 
 .PHONY: keys\:clean
 ## Delete ssh key pair
