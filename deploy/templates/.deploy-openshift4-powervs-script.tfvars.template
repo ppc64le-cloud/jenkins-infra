@@ -8,7 +8,7 @@ service_instance_id = "__SERVICE_INSTANCE_ID__"
 bastion                     = {memory      = "__BASTION_MEMORY__",   processors  = "__BASTION_PROCESSORS__", "count"   = 1}
 bootstrap                   = {memory      = "__BOOTSTRAP_MEMORY__",   processors  = "__BOOTSTRAP_PROCESSORS__",  "count"   = 1}
 master                      = {memory      = "__MASTER_MEMORY__",   processors  = "__MASTER_PROCESSORS__",  "count"   = __NUM_OF_MASTERS__}
-worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = __NUM_OF_WORKERS__}
+worker                      = {memory      = "__WORKER_MEMORY__",   processors  = "__WORKER_PROCESSORS__",  "count"   = __NUM_OF_WORKERS__,  data_volume_count = __DATA_VOLUME_COUNT__,  data_volume_size = __DATA_VOLUME_SIZE__ }
 rhel_image_name     = "__BASTION_IMAGE_NAME__"
 rhcos_image_name    = "__RHCOS_IMAGE_NAME__"
 processor_type      = "shared"
@@ -56,7 +56,7 @@ rhcos_kernel_options        = []
 #proxy = {server = "hostname_or_ip", port = "3128", user = "pxuser", password = "pxpassword"}
 setup_squid_proxy = "__SETUP_SQUID_PROXY__"
 
-storage_type                = "nfs"
+storage_type                = "__STORAGE_TYPE__"
 volume_size                 = "300" # Value in GB
 
 upgrade_image = "__UPGRADE_IMAGE__"

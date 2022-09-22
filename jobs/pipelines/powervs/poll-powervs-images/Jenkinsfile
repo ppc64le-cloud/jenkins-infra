@@ -8,7 +8,10 @@ def INSTANCE_NAME_LIST = [
                     "rdr-ocp-cicd-toronto01",
                     "rdr-ocp-cicd-london06",
                     "rdr-ocp-upi-validation-osa21",
-                    "rdr-ocp-upi-validation-tor01"
+                    "rdr-ocp-upi-validation-tor01",
+                    "rdr-svenkat-ocp-storage-sao01-odf-411",
+                    "rdr-svenkat-ocp-storage-lon06-odf-411",
+                    "rdr-ocp-storage-sydney05-odf"
                     ]
 pipeline {
     agent {
@@ -23,6 +26,7 @@ pipeline {
         //users and credentials. All must be defined in Jenkins Credentials
         IBM_CLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
         PCLOUD_IBM_API_KEY = credentials('IBM_PCLOUD_QE_API_KEY')
+        ODF_IBMCLOUD_API_KEY = credentials('ODF_IBMCLOUD_API_KEY')
         PVSADM_VERSION = "v0.1.7"
     }
     stages {
@@ -36,6 +40,9 @@ pipeline {
                     INSTANCE_NAME_LIST.each { item ->
                         if(item.matches("rdr-ocp-upi-validation-(.*)")){
                             env.IBMCLOUD_API_KEY = env.PCLOUD_IBM_API_KEY
+                        }
+                        else if(item.matches("(.*)odf(.*)")){
+                            env.IBMCLOUD_API_KEY = env.ODF_IBMCLOUD_API_KEY
                         }
                         else {
                             env.IBMCLOUD_API_KEY = env.IBM_CLOUD_API_KEY

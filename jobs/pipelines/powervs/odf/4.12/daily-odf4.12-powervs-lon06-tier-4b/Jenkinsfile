@@ -1,0 +1,213 @@
+@Library('jenkins-upstream-library') _
+
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
+     environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        IBMCLOUD_API_KEY = credentials('ODF_IBMCLOUD_API_KEY')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('ODF_PULL_SECRET')
+
+        //Env constants
+        TERRAFORM_VER = "1.2.0"
+
+        IBM_CLOUD_REGION = "lon"
+        IBM_CLOUD_ZONE = "lon06"
+        SERVICE_INSTANCE_ID = "fac4755e-8aff-45f5-8d5c-1d3b58b7a229"
+
+        BASTION_IMAGE = "rhel-86"
+        RHCOS_IMAGE = "rhcos-412"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
+	RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
+        OCP_RELEASE = "4.12"
+
+        TARGET = "deploy-openshift4-powervs-script"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        POWERVS = true
+        SCRIPT_DEPLOYMENT = true
+        WAIT_FOR_DEBUG = "1"
+	
+        //ODF vars
+	PLATFORM = "powervs"
+	ODF_VERSION = "4.12"
+	TIER_TEST = "4b"
+        ENABLE_FIPS = false
+        ENABLE_VAULT = false
+        CONFIG_TYPE = "odf"
+	 }
+    stages {
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
+            }
+        }
+        stage('pull artifact') {
+            steps {
+                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+                getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
+                getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        pullSecret()
+                        env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        }
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
+                            env.BASTION_IMAGE_NAME = readFile "deploy/artifactory/${BASTION_IMAGE_FILE}"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE_NAME.trim()
+                        }
+                        else{
+                            echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${RHCOS_IMAGE_FILE}")) {
+                            env.RHCOS_IMAGE_NAME = readFile "deploy/artifactory/${RHCOS_IMAGE_FILE}"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        }
+                        else{
+                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                initializeEnvironment("us-south", "ocs-resource-group")
+            }
+        }
+        stage('Setup Terraform Plugin') {
+            steps {
+                setupTerraformPlugin()
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                deployCluster()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+        stage('Run ODF Setup script') {
+            steps {
+                odfAuthYaml()
+                odfRunSetupScript()
+            }
+        }
+        stage('Run ODF deploy script') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
+                           ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=600' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log"
+                           scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ODF deploy script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Capture output of multiple commands to verify ODF deployment') {
+            steps {
+                odfRunCommands()
+            }
+        }
+        stage('Run ODF tier tests') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                           ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=600' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
+                           scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! Tier test script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                 }
+             }
+        }
+        stage('Capture tier test summary and compress results') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                              FILE=tier${TIER_TEST}.log
+                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
+                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' > slacksummary.txt
+                              tar -cvzf results.tar.gz setup-ocs-ci.log deploy-ocs-ci.log odf-commands.txt tier${TIER_TEST}.log
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! Capturing tier test summary failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt")
+            cleanupOcp4Cluster()
+            checkInfraError()
+            odfProcessTierTestResults()
+            cleanupPowerVSResources()
+            notifyBySlack(currentBuild.result, env.MESSAGE)
+            cleanWs()
+        }
+    }
+}
+

@@ -139,7 +139,7 @@ deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
 		-e "s|__BASTION_MEMORY__|$(BASTION_MEMORY)|g" -e "s|__BASTION_PROCESSORS__|$(BASTION_PROCESSORS)|g" \
 		-e "s|__BOOTSTRAP_MEMORY__|$(BOOTSTRAP_MEMORY)|g" -e "s|__BOOTSTRAP_PROCESSORS__|$(BOOTSTRAP_PROCESSORS)|g" \
 		-e "s|__MASTER_MEMORY__|$(MASTER_MEMORY)|g" -e "s|__MASTER_PROCESSORS__|$(MASTER_PROCESSORS)|g" -e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" \
-		-e "s|__WORKER_MEMORY__|$(WORKER_MEMORY)|g" -e "s|__WORKER_PROCESSORS__|$(WORKER_PROCESSORS)|g" -e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" \
+		-e "s|__WORKER_MEMORY__|$(WORKER_MEMORY)|g" -e "s|__WORKER_PROCESSORS__|$(WORKER_PROCESSORS)|g" -e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" -e "s|__DATA_VOLUME_COUNT__|$(DATA_VOLUME_COUNT)|g" -e "s|__DATA_VOLUME_SIZE__|$(DATA_VOLUME_SIZE)|g" \
 		-e "s|__BASTION_IMAGE_NAME__|$(BASTION_IMAGE_NAME)|g" -e "s|__RHCOS_IMAGE_NAME__|$(RHCOS_IMAGE_NAME)|g" -e "s|__SYSTEM_TYPE__|$(SYSTEM_TYPE)|g" \
 		-e "s|__NETWORK_NAME__|$(NETWORK_NAME)|g" -e "s|__RHEL_USERNAME__|$(RHEL_USERNAME)|g" -e "s|__REDHAT_USERNAME__|$(REDHAT_USERNAME)|g" \
 		-e "s|__REDHAT_PASSWORD__|$(REDHAT_PASSWORD)|g" -e "s|__OPENSHIFT_INSTALL_TARBALL__|$(OPENSHIFT_INSTALL_TARBALL)|g" \
@@ -150,6 +150,7 @@ deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
 		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(INSTALL_PLAYBOOK_REPO)|g" \
 		-e "s|__INSTALL_PLAYBOOK_TAG__|$(INSTALL_PLAYBOOK_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
 		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
+		-e "s|__STORAGE_TYPE__|$(STORAGE_TYPE)|g" \
         -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
@@ -166,7 +167,6 @@ deploy-openshift4-powervs-script\:output:
 ## Clean up power-openstack build artifacts
 deploy-openshift4-powervs-script\:clean:
 	@$(SELF) -s deploy:openshift4:powervs:script:clean OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
-
 
 
 # ---------------------------------
