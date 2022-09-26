@@ -29,7 +29,7 @@ pipeline {
         BASEDOMAIN="cicd-ibm-ppc64le.com"
         JENKINS_TOKEN="***REMOVED***"
         OCP_RELEASE = "4.11"
-        CLUSTER_NAME="rdr-cicd"
+        CLUSTER_NAME="rdr-cicd-osa21-411"
         CLUSTER_DIR="./ipi-install"
         OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux-amd64.tar.gz"
         OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"

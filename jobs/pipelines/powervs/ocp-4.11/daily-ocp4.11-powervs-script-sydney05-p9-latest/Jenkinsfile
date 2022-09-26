@@ -184,6 +184,7 @@ def downloadAndUploadImage() {
 
 def cleanupImage() {
     sh '''
+        ibmcloud login -a cloud.ibm.com  -q -r us-south --apikey=${IBMCLOUD_API_KEY}
         ibmcloud plugin install cloud-object-storage -f
         ibmcloud cos config crn --crn "${CRN_OBJECT}"
         ibmcloud cos object-delete --bucket "${BUCKET_NAME}" --key "${RHCOS_IMAGE_NAME}.ova.gz" --force
