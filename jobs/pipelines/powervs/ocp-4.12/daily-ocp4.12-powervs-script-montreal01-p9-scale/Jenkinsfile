@@ -31,6 +31,7 @@ pipeline {
 
         //Script arguments
         RELEASE_VER="4.12"
+        ARTIFACTS_VERSION="master"
 
         TARGET = "deploy-openshift4-powervs-script"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
