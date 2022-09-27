@@ -1,0 +1,171 @@
+@Library('jenkins-upstream-library') _
+
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+
+        //Env constants
+        TERRAFORM_VER = "1.2.0"
+
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd05"
+        SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
+
+        BASTION_IMAGE = "rhel-86"
+        RHCOS_IMAGE = "rhcos-412"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-cicd-sydney05.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-cicd-sydney05.txt"
+        OCP_RELEASE = "4.12"
+
+        //e2e specific variables
+        ENABLE_E2E_TEST = "true"
+        GOLANG_TARBALL = "https://golang.org/dl/go1.18.6.linux-ppc64le.tar.gz"
+
+         //Script arguments
+        RELEASE_VER="4.12"
+        ARTIFACTS_VERSION="master"
+
+        TARGET = "deploy-openshift4-powervs-script"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        POWERVS = true
+        SCRIPT_DEPLOYMENT = true
+        WAIT_FOR_DEBUG = "1"
+
+        // Type of configuration
+        CONFIG_TYPE="min"
+         }
+
+    stages {
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
+            }
+        }
+        stage('pull artifact') {
+            steps {
+                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+                getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
+                getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        pullSecret()
+                        env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                            env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        }
+                        else {
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
+                            env.BASTION_IMAGE_NAME = readFile "deploy/artifactory/${BASTION_IMAGE_FILE}"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE_NAME.trim()
+                        }
+                        else{
+                            echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/${RHCOS_IMAGE_FILE}")) {
+                            env.RHCOS_IMAGE_NAME = readFile "deploy/artifactory/${RHCOS_IMAGE_FILE}"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        }
+                        else{
+                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                            throw err
+                        }
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                initializeEnvironment()
+            }
+        }
+        stage('Setup Terraform Plugin') {
+            steps {
+                setupTerraformPlugin()
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                deployCluster()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+	stage('Gather pprof and prometheus data') {
+            steps {
+                gatherPrometheusData()
+            }
+	}
+        stage('Setup and run verification tests') {
+            steps {
+                script {
+                     ansiColor('xterm') {
+                     echo ""
+                     }
+                     try {
+                          sh '''
+                              cd ${WORKSPACE}/deploy
+                              scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/scripts/verification.sh root@${BASTION_IP}:
+                              ssh -o 'StrictHostKeyChecking no' -i id_rsa root@${BASTION_IP} "chmod 755 verification.sh;
+                                                                                              ~/verification.sh | tee ~/verification.log 2>&1 ;
+                                                                                              exit"
+                          '''
+                     }
+                     catch(err) {
+                         echo 'Running Verification script failed!'
+                         env.FAILED_STAGE=env.STAGE_NAME
+                         throw err
+                     }
+                }
+            }
+        }
+
+    }
+    post {
+        always {
+	    archiveAllArtifacts("deploy/vars.tfvars", "deploy/verification.log",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz")
+            cleanupOcp4Cluster()
+            checkInfraError()
+            cleanupPowerVSResources()
+            notifyBySlack(currentBuild.result, env.MESSAGE)
+            cleanWs()
+        }
+    }
+}
