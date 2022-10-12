@@ -17,7 +17,9 @@ def call(String config, String noOfWorkers="2"){
 
             env.NUM_OF_WORKERS = noOfWorkers
             env.WORKER_PROCESSORS = ".5"
-            env.WORKER_VCPUS = "1" 
+            env.WORKER_VCPUS = "1"
+            env.DATA_VOLUME_SIZE = 100
+            env.DATA_VOLUME_COUNT = 0
 
             if (OCP_RELEASE == "4.6" || OCP_RELEASE == "4.7") {
                 env.MASTER_MEMORY = "32"
@@ -27,6 +29,23 @@ def call(String config, String noOfWorkers="2"){
                 env.MASTER_MEMORY = "16"
                 env.WORKER_MEMORY = "16"
             }
+        }
+        else if (config == "odf") {
+            env.BASTION_MEMORY = "16"
+            env.BASTION_PROCESSORS = "1"
+
+            env.BOOTSTRAP_MEMORY = "16"
+            env.BOOTSTRAP_PROCESSORS = ".5"
+
+            env.NUM_OF_MASTERS = "3"
+            env.MASTER_PROCESSORS = "1.25"
+            env.MASTER_MEMORY = "32"
+
+            env.NUM_OF_WORKERS = 3
+            env.WORKER_PROCESSORS = "1.25"
+            env.WORKER_MEMORY = "64"
+            env.DATA_VOLUME_SIZE = 500
+            env.DATA_VOLUME_COUNT = 1
         }
         //Max Config
         else{
@@ -47,6 +66,8 @@ def call(String config, String noOfWorkers="2"){
             env.WORKER_PROCESSORS = ".5"
             env.WORKER_VCPUS = "3" 
             env.WORKER_MEMORY = "64"
+            env.DATA_VOLUME_SIZE = 100
+            env.DATA_VOLUME_COUNT = 0
         }
     }
 }

@@ -4,15 +4,12 @@ def call() {
         env.FAILED_STAGE=""
         //VMs setup
         if ( env.POWERVS == "true" ) {
-            env.INSTANCE_NAME = "rdr-cicd"
             env.NETWORK_NAME = "ocp-net"
             env.RHEL_USERNAME = "root"
             env.RHEL_SMT = "4"
             env.CLUSTER_DOMAIN = "redhat.com"
-            env.SYSTEM_TYPE = "s922"
             env.ENABLE_LOCAL_REGISTRY = "false"
             env.LOCAL_REGISTRY_IMAGE = "docker.io/ibmcom/registry-ppc64le:2.6.2.5"
-            env.SETUP_SQUID_PROXY = "true"
             //Needed for target service
             env.CRN = "crn:v1:bluemix:public:power-iaas:tor01:a/7cfbd5381a434af7a09289e795840d4e:007e0e92-91d5-4f30-bc63-ca515660a4c2::"
 
@@ -48,21 +45,30 @@ def call() {
             env.UPGRADE_PAUSE_TIME = ""
             env.UPGRADE_DELAY_TIME = ""
 
-
-            //E2e Variables
-            env.E2E_GIT = "https://github.com/openshift/origin"
-            env.E2E_BRANCH="release-${env.OCP_RELEASE}"
-            if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.6" ) {
-                env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+            if ( env.ODF_VERSION != "" ) {
+                env.INSTANCE_NAME = "rdr-cicd-odf"
+                env.SETUP_SQUID_PROXY = "false"
+                env.STORAGE_TYPE = "notnfs"
+                env.SYSTEM_TYPE = "e980"
             }
-            else{
-                env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+            else {
+                env.INSTANCE_NAME = "rdr-cicd"
+                env.SETUP_SQUID_PROXY = "true"
+                env.STORAGE_TYPE = "nfs"
+                env.SYSTEM_TYPE = "s922"
+                //E2e Variables
+	        env.E2E_GIT = "https://github.com/openshift/origin"
+       	        env.E2E_BRANCH="release-${env.OCP_RELEASE}"
+                if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.6" ) {
+                    env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+                }
+                else{
+                    env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+                }
+                //Scale variables
+                env.SCALE_NUM_OF_DEPLOYMENTS = "60"
+                env.SCALE_NUM_OF_NAMESPACES = "1000"
             }
-
-            //Scale variables
-            env.SCALE_NUM_OF_DEPLOYMENTS = "60"
-            env.SCALE_NUM_OF_NAMESPACES = "1000"
-
             //Slack message
             env.MESSAGE=""
 
