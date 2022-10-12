@@ -186,7 +186,7 @@ pipeline {
                         sh '''
                               FILE=tier${TIER_TEST}.log
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' > slacksummary.txt
+                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' > slacksummary.txt
                               tar -cvzf results.tar.gz setup-ocs-ci.log deploy-ocs-ci.log odf-commands.txt tier${TIER_TEST}.log
                         '''
                     }
@@ -204,7 +204,7 @@ pipeline {
             archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt")
             cleanupOcp4Cluster()
             checkInfraError()
-	    odfProcessTierTestResults()
+            odfProcessTierTestResults()
             cleanupPowerVSResources()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
