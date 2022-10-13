@@ -25,7 +25,7 @@ pipeline {
         BASTION_IMAGE = "rhel-86"
         RHCOS_IMAGE = "rhcos-412"
         BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
-	RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
         OCP_RELEASE = "4.12"
 
         TARGET = "deploy-openshift4-powervs-script"
@@ -33,11 +33,11 @@ pipeline {
         POWERVS = true
         SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "1"
-	
+
         //ODF vars
-	PLATFORM = "powervs"
-	ODF_VERSION = "4.12"
-	TIER_TEST = "4b"
+        PLATFORM = "powervs"
+        ODF_VERSION = "4.12"
+        TIER_TEST = "4b"
         ENABLE_FIPS = false
         ENABLE_VAULT = false
         CONFIG_TYPE = "odf"
@@ -137,9 +137,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
-                           ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=600' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log"
-                           scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}
+                           ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
+                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log "
+                           scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}
                         '''
                     }
                     catch (err) {
@@ -163,8 +163,8 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=600' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
-                           scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
+                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
+                           scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
                         '''
                     }
                     catch (err) {
