@@ -21,7 +21,7 @@ def call(){
                scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no env_vars.sh root@${BASTION_IP}:/root/
                ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "git clone https://github.com/ocp-power-automation/ocs-upi-kvm.git"
                ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd /root/ocs-upi-kvm; git submodule update --init;"
-               ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=600' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "chmod 0755 env_vars.sh; source env_vars.sh; cd /root/ocs-upi-kvm/scripts; ./setup-ocs-ci.sh > setup-ocs-ci.log;"
+               ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=1800' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "chmod 0755 env_vars.sh; source env_vars.sh; cd /root/ocs-upi-kvm/scripts; ./setup-ocs-ci.sh > setup-ocs-ci.log;"
                scp -i ${WORKSPACE}/deploy/id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/setup-ocs-ci.log ${WORKSPACE}/
             '''
         }
