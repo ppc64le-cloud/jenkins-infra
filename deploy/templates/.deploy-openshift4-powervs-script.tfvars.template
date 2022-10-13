@@ -37,7 +37,7 @@ enable_local_registry       = "__ENABLE_LOCAL_REGISTRY__"  #Set to true to enabl
 local_registry_image       = "__LOCAL_REGISTRY_IMAGE__"
 ocp_release_tag            = "__OCP_RELEASE_TAG__"
 
-
+cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
 helpernode_repo             = "__HELPERNODE_REPO__"
 helpernode_tag              = "__HELPERNODE_TAG__"
