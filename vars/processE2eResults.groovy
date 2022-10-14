@@ -34,9 +34,6 @@ def call() {
             e2e_summary = env.ERROR_MESSAGE
             currentBuild.result = 'FAILURE'
         }
-        if ( env.OPENSHIFT_IMAGE != ""  ) {
-            env.OPENSHIFT_INSTALL_TARBALL = env.OPENSHIFT_IMAGE
-        }
         if ( fileExists('deploy/junit_e2e.xml')) {
             sh '''
                 sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
@@ -53,7 +50,11 @@ def call() {
             currentBuild.result = 'UNSTABLE'
             e2e_summary = "e2e test didn't run"
         }
-        OCP4_BUILD = env.OPENSHIFT_INSTALL_TARBALL.split(':')[1]
+
+        if (env.OPENSHIFT_IMAGE != ""){
+            OCP4_BUILD = env.OPENSHIFT_IMAGE.split(':')[1]
+        }
+
         if ( env.FAILED_STAGE != ""  ) {
             env.MESSAGE = "e2e summary:`${e2e_summary}`, OCP4 Build: `${OCP4_BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}`, Failed Stage: `${env.FAILED_STAGE}` "
         }

@@ -18,18 +18,17 @@ pipeline {
         IBMCLOUD_OMAPCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
         IBMCLOUD_OCCDIPCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
 
-        //PowerVS specific variables
-        POWERVS_REGION = "lon"
-        POWERVS_ZONE = "lon06"
-        SERVICE_INSTANCE_GUID = "e881db06-9fbc-479d-9144-c3c939cf870b"
-        VPCREGION= "eu-gb"
+        POWERVS_REGION = "mon"
+        POWERVS_ZONE = "mon01"
+        SERVICE_INSTANCE_GUID = "a663358c-9732-4fc3-9e22-47f1da5e5708"
+        VPCREGION= "ca-mon"
         RESOURCE_GROUP="ibm-internal-cicd-resource-group"
-        SERVICE_INSTANCE="rdr-ipi-cicd-london06"
+        SERVICE_INSTANCE="rdr-ipi-cicd-montreal01"
 
         BASEDOMAIN="cicd-ibm-ppc64le.com"
         JENKINS_TOKEN="***REMOVED***"
         OCP_RELEASE = "4.12"
-        CLUSTER_NAME="rdr-cicd-lon06-412"
+        CLUSTER_NAME="rdr-cicd-mon01-412"
         CLUSTER_DIR="./ipi-install"
         OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-client-linux-amd64.tar.gz"
         OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-install-linux-amd64.tar.gz"
@@ -81,7 +80,7 @@ pipeline {
                                 sed -i "s|\\.Payload\\.cloudConnections\\[\\]|\\.cloudConnections\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|\\.Payload\\.jobs\\[\\]|\\.jobs\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE.*$|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=\\"${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}\\"|g" ./powervs-hack/scripts/create-cluster.sh
-                                sed -i "s|platform: {}|platform: \\n    powervs:\\n      processors: \\"0.5\\"\\n      MemoryGiB: 32\\n      sysType: e980|g" ./powervs-hack/scripts/create-cluster.sh
+                                sed -i "s|platform: {}|platform: \\n    powervs:\\n      processors: \\"1\\"\\n      procType: \\"Dedicated\\"\\n      sysType: e980|g" ./powervs-hack/scripts/create-cluster.sh
                             '''
                     }
                     catch (err)

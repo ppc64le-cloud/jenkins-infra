@@ -17,11 +17,12 @@ def call(){
             else {
                 env.DEPLOYMENT_STATUS="false"
                 env.MESSAGE="IPI Deployment Failed Build:${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
-                throw err
+                 error "IPI Deployment Failed!"
             }
         }
         catch (err) {
             echo 'Error ! IPI Cluster Creation Failed'
+            env.FAILED_STAGE=env.STAGE_NAME
             throw err
         }
     }

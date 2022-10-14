@@ -18,27 +18,27 @@ pipeline {
         //Env constants
         TERRAFORM_VER = "1.2.0"
 
-        IBM_CLOUD_REGION = "tor"
-        IBM_CLOUD_ZONE = "tor01"
-        SERVICE_INSTANCE_ID = "007e0e92-91d5-4f30-bc63-ca515660a4c2"
+        IBM_CLOUD_REGION = "syd"
+        IBM_CLOUD_ZONE = "syd05"
+        SERVICE_INSTANCE_ID = "6f5f1a6a-67bf-4ab9-aede-6d31991b4826"
 
         BASTION_IMAGE = "rhel-84"
         RHCOS_IMAGE = "rhcos-410"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-london-06.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-london-06.txt"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-ocp-cicd-sydney05.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-ocp-cicd-sydney05.txt"
         OCP_RELEASE = "4.10"
 
         //e2e specific variables
         ENABLE_E2E_TEST = "true"
         GOLANG_TARBALL = "https://golang.org/dl/go1.17.6.linux-ppc64le.tar.gz"
 
-        //Makefile variables
-        OPENSHIFT_POWERVS_GIT_TF_DEPLOY_BRANCH="release-4.10" //The download branch
+         //Script arguments
+        RELEASE_VER="4.10"
 
         TARGET = "deploy-openshift4-powervs"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = true
-        SCRIPT_DEPLOYMENT = false
+        SCRIPT_DEPLOYMENT = true
         WAIT_FOR_DEBUG = "1"
 
         // Type of configuration

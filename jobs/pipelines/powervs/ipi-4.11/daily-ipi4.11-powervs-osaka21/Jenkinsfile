@@ -82,6 +82,7 @@ pipeline {
                                 sed -i "s|\\.Payload\\.cloudConnections\\[\\]|\\.cloudConnections\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|\\.Payload\\.jobs\\[\\]|\\.jobs\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE.*$|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=\\"${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}\\"|g" ./powervs-hack/scripts/create-cluster.sh
+                                sed -i "s|platform: {}|platform: \\n    powervs:\\n      processors: \\"0.5\\"\\n      MemoryGiB: 32\\n      sysType: e980|g" ./powervs-hack/scripts/create-cluster.sh
                             '''
                     }
                     catch (err)
@@ -176,8 +177,8 @@ pipeline {
                 done
                 #Get connections
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
-                echo "$cons"|cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
-                while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
+                cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
+                echo "$cons"|while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
                 #Get DHCP
                 ./powervs-hack/scripts/get-dhcp.sh || true
                 dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
