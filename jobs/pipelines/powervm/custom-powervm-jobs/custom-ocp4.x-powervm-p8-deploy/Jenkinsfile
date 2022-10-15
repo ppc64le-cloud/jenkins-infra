@@ -121,7 +121,7 @@ pipeline {
                         env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-${env.OCP_RELEASE}" //The download branch
                     }
                     else {
-                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main" //The download branch
                     }
                 }
             }

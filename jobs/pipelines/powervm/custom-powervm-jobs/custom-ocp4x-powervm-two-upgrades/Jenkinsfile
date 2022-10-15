@@ -135,7 +135,7 @@ pipeline {
                         env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="release-${env.OCP_RELEASE}" //The download branch
                     }
                     else {
-                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master" //The download branch
+                        env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main" //The download branch
                     }
                     if (env.NEXT_UPGRADE_RELEASE == "4.8" || env.NEXT_UPGRADE_RELEASE == "4.9"){
                         env.GOLANG_TARBALL = "https://dl.google.com/go/go1.16.5.linux-ppc64le.tar.gz"

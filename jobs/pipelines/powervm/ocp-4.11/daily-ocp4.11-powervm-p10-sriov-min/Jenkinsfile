@@ -35,7 +35,7 @@ pipeline {
         REDHAT_RELEASE = "8.6"
 
         //Branch
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"//The download branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
 
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"

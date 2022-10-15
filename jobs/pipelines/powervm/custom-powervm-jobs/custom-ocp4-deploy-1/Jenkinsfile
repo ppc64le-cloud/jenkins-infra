@@ -403,7 +403,7 @@ pipeline {
         ENABLE_SCALE_TEST = "false"
         WAIT_FOR_DEBUG = "1"
         //Branch
-        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"//The download branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
         GOLANG_TARBALL="https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
 
         ENABLE_E2E_TEST = "${params.Rune2e}"

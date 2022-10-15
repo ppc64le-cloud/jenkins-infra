@@ -74,7 +74,7 @@ pipeline {
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
                     env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_RELEASE}-powervm/ocp${env.UPGRADE_RELEASE}_power_exclude_list.txt"
-                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"
+                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"
                     if ( env.UPGRADE_RELEASE == "4.6"||env.UPGRADE_RELEASE == "4.7")  {
                         env.GOLANG_TARBALL = "https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
                     }
