@@ -67,7 +67,7 @@ pipeline {
                     env.UPGRADE_DELAY_TIME = "600"
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
-                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="master"
+                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"
                 }
             }
         }
