@@ -114,6 +114,7 @@ def call() {
             env.SCG_ID = "c5045866-7a78-4b5b-8ae8-061340be64f8"
             env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
+            env.CONNECTION_TIME_OUT = "30"
 
             //e2e variables
             if ( env.ENABLE_E2E_TEST ) {

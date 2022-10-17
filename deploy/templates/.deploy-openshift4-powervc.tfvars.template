@@ -42,7 +42,9 @@ scg_id = "__SCG_ID__"
 volume_storage_template = "__VOLUME_STORAGE_TEMPLATE__"
 
 cni_network_provider = "__CNI_NETWORK_PROVIDER__"
-  
+
+connection_timeout = "__CONNECTION_TIME_OUT__"
+
 e2e_tests_git = "__E2E_GIT__"
 
 e2e_tests_git_branch = "__E2E_BRANCH__"
