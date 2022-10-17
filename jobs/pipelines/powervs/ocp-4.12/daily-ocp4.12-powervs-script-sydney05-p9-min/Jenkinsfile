@@ -56,9 +56,6 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    env.SYSTEM_TYPE = "e980"
-                }
             }
         }
         stage('pull artifact') {
