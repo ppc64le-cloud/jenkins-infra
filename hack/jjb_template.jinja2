@@ -33,7 +33,27 @@
         {% elif 'daily-odf4.12-powervs-lon06-tier-4b' in JOB_NAME %}"0 23 * * * "
         {% elif 'daily-odf4.12-powervs-syd05-tier-4c' in JOB_NAME %}"0 23 * * * "
 
-       
+        {% elif 'daily-ocp4.6-powervm-p8-min' in JOB_NAME %}"00 07 * * * "
+        {% elif 'daily-ocp4.6-to-4.7-powervm-p8-min-upgrade' in JOB_NAME %}"30 07 * * 1"
+        {% elif 'daily-ocp4.7-to-4.8-powervm-p8-min-upgrade' in JOB_NAME %}"30 07 * * 2"
+        {% elif 'daily-ocp4.8-to-4.9-powervm-p8-min-upgrade' in JOB_NAME %}"30 07 * * 3"
+        {% elif 'daily-ocp4.9-to-4.10-powervm-p8-min-upgrade' in JOB_NAME %}"30 07 * * 4"
+        {% elif 'daily-ocp4.10-to-4.11-powervm-p8-min-upgrade' in JOB_NAME %}"30 07 * * 5,6"
+        {% elif 'daily-ocp4.9-powervm-p8-min' in JOB_NAME %}"00 08 * * * "
+        {% elif 'daily-ocp4.12-powervm-p8-min' in JOB_NAME %}"00 10 * * *  "
+
+
+        {% elif 'daily-ocp4.7-powervm-p9-min' in JOB_NAME %}"00 09 * * *  "
+        {% elif 'daily-ocp4.8-powervm-p9-min' in JOB_NAME %}"00 13 * * * "
+        {% elif 'daily-ocp4.10-powervm-p9-min' in JOB_NAME %}"00 17 * * * "
+        {% elif 'daily-ocp4.11-powervm-p9-max' in JOB_NAME %}"00 22 * * *  "
+        {% elif 'daily-ocp4.12-powervm-p9-sriov' in JOB_NAME %}"30 01 * * *  "
+
+        {% elif 'daily-ocp4.10-powervm-p10-min' in JOB_NAME %}"00 18 * * *  "
+        {% elif 'daily-ocp4.12-powervm-p10-ovn-min' in JOB_NAME %}"30 21 * * * "
+        {% elif 'daily-ocp4.12-powervm-p10-max' in JOB_NAME %}"00 22 * * *  "
+        {% elif 'daily-ocp4.11-powervm-p10-ssp' in JOB_NAME %}" "
+        {% elif 'daily-ocp4.12-powervm-p10-vscsi' in JOB_NAME %}"30 5 * * *  "
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
