@@ -5,79 +5,75 @@ def call() {
         }
         try {
             env.CLUSTER_ID=""
-            sh '''
-                echo 'Deploying Cluster!'
-                if [ "${SCRIPT_DEPLOYMENT}" = false ]; then
-                    cd ${WORKSPACE}/deploy
-                    exit_status=0
-                    make $TARGET || exit_status=$?
-                    retries=0
-                    until [ "$retries" -ge 3 ]
-                    do
-                        if [ "$retries" -eq 2 ]; then
-                            if [ "$exit_status" -ne 0 ] ;then
-                                CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
-                                if ! [ "$CLUSTER_ID" = "" ]; then
-                                    if [ "${POWERVS}" = false  ]; then
-                                        SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
-                                        echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                        echo "$SERVER_LIST" | grep "master"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                        echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                    else
-                                         ibmcloud login -a cloud.ibm.com  -q -r us-south --apikey=${IBMCLOUD_API_KEY}
-                                         ibmcloud pi ins| grep  $CLUSTER_ID | grep  -v "bastion" | awk -v OFS='\t' '{print $1, $2}' > server_list.txt
-                                         cat  server_list.txt| grep "bootstrap"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
-                                         cat  server_list.txt| grep "master"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 1000
-                                         cat  server_list.txt| grep "worker-0"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
-                                         cat  server_list.txt| grep "worker-1"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
-                                    fi
-                                fi
-                                exit_status=0
-                            fi
-                            make $TARGET:redeploy
-                            sleep 60
-                        else
-                            if [ "$exit_status" -ne 0 ]; then
-                               CLUSTER_ID=$(make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR="cluster_id" | tr -d '"')
-                                if ! [ "$CLUSTER_ID" = "" ]; then
-                                    if [ "${POWERVS}" = false  ]; then
-                                        SERVER_LIST=$(openstack server list --insecure | grep  $CLUSTER_ID | grep -v "bastion" | awk '{print $4}')
-                                        echo "$SERVER_LIST" | grep "bootstrap"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                        echo "$SERVER_LIST" | grep "master"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                        echo "$SERVER_LIST" | grep "worker"| while IFS= read -r line ; do openstack server reboot --insecure $line; done || true
-                                        sleep 180
-                                    else
-                                         ibmcloud login -a cloud.ibm.com  -q -r us-south --apikey=${IBMCLOUD_API_KEY}
-                                         ibmcloud pi ins| grep  $CLUSTER_ID | grep  -v "bastion" | awk -v OFS='\t' '{print $1, $2}' > server_list.txt
-                                         cat  server_list.txt| grep "bootstrap"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 180
-                                         cat  server_list.txt| grep "master"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line; done || true
-                                         sleep 1000
-                                         cat  server_list.txt| grep "worker"|awk '{print $1}' | while IFS= read -r line ; do ibmcloud pi inhrb  $line && sleep 180; done || true
-                                    fi
-                                fi
-                                exit_status=0
-                            fi
-                            make $TARGET:redeploy|| exit_status=$?
-                        fi
-                        retries=$((retries+1))
-                        sleep 10
-                    done
-                else
+            env.SERVER_LIST=""
+            def retries=0
+            env.EXIT_STATUS=0
+            bootstrap_reboot="failed to connect to the host via ssh: ssh: connect to host bootstrap"
+            worker_reboot="failed to connect to the host via ssh: ssh: connect to host worker"
+            master_reboot="failed to connect to the host via ssh: ssh: connect to host master"
+            if (env.SCRIPT_DEPLOYMENT == "false" )
+            {
+               // Initial deployment try
+               sh '''
+                   set -x
+                   cd ${WORKSPACE}/deploy
+                   make $TARGET || EXIT_STATUS=$?
+                   echo $EXIT_STATUS > ${WORKSPACE}/deploy/exit_status
+                   cat ${WORKSPACE}/deploy/exit_status
+               '''
+               env.EXIT_STATUS=sh(returnStdout: true, script: "cat \"${WORKSPACE}\"/deploy/exit_status").trim()
+                while ( "${retries}" < 4 ) {
+                    // Third try
+                    if ( "${EXIT_STATUS}" != 0 ) {
+                        env.CLUSTER_ID=sh(returnStdout: true, script: "cd \"${WORKSPACE}\"/deploy;make terraform:output TERRAFORM_DIR=.\"${TARGET}\" TERRAFORM_OUTPUT_VAR='cluster_id'").trim()
+                        if ( env.CLUSTER_ID != "") {
+
+                            if ( env.POWERVS == "false" ){ // if PowerVC
+                                def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+                                def logContent_modified=logContent.toLowerCase()
+                                env.SERVER_LIST=sh(returnStdout: true, script: "openstack server list --insecure | grep  \"${CLUSTER_ID}\" | grep -v 'bastion' | awk '{print \$4}'").trim()
+                                if (logContent_modified.count(bootstrap_reboot) >= 1 && logContent_modified.count(master_reboot) == 0 && logContent_modified.count(worker_reboot) == 0) {
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'bootstrap'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'master'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sleep 60
+                                }
+                                if (logContent_modified.count(bootstrap_reboot) >= 1 && logContent_modified.count(master_reboot) >= 1 && logContent_modified.count(worker_reboot) == 0) {
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'master'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sleep 60
+                                    }
+                                if (logContent_modified.count(worker_reboot) >= 1) {
+                                    sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
+                                    sleep 60
+                                }
+                            }
+                        }
+                        sh '''
+                        set -x
+                        EXIT_STATUS=0
+                        cd ${WORKSPACE}/deploy
+                        make $TARGET:redeploy|| EXIT_STATUS=$?
+                        echo $EXIT_STATUS > ${WORKSPACE}/deploy/exit_status
+                        cat ${WORKSPACE}/deploy/exit_status
+                        sleep 60
+                        '''
+                        env.EXIT_STATUS=sh(returnStdout: true, script: "cat \"${WORKSPACE}\"/deploy/exit_status").trim()
+                    }
+                retries = retries + 1
+                status = "${EXIT_STATUS}".toInteger()
+                if ( status == 0 ) {
+                    break
+                }
+                } // While loop for retry the deployment ENDS
+            } else { // If Script deployment
+                sh '''
+                    set -x
                     export CLOUD_API_KEY=$IBMCLOUD_API_KEY
                     cd ${WORKSPACE}/deploy
                     make $TARGET
-                fi
-            '''
+                '''
+            }
             if ( env.POWERVS == "true"  ) {
                 if (env.SCRIPT_DEPLOYMENT == "true" ){
                     env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make $TARGET:output TERRAFORM_OUTPUT_VAR=bastion_public_ip|grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}'").trim()
