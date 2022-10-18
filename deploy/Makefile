@@ -151,7 +151,7 @@ deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
 		-e "s|__INSTALL_PLAYBOOK_TAG__|$(INSTALL_PLAYBOOK_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
 		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
 		-e "s|__STORAGE_TYPE__|$(STORAGE_TYPE)|g" \
-        -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" \
+        -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" -e "s|__CNI_NETWORK_PROVIDER__|$(CNI_NETWORK_PROVIDER)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
 	@$(SELF) -s deploy:openshift4:powervs:script OPENSHIFT_POWERVS_SCRIPT_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_SCRIPT_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
@@ -192,7 +192,7 @@ deploy-openshift4-powervs: %deploy-openshift4-powervs:
 		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(INSTALL_PLAYBOOK_REPO)|g" \
 		-e "s|__INSTALL_PLAYBOOK_TAG__|$(INSTALL_PLAYBOOK_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
 		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
-        -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" -e "s|__PULL_SECRET_FILE__|$(PULL_SECRET_FILE)|g" \
+        -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" -e "s|__PULL_SECRET_FILE__|$(PULL_SECRET_FILE)|g" -e "s|__CNI_NETWORK_PROVIDER__|$(CNI_NETWORK_PROVIDER)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
 	@$(SELF) -s deploy:openshift4:powervs OPENSHIFT_POWERVS_DEPLOY_DIR=$(TERRAFORM_DIR) OPENSHIFT_POWERVS_TERRAFORM_VARS_FILE=$(TERRAFORM_VARS_FILE)
