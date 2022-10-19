@@ -106,6 +106,9 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment("us-south", "ocs-resource-group")
+                script{
+                    env.SYSTEM_TYPE = "s922"
+                }
             }
         }
         stage('Setup Terraform Plugin') {
