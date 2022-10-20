@@ -38,7 +38,7 @@ def call() {
                                     sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
                                     sleep 60
                                 }
-                                if (logContent_modified.count(bootstrap_reboot) >= 1 && logContent_modified.count(master_reboot) >= 1 && logContent_modified.count(worker_reboot) == 0) {
+                                if (logContent_modified.count(bootstrap_reboot) >= 0 && logContent_modified.count(master_reboot) >= 1 && logContent_modified.count(worker_reboot) == 0) {
                                     sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'master'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
                                     sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
                                     sleep 60
@@ -60,12 +60,17 @@ def call() {
                         '''
                         env.EXIT_STATUS=sh(returnStdout: true, script: "cat \"${WORKSPACE}\"/deploy/exit_status").trim()
                     }
-                retries = retries + 1
-                status = "${EXIT_STATUS}".toInteger()
-                if ( status == 0 ) {
-                    break
-                }
+                    retries = retries + 1
+                    status = "${EXIT_STATUS}".toInteger()
+                    if ( status == 0 ) {
+                        break
+                    }
                 } // While loop for retry the deployment ENDS
+                if ( retries == 4 && status != 0 ) {
+                    sh '''
+                        exit 1
+                    '''
+                }
             } else { // If Script deployment
                 sh '''
                     set -x
