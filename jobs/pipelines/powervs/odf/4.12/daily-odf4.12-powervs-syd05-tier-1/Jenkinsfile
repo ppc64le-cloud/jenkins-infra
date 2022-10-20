@@ -143,7 +143,6 @@ pipeline {
                         sh '''
                            ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
                            ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log "
-                           scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}
                         '''
                     }
                     catch (err) {
@@ -190,7 +189,7 @@ pipeline {
                               FILE=tier${TIER_TEST}.log
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' > slacksummary.txt
-                              tar -cvzf results.tar.gz setup-ocs-ci.log deploy-ocs-ci.log odf-commands.txt tier${TIER_TEST}.log
+                              tar -cvzf test-log.tar.gz tier${TIER_TEST}.log
                         '''
                     }
                     catch (err) {
@@ -204,7 +203,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt")
+            archiveAllArtifacts("test-log.tar.gz", "results.tar.gz", "tier${TIER_TEST}-summary.txt")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
