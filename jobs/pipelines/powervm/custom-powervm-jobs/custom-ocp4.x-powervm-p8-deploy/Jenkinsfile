@@ -98,7 +98,7 @@ pipeline {
         stage('Clone ansible extra') {
             when { expression { return env.ENABLE_E2E_TEST == "true"; } }
             steps {
-                cloneRepo("git@github.ibm.com:redstack-power/ocp4_ansible_extras.git", "ansible_extra")
+                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
             }
         }
         stage('Setup Common Environment Variables') {
