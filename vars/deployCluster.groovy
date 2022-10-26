@@ -11,7 +11,7 @@ def call() {
             bootstrap_reboot="failed to connect to the host via ssh: ssh: connect to host bootstrap"
             worker_reboot="failed to connect to the host via ssh: ssh: connect to host worker"
             master_reboot="failed to connect to the host via ssh: ssh: connect to host master"
-            if (env.SCRIPT_DEPLOYMENT == "false" )
+            if (env.POWERVS == "false")
             {
                // Initial deployment try
                sh '''
@@ -27,8 +27,6 @@ def call() {
                     if ( "${EXIT_STATUS}" != 0 ) {
                         env.CLUSTER_ID=sh(returnStdout: true, script: "cd \"${WORKSPACE}\"/deploy;make terraform:output TERRAFORM_DIR=.\"${TARGET}\" TERRAFORM_OUTPUT_VAR='cluster_id'").trim()
                         if ( env.CLUSTER_ID != "") {
-
-                            if ( env.POWERVS == "false" ){ // if PowerVC
                                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
                                 def logContent_modified=logContent.toLowerCase()
                                 env.SERVER_LIST=sh(returnStdout: true, script: "openstack server list --insecure | grep  \"${CLUSTER_ID}\" | grep -v 'bastion' | awk '{print \$4}'").trim()
@@ -47,7 +45,6 @@ def call() {
                                     sh(returnStdout: true, script: "echo \"${SERVER_LIST}\" | grep 'worker'| while IFS= read -r line ; do openstack server reboot --insecure \$line; done || true").trim()
                                     sleep 60
                                 }
-                            }
                         }
                         sh '''
                         set -x
@@ -71,7 +68,7 @@ def call() {
                         exit 1
                     '''
                 }
-            } else { // If Script deployment
+            } else { // If PowerVS and Script deployment
                 sh '''
                     set -x
                     export CLOUD_API_KEY=$IBMCLOUD_API_KEY
