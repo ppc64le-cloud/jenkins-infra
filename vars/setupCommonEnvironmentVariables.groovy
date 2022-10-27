@@ -17,7 +17,7 @@ def call() {
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
             env.HELPERNODE_TAG = "73312da6192298b3174d54e0a2ae129429561f77"
             env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-            env.INSTALL_PLAYBOOK_TAG = "f28e20a1d577defc57e4601438ae2a7c53feebd5"
+            env.INSTALL_PLAYBOOK_TAG = "bb59c275319116a60dd9b827bf4f9388f743d346"
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             //Upgrade variables
             env.UPGRADE_IMAGE = ""
