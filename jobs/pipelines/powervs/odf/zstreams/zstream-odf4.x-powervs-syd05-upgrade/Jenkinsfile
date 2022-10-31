@@ -267,7 +267,7 @@ pipeline {
                         sh '''
                               FILE=tier${TIER_TEST}.log
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
-                              echo "Upgraded ODF from `echo $OCS_REGISTRY_IMAGE | cut -d ":" -f 2 | tr -dc '[. [:digit:]]'` to ${UPGRADE_OCS_VERSION}" > slacksummary.txt
+                              echo -n "Upgraded ODF from `echo $OCS_REGISTRY_IMAGE | cut -d ":" -f 2 | tr -dc '[. [:digit:]]'` to ${UPGRADE_OCS_VERSION} && Result:" > slacksummary.txt
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' >> slacksummary.txt
                               tar -cvzf test-log.tar.gz tier${TIER_TEST}.log
                         '''
