@@ -41,7 +41,7 @@
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/stability-check.log .
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/success.txt ./successful_tests_cni_ovn_validation.txt
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/failed.txt ./failed_tests_cni_ovn_validation.txt
-            ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/odf-commands.txt --ignore-failed-read > /dev/null 2>&1
+            ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/odf-commands.txt  ~/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ~/odf-full-build.txt --ignore-failed-read > /dev/null 2>&1
             scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/results.tar.gz .
 
         else
