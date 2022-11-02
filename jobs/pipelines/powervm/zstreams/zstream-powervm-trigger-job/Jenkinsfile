@@ -14,11 +14,11 @@ pipeline {
             steps {
                 script {
                     // Copy the builds of OCP releases from last successful job
-                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
+                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-powervm-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
                 }
             }
         }
-        stage("Identify newer Zstrems and Trigger Jenkins Jobs") {
+        stage("Identify newer Zstreams and Trigger Jenkins Jobs") {
             steps {
                 script {
                     def version_exists = "true"
@@ -65,12 +65,12 @@ def getChangedFilesList() {
         then
             mkdir  "versions"
         fi
-        for x in 6 7 8 9 10
+        for x in 6 7 8
         do
             VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name'  | grep 4.$x | grep "ppc64le"  | grep -v multi | grep -v fc | grep -v rc | tail -1 |  tr -d '"'`
             if [ "$VERSION" = "" ] && [ ! -f versions/4.$x.txt ];
             then
-                for i in 2 3 4 5 6
+                for i in 2 3 4 5 6 7 8 9 10 11 12
                 do
                     VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100&page=$i" | jq '.tags | sort_by(.start_ts) | .[].name'  | grep 4.$x | grep "ppc64le"  | grep -v multi | grep -v fc | grep -v rc | tail -1 |  tr -d '"'`
                     if [ "$VERSION" != "" ] ;
