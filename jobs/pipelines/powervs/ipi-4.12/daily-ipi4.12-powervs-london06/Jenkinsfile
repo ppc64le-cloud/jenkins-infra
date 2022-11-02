@@ -167,6 +167,8 @@ pipeline {
                 else
                   exit 1
                 fi
+                ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
+                ./powervs-hack/scripts/dump-powervs.sh
                 retries=0
                 until [ "$retries" -ge 3 ]
                 do
