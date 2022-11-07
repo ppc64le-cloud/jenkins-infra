@@ -21,14 +21,8 @@ def call(){
                 sed -i 's/ansible_connection=local/ansible_connection=ssh/g' cni_inventory
                 sed -i "s|ssh|ssh ansible_ssh_private_key_file=${WORKSPACE}/deploy/id_rsa|g" cni_inventory
                 cat cni_inventory
-                cp ansible.cfg ansible_copy.cfg
-                echo "[ssh_connection]" >> ansible.cfg
-                echo "ssh_args = -C -o ControlMaster=auto -o ControlPersist=120m -o ServerAliveInterval=30" >> ansible.cfg
                 cat ansible.cfg
                 ansible-playbook  -i cni_inventory -e @ocp_ovnkube_cni_vars.yaml playbooks/ocp-ovnkube-cni.yml
-                rm -f ansible.cfg
-                mv ansible_copy.cfg ansible.cfg
-                rm -f ansible_copy.cfg
             '''
         }
         catch (err) {
