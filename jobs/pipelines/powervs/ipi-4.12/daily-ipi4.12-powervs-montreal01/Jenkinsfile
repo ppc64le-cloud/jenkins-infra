@@ -21,7 +21,7 @@ pipeline {
         POWERVS_REGION = "mon"
         POWERVS_ZONE = "mon01"
         SERVICE_INSTANCE_GUID = "a663358c-9732-4fc3-9e22-47f1da5e5708"
-        VPCREGION= "us-east"
+        VPCREGION= "ca-tor"
         RESOURCE_GROUP="ibm-internal-cicd-resource-group"
         SERVICE_INSTANCE="rdr-ipi-cicd-montreal01"
 
