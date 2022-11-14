@@ -19,12 +19,13 @@ def call() {
                    cd ${WORKSPACE}/deploy
                    make $TARGET || EXIT_STATUS=$?
                    echo $EXIT_STATUS > ${WORKSPACE}/deploy/exit_status
-                   cat ${WORKSPACE}/deploy/exit_status
                '''
+               sleep 60
                env.EXIT_STATUS=sh(returnStdout: true, script: "cat \"${WORKSPACE}\"/deploy/exit_status").trim()
                 while ( "${retries}" < 4 ) {
                     // Third try
-                    if ( "${EXIT_STATUS}" != 0 ) {
+                    if (  "${env.EXIT_STATUS}" != "0" ) {
+                        env.EXIT_STATUS = "0"
                         env.CLUSTER_ID=sh(returnStdout: true, script: "cd \"${WORKSPACE}\"/deploy;make terraform:output TERRAFORM_DIR=.\"${TARGET}\" TERRAFORM_OUTPUT_VAR='cluster_id'").trim()
                         if ( env.CLUSTER_ID != "") {
                                 def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
@@ -52,21 +53,17 @@ def call() {
                         cd ${WORKSPACE}/deploy
                         make $TARGET:redeploy|| EXIT_STATUS=$?
                         echo $EXIT_STATUS > ${WORKSPACE}/deploy/exit_status
-                        cat ${WORKSPACE}/deploy/exit_status
-                        sleep 60
                         '''
+                        sleep 60
                         env.EXIT_STATUS=sh(returnStdout: true, script: "cat \"${WORKSPACE}\"/deploy/exit_status").trim()
                     }
                     retries = retries + 1
-                    status = "${EXIT_STATUS}".toInteger()
-                    if ( status == 0 ) {
+                    if ( "${env.EXIT_STATUS}" == "0" ) {
                         break
                     }
                 } // While loop for retry the deployment ENDS
-                if ( retries == 4 && status != 0 ) {
-                    sh '''
-                        exit 1
-                    '''
+                if ( "${retries}" >= 4 && "${env.EXIT_STATUS}" != "0" ) {
+                    error "Deployment Failed!"
                 }
             } else { // If PowerVS and Script deployment
                 sh '''
