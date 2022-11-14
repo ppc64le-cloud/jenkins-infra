@@ -3,37 +3,26 @@
 pipeline {
 	agent {
         kubernetes {
-                inheritFrom 'jenkins-agent'
-      	        label 'jenkins-backup-job'
-      		defaultContainer 'jnlp'
-      		yamlFile 'hack/ibmcloud-build-pod.yaml'
-    	}
+            inheritFrom 'jenkins-agent'
+        }
     }
     environment {
-        //users and credentials. All must be defined in Jenkins Credentials
-        IBMCLOUD_API_KEY = credentials('IBMCLOUD_API_KEY')
-        CRN = "crn:v1:bluemix:public:cloud-object-storage:global:a/65b64c1f1c29460e8c2e4bbfbd893c2c:8aeefa98-c07b-4d22-aa7a-1694374ae275::"
-	CLUSTER_ID = "c2mvmdid0fcfdmiub59g"
-	JENKINS_BUCKET = "jenkins-backup-storage"
-        INFLUXDB_BUCKET = "influxdb-backup-storage"
-	}
+        IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY')
+        CRN = "crn:v1:bluemix:public:cloud-object-storage:global:a/7cfbd5381a434af7a09289e795840d4e:28b5b206-4182-4324-8f5d-0d9234989a92::"
+        CLUSTER_ID = "ccvt6cad05vojajdanig"
+        JENKINS_BUCKET = "ibm-internal-cicd-jenkins-backup-bucket"
+        INFLUXDB_BUCKET = "ibm-internal-cicd-infuxdb-backup-bucket"
+    }
 
     stages {
         stage('Create Backup') {
             steps {
-                 container('ibmcloud'){
-		            script {
+		        script {
 		            sh '''#!/bin/bash
-		            echo "IBM cloud login"
-                            ibmcloud login -a cloud.ibm.com -r us-south -g prow-resource-group -q --apikey=${IBMCLOUD_API_KEY}
-
-                            echo "Login to cluster"
-                            ibmcloud ks cluster config --cluster "${CLUSTER_ID}"
-                            chmod +x ./scripts/prepare-backup.sh
-                            ./scripts/prepare-backup.sh 2>&1 | tee backup.log
+                        chmod +x ./scripts/prepare-backup.sh
+                        ./scripts/prepare-backup.sh 2>&1 | tee backup.log
 		            '''
-		   }
-                }
+		        }
             }
         }
     }
