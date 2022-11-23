@@ -57,7 +57,7 @@ pipeline {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
-                    env.SCG_ID = "35eb7843-2e40-4839-a1e3-dead98259dde"
+                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
                 }
             }
         }
