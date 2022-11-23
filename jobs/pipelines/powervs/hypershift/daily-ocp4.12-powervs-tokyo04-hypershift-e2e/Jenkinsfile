@@ -1,0 +1,82 @@
+@Library('jenkins-upstream-library') _
+
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-agent'
+        }
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        IBMCLOUD_API_KEY = credentials('PLCLOUD_HYPERSHIFT_CI_API_KEY')
+        PULL_SECRET_CRED = credentials('PULL_SECRET')
+        MANAGEMENT_CLUSTER = "hyp-ci"
+        REGION = "tok"
+        ZONE = "tok04"
+        VPC_REGION = "jp-tok"
+        RESOURCE_GROUP = "ibm-hypershift-dev"
+        BASEDOMAIN = "hypershift-ppc64le.com"
+        PROC_TYPE = "dedicated"
+        PROCESSORS = 1
+        PULL_SECRET_FILE="${WORKSPACE}/pull_secret.txt"
+        PULL_SECRET="${PULL_SECRET_FILE}"
+        DUMP_DIR="${WORKSPACE}/hypershift-e2e"
+        GO_VERSION="1.18"
+    }
+
+    stages {
+        stage('Setup Environment') {
+            steps {
+                cloneRepo("https://github.com/ppc64le-cloud/hypershift-hacks", "hypershift-hacks", "*/main")
+                script {
+                    try
+                    {
+                        pullSecret()
+                        env.RELEASE_IMAGE =sh(returnStdout: true, script: '''curl https://multi.ocp.releases.ci.openshift.org/api/v1/releasestream/4.12.0-0.nightly-multi/latest | jq ".pullSpec" |tr -d '"' ''').trim()
+                        sh(returnStdout: false, script: '''cd scripts/hypershift-e2e; chmod +x install_packages.sh; ./install_packages.sh ''')
+                    }
+                    catch (err)
+                        {
+                            echo 'Error ! Setup Environment failed !'
+                            env.MESSAGE="Setup Environment failed Failed Stage:${STAGE_NAME}"
+                            throw err
+                        }
+
+                }
+            }
+        }
+        stage('Run Hypershift E2e') {
+            steps {
+                script{
+                    try
+                    {   sh '''
+                          export PATH=$PATH:/usr/local/go/bin
+                          cd ${WORKSPACE}/hypershift-hacks/jenkins
+                          python3 e2e.py
+                          if [ $? -ne 0 ]; then
+                            echo "hypershift E2e failed" && exit 1
+                          fi
+                        '''
+                    }
+                    catch (err)
+                        {
+                            echo 'Error ! HyperShift E2e failed !'
+                            env.MESSAGE="Hypershift E2e failed Failed Stage:${STAGE_NAME}"
+                            throw err
+                        }
+                }
+            }
+        }
+
+    }
+    post {
+        always {
+            script {
+                sh(returnStdout: false, script: ''' tar -czvf ${WORKSPACE}/hypershift_logs.tar.gz ${DUMP_DIR} ''')
+            }
+	        archiveAllArtifacts("hypershift_output.txt", "hypershift_logs.tar.gz")
+            notifyBySlack(currentBuild.result, env.MESSAGE)
+            cleanWs()
+        }
+    }
+}
