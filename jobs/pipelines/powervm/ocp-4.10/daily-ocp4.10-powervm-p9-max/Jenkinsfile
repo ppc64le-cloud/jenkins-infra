@@ -58,7 +58,7 @@ pipeline {
                 setupClusterConfig("${CONFIG_TYPE}")
                 script{
                     //Todo: Issue-2277 Remove scg id when npiv issue is resolved
-                    env.SCG_ID = "35eb7843-2e40-4839-a1e3-dead98259dde"
+                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
                 }
             }
         }

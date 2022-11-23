@@ -1,7 +1,13 @@
 @Library('jenkins-upstream-library') _
 
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'jump-vpc-x86_64'
+        }
+    }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
@@ -55,8 +61,8 @@ pipeline {
             steps {
                 script {
                     getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
-                    getArtifacts("poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
-                    getArtifacts("poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
+                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                    getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
             }
         }

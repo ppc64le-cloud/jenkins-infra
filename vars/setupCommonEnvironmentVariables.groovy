@@ -94,7 +94,7 @@ def call() {
             env.INSTANCE_NAME = "rdr-cicd"
             env.MOUNT_ETCD_RAMDISK="true"
             env.CHRONY_CONFIG="true"
-            env.SCG_ID = "c5045866-7a78-4b5b-8ae8-061340be64f8"
+            env.SCG_ID = "c2663d7f-2e81-4698-abc4-dca631220f7d"
             env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             env.CONNECTION_TIME_OUT = "30"
