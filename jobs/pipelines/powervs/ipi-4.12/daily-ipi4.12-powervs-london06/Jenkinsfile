@@ -168,6 +168,9 @@ pipeline {
                   exit 1
                 fi
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
+                for I in infrastructure-service cloud-internet-services dl-cli dns; do
+                   ibmcloud plugin install ${I}
+                done
                 ./powervs-hack/scripts/dump-powervs.sh
                 retries=0
                 until [ "$retries" -ge 3 ]
