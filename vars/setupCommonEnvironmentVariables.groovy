@@ -35,8 +35,8 @@ def call() {
                 env.STORAGE_TYPE = "nfs"
                 env.SYSTEM_TYPE = "s922"
                 //E2e Variables
-	        env.E2E_GIT = "https://github.com/openshift/origin"
-       	        env.E2E_BRANCH="release-${env.OCP_RELEASE}"
+                env.E2E_GIT = "https://github.com/openshift/origin"
+                env.E2E_BRANCH="release-${env.OCP_RELEASE}"
                 if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.6" ) {
                     env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
                 }
@@ -98,7 +98,12 @@ def call() {
             env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             env.CONNECTION_TIME_OUT = "30"
-
+            env.STORAGE_TYPE = "nfs"
+            if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
+                env.INSTANCE_NAME = "rdr-cicd-odf"
+                env.SETUP_SQUID_PROXY = "false"
+                env.STORAGE_TYPE = "notnfs"
+            }
             //e2e variables
             if ( env.ENABLE_E2E_TEST ) {
                 env.E2E_GIT="https://github.com/openshift/origin"
@@ -143,6 +148,11 @@ def call() {
             env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
             env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
             env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
+            if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
+                env.INSTANCE_NAME = "rdr-cicd-odf"
+                env.SETUP_SQUID_PROXY = "false"
+                env.STORAGE_TYPE = "notnfs"
+            }
         }
     }
 }

@@ -2,59 +2,69 @@
 
 pipeline {
     agent {
-        kubernetes {
-            inheritFrom 'jenkins-agent'
+        docker {
+            image 'quay.io/powercloud/inbound-agent:4.10-3.2'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'jump-vpc-x86_64'
         }
     }
     parameters {
-            string(defaultValue: '', description: 'OCP version on which OCS/ODF will be deployed', name: 'ocpVersion')
-            string(defaultValue: '', description: 'OCS version which you want to upgrade', name: 'ocsVersion')
-            string(defaultValue: '', description: 'rhceph-dev/ocs-registry Image used for deploying OCS/ODF', name: 'ocsRegistryImage')
-            string(defaultValue: '', description: 'OCS version in which you want to upgrade', name: 'ocsUpgradeVersion')
-            string(defaultValue: '', description: 'rhceph-dev/ocs-registry image of upgraded ocs version', name: 'ocsUpgradeRegistryImage')
-            string(defaultValue: '720', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
-            booleanParam(defaultValue: false, description: 'Enable/Disable Vault', name: 'Vault')
-            booleanParam(defaultValue: false, description: 'Enable/Disable Fips', name: 'Fips')
-            choice(choices: ['1', '2', '3', '4a', '4b','4c' ],name: 'TierTest')
-        }
-    environment {
-       //users and credentials. All must be defined in Jenkins Credentials
-       GITHUB_USER = credentials('GITHUB_USER')
-       IBMCLOUD_API_KEY = credentials('ODF_IBMCLOUD_API_KEY')
-       GITHUB_TOKEN = credentials('GITHUB_TOKEN')
-       REDHAT_USERNAME = credentials('REDHAT_USERNAME')
-       REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-       PULL_SECRET = credentials('ODF_PULL_SECRET')
+        string(defaultValue: '', description: 'OCP version on which OCS/ODF will be deployed', name: 'ocpVersion')
+        string(defaultValue: '', description: 'OCS version which you want to upgrade', name: 'ocsVersion')
+        string(defaultValue: '', description: 'rhceph-dev/ocs-registry Image used for deploying OCS/ODF', name: 'ocsRegistryImage')
+        string(defaultValue: '', description: 'OCS version in which you want to upgrade', name: 'ocsUpgradeVersion')
+        string(defaultValue: '', description: 'rhceph-dev/ocs-registry image of upgraded ocs version', name: 'ocsUpgradeRegistryImage')
+        booleanParam(defaultValue: false, description: 'Enable/Disable Vault', name: 'Vault')
+        booleanParam(defaultValue: false, description: 'Enable/Disable Fips', name: 'Fips')
+        choice(choices: ['1', '2', '3', '4a', '4b','4c' ],name: 'TierTest')
+        string(defaultValue: '720', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
+    }
+     environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('GITHUB_USER')
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
+        DOCKER_USER = credentials('DOCKER_USER')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('ODF_PULL_SECRET')
+        OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
-       // Parameters
-       OCP_RELEASE = "${params.ocpVersion}"
-       ODF_VERSION = "${params.ocsVersion}"
-       UPGRADE_OCS_VERSION = "${params.ocsUpgradeVersion}"
-       OCS_REGISTRY_IMAGE = "${params.ocsRegistryImage}"
-       UPGRADE_OCS_REGISTRY = "${params.ocsUpgradeRegistryImage}"
-       ENABLE_VAULT = "${params.Vault}"
-       ENABLE_FIPS = "${params.Fips}"
-       TIER_TEST = "${params.TierTest}"
-       TIMEOUT = "${params.KeepFor}"
 
-       //Env constants
-       TERRAFORM_VER = "1.2.0"
+        // Parameters
+        OCP_RELEASE = "${params.ocpVersion}"
+        ODF_VERSION = "${params.ocsVersion}"
+        UPGRADE_OCS_VERSION = "${params.ocsUpgradeVersion}"
+        OCS_REGISTRY_IMAGE = "${params.ocsRegistryImage}"
+        UPGRADE_OCS_REGISTRY = "${params.ocsUpgradeRegistryImage}"
+        ENABLE_VAULT = "${params.Vault}"
+        ENABLE_FIPS = "${params.Fips}"
+        TIER_TEST = "${params.TierTest}"
+        TIMEOUT = "${params.KeepFor}"
 
-       IBM_CLOUD_REGION = "syd"
-       IBM_CLOUD_ZONE = "syd05"
-       SERVICE_INSTANCE_ID = "22bd163a-c87c-4cea-90d2-58f7794caa43"
+        //Env constants
+        HARDWARE_CHOSE = "P8"
+        TERRAFORM_VER = "1.2.0"
+        AVAILABILITY_ZONE = "p8_pvm"
+        POWERVS = false
+        SCRIPT_DEPLOYMENT = false
+        WAIT_FOR_DEBUG = "1"
 
-       TARGET = "deploy-openshift4-powervs-script"
-       TEMPLATE_FILE = ".${TARGET}.tfvars.template"
-       POWERVS = true
-       SCRIPT_DEPLOYMENT = true
-       WAIT_FOR_DEBUG = "1"
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
 
-       //ODF vars
-       PLATFORM = "powervs"
-       CONFIG_TYPE = "odf"
+        TARGET = "deploy-openshift4-powervc"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
-	}
+        // ODF Variables
+        PLATFORM = "powervm"
+       // OCS_REGISTRY_IMAGE="quay.io/rhceph-dev/ocs-registry:latest-stable-4.11.0"
+        CONFIG_TYPE = "odf"
+
+	 }
     stages {
         stage('Setup Common Environment Variables') {
             steps {
@@ -62,49 +72,40 @@ pipeline {
                 setupClusterConfig("${CONFIG_TYPE}")
             }
         }
-        stage('Setting RHCOS and RHEL Images as per OCP version') {
+        stage('Setting RHEL Image as per OCP version') {
             steps {
                 script {
                     switch (env.OCP_RELEASE) {
                         case "4.6":
-                            env.BASTION_IMAGE = "rhel-83"
-                            env.RHCOS_IMAGE = "rhcos-46"
+                            env.REDHAT_RELEASE = "8.3"
                             break
                         case "4.7":
-                            env.BASTION_IMAGE = "rhel-83"
-                            env.RHCOS_IMAGE = "rhcos-47"
+                            env.REDHAT_RELEASE = "8.3"
                             break
                         case "4.8":
-                            env.BASTION_IMAGE = "rhel-83"
-                            env.RHCOS_IMAGE = "rhcos-48"
+                            env.REDHAT_RELEASE ="8.3"
                             break
                         case "4.9":
-                            env.BASTION_IMAGE = "rhel-84"
-                            env.RHCOS_IMAGE = "rhcos-49"
+                            env.REDHAT_RELEASE = "8.4"
                             break
                         case "4.10":
-                            env.BASTION_IMAGE = "rhel-84"
-                            env.RHCOS_IMAGE = "rhcos-410"
+                            env.REDHAT_RELEASE = "8.4"
                             break
                         case "4.11":
-                            env.BASTION_IMAGE = "rhel-85"
-                            env.RHCOS_IMAGE = "rhcos-411"
+                            env.REDHAT_RELEASE = "8.5"
                             break
                         default:
-                             env.BASTION_IMAGE = "rhel-86"
-                             env.RHCOS_IMAGE = "rhcos-412"
+                             env.REDHAT_RELEASE = "8.6"
                     }
-
-                    BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-storage-sydney05-odf.txt"
-                    RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-storage-sydney05-odf.txt"
                 }
             }
         }
+
         stage('pull artifact') {
             steps {
                 getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
-                getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
-                getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
             }
         }
         //Checkout the installer git repo
@@ -117,6 +118,7 @@ pipeline {
                     try
                     {
                         pullSecret()
+                        gbToMb()
                         env.OPENSHIFT_IMAGE = ""
                         env.OCP_RELEASE_TAG = ""
                         if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
@@ -128,22 +130,28 @@ pipeline {
                             echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
-                        if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
-                            env.BASTION_IMAGE_NAME = readFile "deploy/artifactory/${BASTION_IMAGE_FILE}"
-                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE_NAME.trim()
+                        if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
+                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
+                            env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
                         }
-                        else{
-                            echo "${BASTION_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                        else {
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
-                        if (fileExists("deploy/artifactory/${RHCOS_IMAGE_FILE}")) {
-                            env.RHCOS_IMAGE_NAME = readFile "deploy/artifactory/${RHCOS_IMAGE_FILE}"
-                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE_NAME.trim()
+                        if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
+                            env.BASTION_IMAGE = readFile "deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE.split()[0].trim()
+                            env.BASTION_IMAGE_ID = env.BASTION_IMAGE.split()[1].trim()
                         }
-                        else{
-                            echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
+                        else {
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
+                        createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BOOTSTRAP_VCPUS , "${BOOTSTRAP_MEMORY_MB}", env.BOOTSTRAP_PROCESSORS, env.BOOTSTRAP_TEMPLATE)
                     }
                     catch (err)
                     {
@@ -156,10 +164,7 @@ pipeline {
         }
         stage('Initialize Environment') {
             steps {
-                initializeEnvironment("us-south", "ocs-resource-group")
-                script{
-                    env.SYSTEM_TYPE = "s922"
-                }
+                initializeEnvironment()
             }
         }
         stage('Setup Terraform Plugin') {
@@ -203,7 +208,7 @@ pipeline {
                 }
             }
         }
-        stage('Capture ODF cluster status before Upgrade') {
+        stage('Capture output of multiple commands to verify before ODF upgrade') {
             steps {
                 odfRunCommands()
             }
@@ -221,7 +226,7 @@ pipeline {
                                ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "odf_csv=`oc get csv -n openshift-storage |grep odf-operator | awk {'print $1'}`; oc get csv $odf_csv -n openshift-storage -o yaml |grep full_version |awk {'print $2'} | tail -n 1 > odf-full-build.txt ; "
                                scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP}:/root/odf-full-build.txt ${WORKSPACE}/
                             '''
-                            env.ODF_BUILD = readFile "odf-full-build.txt"
+                            env.ODF_FULL_BUILD = readFile "odf-full-build.txt"
 
                         }
                         catch (err) {
@@ -232,7 +237,7 @@ pipeline {
                 }
             }
         }
-        stage('ODF cluster status after Upgrade') {
+        stage('Capture output of multiple commands to verify after ODF upgrade') {
             steps {
                 odfRunCommands()
             }
@@ -245,10 +250,7 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "pip3 install yq"
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} 'source env_vars.sh; export OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; export OCS_CSV_CHANNEL=stable-$OCS_VERSION; yq -y -i ".DEPLOYMENT.ocs_csv_channel |= env.OCS_CSV_CHANNEL" /root/ocs-ci-conf.yaml; yq -y -i ".ENV_DATA.ocs_version |= env.OCS_VERSION" /root/ocs-ci-conf.yaml'
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cat /root/ocs-ci-conf.yaml"
-                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; export OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; echo "Testing on ODF Version $OCS_VERSION"; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
+                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
                            scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
                         '''
                     }
@@ -270,8 +272,7 @@ pipeline {
                         sh '''
                               FILE=tier${TIER_TEST}.log
                               sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
-                              echo -n "Upgraded ODF from `echo $OCS_REGISTRY_IMAGE | cut -d ":" -f 2 | tr -dc '[. [:digit:]]'` to ${UPGRADE_OCS_VERSION} && Result:" > slacksummary.txt
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' >> slacksummary.txt
+                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' > slacksummary.txt
                               tar -cvzf test-log.tar.gz tier${TIER_TEST}.log
                         '''
                     }
@@ -290,17 +291,18 @@ pipeline {
                         echo ""
                     }
                     try {
-                        TIMEOUT_MIN = TIMEOUT.toInteger()
-                        if ( TIMEOUT_MIN != 0 ){
-                            TIMEOUT_SEC=TIMEOUT_MIN*60
-                            echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
-                            sleep TIMEOUT_SEC
+                            TIMEOUT_MIN = TIMEOUT.toInteger()
+                            if ( TIMEOUT_MIN != 0 )
+                            {
+                                TIMEOUT_SEC=TIMEOUT_MIN*60
+                                echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
+                                sleep TIMEOUT_SEC
+                            }
                         }
-                    }
                     catch (err) {
-                        echo 'Error ! Timeout stage failed!'
-                        env.FAILED_STAGE=env.STAGE_NAME
-                        throw err
+                            echo 'Error ! Timeout stage failed!'
+                            env.FAILED_STAGE=env.STAGE_NAME
+                            throw err
                     }
                 }
             }
@@ -308,13 +310,14 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/vars.tfvars", "test-log.tar.gz", "deploy/results.tar.gz", "tier${TIER_TEST}-summary.txt")
+            archiveAllArtifacts("test-log.tar.gz", "deploy/results.tar.gz", "tier${TIER_TEST}-summary.txt")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
-            cleanupPowerVSResources()
-            notifyBySlack(currentBuild.result, env.MESSAGE)
+            //notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
     }
 }
+
+
