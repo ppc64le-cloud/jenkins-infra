@@ -19,7 +19,7 @@ public_key  = ""
 bastion = { instance_type  = "__BASTION_TEMPLATE__", image_id = "__BASTION_IMAGE_ID__" }
 bootstrap = { instance_type  = "__BOOTSTRAP_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = 1 }
 master = { instance_type  = "__MASTER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_MASTERS__ }
-worker = { instance_type  = "__WORKER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_WORKERS__ }
+worker = { instance_type  = "__WORKER_TEMPLATE__", image_id = "__RHCOS_IMAGE_ID__",  "count"   = __NUM_OF_WORKERS__,  data_volume_count = __DATA_VOLUME_COUNT__,  data_volume_size = __DATA_VOLUME_SIZE__ }
 
 ## RedHat Subscription credentials
 rhel_subscription_username = "__REDHAT_USERNAME__"
@@ -34,7 +34,7 @@ pull_secret_file = "__PULL_SECRET_FILE__"
 cluster_domain = "__CLUSTER_DOMAIN__"
 cluster_id_prefix = "__INSTANCE_NAME__"
 
-storage_type    = "nfs"
+storage_type  = "__STORAGE_TYPE__"
 volume_size = "300"
 mount_etcd_ramdisk  = "__MOUNT_ETCD_RAMDISK__"
 

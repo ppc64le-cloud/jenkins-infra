@@ -6,12 +6,12 @@ TERRAFORM_STATE_FILE ?= $(TERRAFORM_DIR)/terraform.tfstate
 .PHONY: terraform\:init
 ## Ensure all plugins can be fetched
 terraform\:init:
-	@$(shell) terraform -chdir=$(TERRAFORM_DIR) init -backend=false -input=false >/dev/null
+	@$(shell) terraform -chdir=$(TERRAFORM_DIR) init -backend=false -lock=false -input=false >/dev/null
 
 .PHONY: terraform\:apply
 ## Run terraform apply with -var-file (TERRAFORM_VARS_FILE) in dir (TERRAFORM_DIR)
 terraform\:apply:
-	@$(shell) terraform -chdir=$(TERRAFORM_DIR) apply -parallelism=3 -input=false -auto-approve -var-file="$(TERRAFORM_VARS_FILE)" -state="$(TERRAFORM_STATE_FILE)"
+	@$(shell) terraform -chdir=$(TERRAFORM_DIR) apply -parallelism=3 -input=false -auto-approve -lock=false -var-file="$(TERRAFORM_VARS_FILE)" -state="$(TERRAFORM_STATE_FILE)"
 
 .PHONY: terraform\:destroy
 ## Destroy terraform resources
