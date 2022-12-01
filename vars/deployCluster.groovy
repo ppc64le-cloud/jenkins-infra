@@ -82,7 +82,14 @@ def call() {
                 }
             }
             else {
-                 env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip | grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}'").trim()
+                sh '''#!/bin/bash
+                    cd ${WORKSPACE}/deploy
+                    OPENSHIFT_POWERVC_DEPLOY_DIR=".${TARGET}/"
+                    TERRAFORM_VARS_FILE_POWERVC=".${TARGET}.tfvars"
+                    BOOT=$(grep '^bootstrap*' $OPENSHIFT_POWERVC_DEPLOY_DIR/$TERRAFORM_VARS_FILE_POWERVC);BOOT2="${BOOT//1/0}"; sed -i -e "s|$BOOT|$BOOT2|g" $OPENSHIFT_POWERVC_DEPLOY_DIR/$TERRAFORM_VARS_FILE_POWERVC
+                    make $TARGET:redeploy
+                '''
+                env.BASTION_IP=sh(returnStdout: true, script: "cd ${WORKSPACE}/deploy && make terraform:output TERRAFORM_DIR=.${TARGET} TERRAFORM_OUTPUT_VAR=bastion_ip | grep -Eo '[0-9]{1,3}(\\.[0-9]{1,3}){3}'").trim()
             }
             env.DEPLOYMENT_STATUS = true
         }
