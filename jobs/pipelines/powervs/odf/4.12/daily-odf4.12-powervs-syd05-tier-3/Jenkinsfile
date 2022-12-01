@@ -39,7 +39,7 @@ pipeline {
         ODF_VERSION = "4.12"
         TIER_TEST = "3"
         ENABLE_FIPS = false
-        ENABLE_VAULT = false
+        ENABLE_VAULT = true
         CONFIG_TYPE = "odf"
 
 	 }
