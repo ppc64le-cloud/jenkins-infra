@@ -68,11 +68,6 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                 // env.INSTALL_PLAYBOOK_TAG=sh(returnStdout:true, script: '''git ls-remote "${INSTALL_PLAYBOOK_REPO}" refs/heads/main | cut -f1''').trim()
-                  env.INSTALL_PLAYBOOK_TAG="bb59c275319116a60dd9b827bf4f9388f743d346"
-                  env.HELPERNODE_TAG=sh(returnStdout:true, script: '''git ls-remote "${HELPERNODE_REPO}" refs/heads/main | cut -f1''').trim()
-                }
             }
         }
         stage('pull artifact') {

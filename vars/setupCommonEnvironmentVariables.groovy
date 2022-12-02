@@ -15,9 +15,9 @@ def call() {
 
             // Bellow 4 variables are not used. Disabled in template
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
-            env.HELPERNODE_TAG = "73312da6192298b3174d54e0a2ae129429561f77"
+            env.HELPERNODE_TAG = ""
             env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-            env.INSTALL_PLAYBOOK_TAG = "99d0af666cb0b88282256cfa159e452f9fdde3ae"
+            env.INSTALL_PLAYBOOK_TAG = ""
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             //Upgrade variables
             env.UPGRADE_IMAGE = ""
@@ -136,9 +136,9 @@ def call() {
             env.CS_INSTALL = "false"
 
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
-            env.HELPERNODE_TAG = "73312da6192298b3174d54e0a2ae129429561f77"
+            env.HELPERNODE_TAG = ""
             env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
-            env.INSTALL_PLAYBOOK_TAG = "f28e20a1d577defc57e4601438ae2a7c53feebd5"
+            env.INSTALL_PLAYBOOK_TAG = ""
 
             // Compute Template Variables
             env.WORKER_MEMORY_MB=""
