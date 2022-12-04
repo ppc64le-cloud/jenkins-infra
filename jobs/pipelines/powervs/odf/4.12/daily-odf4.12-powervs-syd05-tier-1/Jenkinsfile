@@ -141,8 +141,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
-                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log ;"
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-odf-deploy.sh
+                            ./run-odf-deploy.sh
                         '''
                     }
                     catch (err) {
@@ -157,7 +158,7 @@ pipeline {
             steps {
                 odfRunCommands()
             }
-        }	    
+        }
         stage('Run ODF tier tests') {
             steps {
                 script {
@@ -166,8 +167,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log ;"
-                           scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-tier-tests.sh
+                            ./run-tier-tests.sh
                         '''
                     }
                     catch (err) {
@@ -178,32 +180,10 @@ pipeline {
                  }
              }
         }
-        stage('Capture tier test summary and compress results') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                              FILE=tier${TIER_TEST}.log
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' > slacksummary.txt
-                              tar -cvzf test-log.tar.gz tier${TIER_TEST}.log
-                        '''
-                    }
-                    catch (err) {
-                        echo 'Error ! Capturing tier test summary failed!'
-                        env.FAILED_STAGE=env.STAGE_NAME
-                        throw err
-                    }
-                }
-            }
-        }
     }
     post {
         always {
-            archiveAllArtifacts("test-log.tar.gz", "deploy/results.tar.gz", "tier${TIER_TEST}-summary.txt")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt","odf-commands.txt")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()

@@ -191,8 +191,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cp -r /root/openstack-upi/auth/ /root/; cp /usr/local/bin/oc /root/ocs-upi-kvm/src/ocs-ci/bin/; mkdir /root/bin; cp /usr/local/bin/oc /root/bin/;"
-                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200'  -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source /root/env_vars.sh; cd /root/ocs-upi-kvm/scripts;  ./deploy-ocs-ci.sh > deploy-ocs-ci.log "
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-odf-deploy.sh
+                            ./run-odf-deploy.sh
                         '''
                     }
                     catch (err) {
@@ -203,7 +204,7 @@ pipeline {
                 }
             }
         }
-        stage('Capture ODF cluster status before Upgrade') {
+        stage('Capture output of multiple commands to verify ODF deployment') {
             steps {
                 odfRunCommands()
             }
@@ -216,12 +217,11 @@ pipeline {
                         }
                         try {
                             sh '''
-                               ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source env_vars.sh; echo "Upgrading ODF to ${UPGRADE_OCS_VERSION}"; cd /root/ocs-upi-kvm/scripts; ./upgrade-ocs-ci.sh > upgrade-ocs-ci.log ; "
-                               scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ${WORKSPACE}/
-                               ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "odf_csv=`oc get csv -n openshift-storage |grep odf-operator | awk {'print $1'}`; oc get csv $odf_csv -n openshift-storage -o yaml |grep full_version |awk {'print $2'} | tail -n 1 > odf-full-build.txt ; "
-                               scp -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP}:/root/odf-full-build.txt ${WORKSPACE}/
-                            '''
-                            env.ODF_BUILD = readFile "odf-full-build.txt"
+                               cd ${WORKSPACE}/scripts/odf
+                               chmod +x run-odf-upgrade.sh
+                               ./run-odf-upgrade.sh
+                               '''
+                            env.ODF_FULL_BUILD = readFile "${WORKSPACE}/odf-full-build.txt"
 
                         }
                         catch (err) {
@@ -232,7 +232,7 @@ pipeline {
                 }
             }
         }
-        stage('ODF cluster status after Upgrade') {
+        stage('Capture output of multiple commands to verify after ODF upgrade') {
             steps {
                 odfRunCommands()
             }
@@ -245,11 +245,9 @@ pipeline {
                     }
                     try {
                         sh '''
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "pip3 install yq"
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} 'source env_vars.sh; export OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; export OCS_CSV_CHANNEL=stable-$OCS_VERSION; yq -y -i ".DEPLOYMENT.ocs_csv_channel |= env.OCS_CSV_CHANNEL" /root/ocs-ci-conf.yaml; yq -y -i ".ENV_DATA.ocs_version |= env.OCS_VERSION" /root/ocs-ci-conf.yaml'
-                           ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cat /root/ocs-ci-conf.yaml"
-                           ssh -o 'StrictHostKeyChecking=no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax 1200' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd ocs-upi-kvm/scripts/; source /root/env_vars.sh; export OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; echo "Testing on ODF Version $OCS_VERSION"; ./test-ocs-ci.sh --tier ${TIER_TEST} > tier${TIER_TEST}.log "
-                           scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/ocs-upi-kvm/scripts/tier${TIER_TEST}.log ${WORKSPACE}
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-tier-tests.sh
+                            ./run-tier-tests.sh
                         '''
                     }
                     catch (err) {
@@ -259,29 +257,6 @@ pipeline {
                     }
                  }
              }
-        }
-        stage('Capture tier test summary and compress results') {
-            steps {
-                script {
-                    ansiColor('xterm') {
-                        echo ""
-                    }
-                    try {
-                        sh '''
-                              FILE=tier${TIER_TEST}.log
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log > tier${TIER_TEST}-summary.txt
-                              echo -n "Upgraded ODF from `echo $OCS_REGISTRY_IMAGE | cut -d ":" -f 2 | tr -dc '[. [:digit:]]'` to ${UPGRADE_OCS_VERSION} && Result:" > slacksummary.txt
-                              sed -n '/short test summary info/, /Test result:/p' tier${TIER_TEST}.log | awk '/passed/||/failed/||/skipped/' | sed 's/=*//g' >> slacksummary.txt
-                              tar -cvzf test-log.tar.gz tier${TIER_TEST}.log
-                        '''
-                    }
-                    catch (err) {
-                        echo 'Error ! Capturing tier test summary failed!'
-                        env.FAILED_STAGE=env.STAGE_NAME
-                        throw err
-                    }
-                }
-            }
         }
         stage('Waiting to timeout') {
             steps {
