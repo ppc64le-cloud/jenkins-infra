@@ -78,9 +78,7 @@ upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
 upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
 
 helpernode_repo             = "__HELPERNODE_REPO__"
-helpernode_tag              = "__HELPERNODE_TAG__"
 install_playbook_repo       = "__INSTALL_PLAYBOOK_REPO__"
-install_playbook_tag        = "__INSTALL_PLAYBOOK_TAG__"
 
 chrony_config = "__CHRONY_CONFIG__"
 
