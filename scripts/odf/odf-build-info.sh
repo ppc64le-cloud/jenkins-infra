@@ -1,0 +1,22 @@
+#!/bin/bash
+echo "--------------------START-------------------";echo
+echo "#######  oc get clusterversion  #######";echo; oc get clusterversion; echo
+echo "#######  oc get nodes  #######";echo; oc get nodes; echo
+echo "#######  oc get csv -A  #######";echo; oc get csv -A; echo
+echo "#######  oc get pods -n openshift-local-storage  #######";echo; oc get pods -n openshift-local-storage; echo
+echo "#######  oc get localvolumeset -n openshift-local-storage  #######";echo; oc get localvolumeset -n openshift-local-storage; echo
+echo "#######  oc get pods -n openshift-storage  #######";echo; oc get pods -n openshift-storage; echo
+echo "#######  oc get pv  #######";echo; oc get pv; echo
+echo "#######  oc get pvc -n openshift-storage  #######";echo; oc get pvc -n openshift-storage; echo
+echo "#######  oc get sc -n openshift-storage  #######";echo; oc get sc -n openshift-storage; echo
+echo "#######  oc get storagecluster -n openshift-storage  #######";echo; oc get storagecluster -n openshift-storage; echo
+echo "#######  oc get cephcluster -n openshift-storage  #######";echo; oc get cephcluster -n openshift-storage; echo
+echo "#######  oc get storagesystem -n openshift-storage  #######"; echo;oc get storagesystem -n openshift-storage; echo
+echo "#######  oc get storagecluster -n openshift-storage -o yaml  #######";echo; oc get storagecluster -n openshift-storage -o yaml; echo
+echo "#######  oc get backingstore -n openshift-storage  #######";echo; oc get backingstore -n openshift-storage; echo
+echo "#######  oc get bucketclass -n openshift-storage  #######";echo; oc get bucketclass -n openshift-storage; echo
+echo "#######  oc get noobaa -n openshift-storage  #######";echo; oc get noobaa -n openshift-storage; echo
+echo "#######  oc get noobaa -n openshift-storage -o yaml  #######";echo; oc get noobaa -n openshift-storage -o yaml; echo
+echo "#######  ODF build  #######"; op=`oc get csv -n openshift-storage |grep odf-operator | awk {'print $1'}`  oc get csv $op  -n openshift-storage -o yaml | grep full_version
+echo "--------------------END-------------------"; echo
+
