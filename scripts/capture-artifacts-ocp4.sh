@@ -8,7 +8,7 @@ fi
 # Capturing Terraform template
 if [ ! -f ${WORKSPACE}/deploy/.${TARGET}.tfvars ]; then
     echo "${WORKSPACE}/deploy/.${TARGET}.tfvars not found!"
-    #exit 1
+    exit 1
 else
     cp ${WORKSPACE}/deploy/.${TARGET}.tfvars ${TARGET}.tfvars
     sed -i "s|password.*=.*$|password = ************|g" ${TARGET}.tfvars
@@ -41,8 +41,9 @@ if [ ! -z "${BASTION_IP}" ]; then
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/stability-check.log .
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/success.txt ./successful_tests_cni_ovn_validation.txt
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/failed.txt ./failed_tests_cni_ovn_validation.txt
-        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/test_results.xml ${WORKSPACE}/test_results.xml
-        ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/ocs-upi-kvm/scripts/helper/vault-setup.log ~/ocs-upi-kvm/scripts/helper/kustomize.log ~/odf-commands.txt  ~/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ~/odf-full-build.txt ~/logs-ocs-ci/${ODF_VERSION}/test_results.xml ~/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
+        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/test_results_tier${TIER_TEST}_1.xml ${WORKSPACE}/
+        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/results.html ${WORKSPACE}/
+        ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/ocs-upi-kvm/scripts/helper/vault-setup.log ~/ocs-upi-kvm/scripts/helper/kustomize.log ~/odf-commands.txt  ~/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ~/odf-full-build.txt ~/logs-ocs-ci/${ODF_VERSION}/test_results_tier*.xml ~/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/results.tar.gz ${WORKSPACE}/
 
     else

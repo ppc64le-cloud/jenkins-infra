@@ -28,6 +28,7 @@ def call() {
                 env.SETUP_SQUID_PROXY = "false"
                 env.STORAGE_TYPE = "notnfs"
                 env.SYSTEM_TYPE = "e980"
+                env.RERUN_TIER_TEST = "3"
             }
             else {
                 env.INSTANCE_NAME = "rdr-cicd"
@@ -152,6 +153,7 @@ def call() {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
                 env.STORAGE_TYPE = "notnfs"
+                env.RERUN_TIER_TEST = "3"
             }
         }
     }
