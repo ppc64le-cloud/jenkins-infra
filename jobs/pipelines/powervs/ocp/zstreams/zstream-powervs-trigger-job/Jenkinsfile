@@ -18,13 +18,13 @@ pipeline {
                 }
             }
         }
-        stage("Identify newer Zstreams and Trigger Jenkins Jobs") {
+        stage("Identify newer Z streams and trigger Jenkins jobs") {
             steps {
                 script {
                     def version_exists = "true"
                     if(!fileExists("versions/")){
                         version_exists = "false"
-                        echo "First Time Job Triggered! Initializing the versions!"
+                        echo "Job has triggered for first time! Initializing the ocp versions!"
                         echo "Not triggering any Jobs for first time!"
                     }
                     filenames = getChangedFilesList()
@@ -65,7 +65,7 @@ def getChangedFilesList() {
         then
             mkdir  "versions"
         fi
-        for x in 9 10 11
+        for x in 12
         do
             VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name'  | grep 4.$x | grep "ppc64le"  | grep -v multi | grep -v fc | grep -v rc | tail -1 |  tr -d '"'`
             if [ "$VERSION" = "" ] && [ ! -f versions/4.$x.txt ];
@@ -151,7 +151,7 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
     
     //Direct deployment Job Trigger
     echo "Latest Build: $latestBuild"
-       build job: 'zstream-ocp4x-powervs-toronto01-p9-direct-deploy', wait: false,parameters: [
+       build job: 'zstream-ocp4x-powervs-london06-p9-direct-deploy', wait: false,parameters: [
           string(name: 'Release', value: "${release}"),
           string(name: 'Build', value: "${latestBuild}"),
           string(name: 'KeepFor', value: "${keepfor}")
@@ -161,7 +161,7 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
     if (latestBuild != currentStableBuild ){
      echo "Current Release Stable Build: $currentStableBuild"
         sleep 840
-        build job: 'zstream-ocp4x-powervs-toronto01-p9-current-upgrade', wait: false,parameters: [
+        build job: 'zstream-ocp4x-powervs-london06-p9-current-upgrade', wait: false,parameters: [
             string(name: 'Release', value: "${release}"),
             string(name: 'CurrentBuild', value: "${currentStableBuild}"),
             string(name: 'UpgradeBuild', value: "${latestBuild}"),
@@ -173,7 +173,7 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
     if (nextStableBuild != "default"){
         echo "Next Release Stable Build: ${nextStableBuild}"
            sleep 840
-           build job: 'zstream-ocp4x-powervs-toronto01-p9-next-upgrade', wait: false,parameters: [
+           build job: 'zstream-ocp4x-powervs-london06-p9-next-upgrade', wait: false,parameters: [
                string(name: 'Release', value: "${release}"),
                string(name: 'UpgradeRelease', value: "${next_release}"),
                string(name: 'CurrentBuild', value: "${latestBuild}"),
