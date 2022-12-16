@@ -41,6 +41,7 @@ pipeline {
         ENABLE_FIPS = false
         ENABLE_VAULT = true
         CONFIG_TYPE = "odf"
+
 	 }
     stages {
         stage('Setup Common Environment Variables') {
