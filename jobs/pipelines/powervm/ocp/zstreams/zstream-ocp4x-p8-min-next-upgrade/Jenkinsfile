@@ -37,15 +37,18 @@ pipeline {
         UPGRADE_BUILD="${params.UpgradeBuild}"
         TIMEOUT = "${params.KeepFor}"
 
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
+
         //Env constants
         HARDWARE_CHOSE = "P8"
-        AVAILABILITY_ZONE = "zstream"
+        AVAILABILITY_ZONE = "p8-new"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TERRAFORM_VER = "1.2.0"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "0"
-        REDHAT_RELEASE = "8.4"
         ENABLE_SCALE_TEST="false"
     }
 
@@ -58,7 +61,6 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         env.INSTANCE_NAME = "rdr-zsnxt"
                     }
-                   env.TERRAFORM_VER = "1.2.0"
                     env.OS_TENANT_NAME="icp-test"
                     env.OS_NETWORK = "workload"
                     env.OS_PRIVATE_NETWORK = "workload"
@@ -67,7 +69,16 @@ pipeline {
                     env.UPGRADE_DELAY_TIME = "600"
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
-                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"
+
+                    if (env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9"){
+                        env.REDHAT_RELEASE = "8.4"
+                    }
+                    else if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                        env.REDHAT_RELEASE = "8.5"
+                    }
+                    else {
+                        env.REDHAT_RELEASE = "8.6"
+                    }
                 }
             }
         }
@@ -161,8 +172,6 @@ pipeline {
                         createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.BOOTSTRAP_VCPUS , "${BOOTSTRAP_MEMORY_MB}", env.BOOTSTRAP_PROCESSORS, env.BOOTSTRAP_TEMPLATE)
-                        println "cluster current build: ${env.OPENSHIFT_IMAGE}" 
-                        println "cluster upgrade build: ${env.UPGRADE_IMAGE}"
                     }
                     catch (err)
                     {
