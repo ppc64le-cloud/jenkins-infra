@@ -41,7 +41,7 @@ pipeline {
         // ODF Variables
         PLATFORM = "powervm"
         ODF_VERSION = "4.12"
-        TIER_TEST = "3"
+        TIER_TEST = "4b"
         ENABLE_FIPS = false
         ENABLE_VAULT = true
        // OCS_REGISTRY_IMAGE="quay.io/rhceph-dev/ocs-registry:latest-stable-4.11.0"
