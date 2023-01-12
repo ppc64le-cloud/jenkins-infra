@@ -199,7 +199,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("test-log.tar.gz", "deploy/results.tar.gz", "tier${TIER_TEST}-summary.txt")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
