@@ -63,6 +63,7 @@ pipeline {
                     grep '4\\.10\\.[0-9]\\?[0-9]' all-builds.txt  > all-4.10-builds.txt
                     grep '4\\.11\\.[0-9]\\?[0-9]' all-builds.txt  > all-4.11-builds.txt
                     grep '4\\.12\\.[0-9]\\?[0-9]' all-builds.txt  > all-4.12-builds.txt
+                    grep '4\\.13\\.[0-9]\\?[0-9]' all-builds.txt  > all-4.13-builds.txt
 
                     #Latest Builds
                     cat all-4.6-builds.txt|head -n 1|awk '{print $1}' >latest-4.6-build.txt
@@ -72,6 +73,7 @@ pipeline {
                     cat all-4.10-builds.txt|head -n 1|awk '{print $1}' > latest-4.10-build.txt
                     cat all-4.11-builds.txt|head -n 1|awk '{print $1}' > latest-4.11-build.txt
                     cat all-4.12-builds.txt|head -n 1|awk '{print $1}' > latest-4.12-build.txt
+                    cat all-4.13-builds.txt|head -n 1|awk '{print $1}' > latest-4.13-build.txt
 
                     #All stable Builds
                     cat all-4.6-builds.txt | grep -v 'nightly\\|-rc\\|-fc' > all-4.6-stable-builds.txt
@@ -105,8 +107,8 @@ pipeline {
         always {
             archiveAllArtifacts("builds.raw.txt", "all-builds.txt", "all-4.6-builds.txt", "all-4.7-builds.txt",
                                   "all-4.8-builds.txt","all-4.9-builds.txt","all-4.10-builds.txt","all-4.11-builds.txt",
-                                  "all-4.12-builds.txt","latest-4.6-build.txt","latest-4.7-build.txt","latest-4.8-build.txt",
-                                  "latest-4.9-build.txt","latest-4.10-build.txt","latest-4.11-build.txt","latest-4.12-build.txt",
+                                  "all-4.12-builds.txt", "all-4.13-builds.txt", "latest-4.6-build.txt","latest-4.7-build.txt","latest-4.8-build.txt",
+                                  "latest-4.9-build.txt","latest-4.10-build.txt","latest-4.11-build.txt","latest-4.12-build.txt", "latest-4.13-build.txt",
                                   "all-4.6-stable-builds.txt","all-4.7-stable-builds.txt","all-4.8-stable-builds.txt",
                                   "all-4.9-stable-builds.txt","all-4.10-stable-builds.txt","all-4.11-stable-builds.txt",
                                    "latest-4.6-stable-build.txt", "latest-4.7-stable-build.txt","latest-4.8-stable-build.txt",
