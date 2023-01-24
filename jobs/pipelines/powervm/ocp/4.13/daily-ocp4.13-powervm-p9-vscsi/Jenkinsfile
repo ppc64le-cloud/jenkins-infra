@@ -23,9 +23,9 @@ pipeline {
         OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
         //Env constants
-        HARDWARE_CHOSE = "P10"
+        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p10_pvm"
+        AVAILABILITY_ZONE = "p9"
         OCP_RELEASE="4.13"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
@@ -43,7 +43,7 @@ pipeline {
         GOLANG_TARBALL="https://dl.google.com/go/go1.18.6.linux-ppc64le.tar.gz"
 
         // Type of configuration
-        CONFIG_TYPE="min"
+         CONFIG_TYPE="min"
 	 }
 
     stages {
@@ -57,8 +57,7 @@ pipeline {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
-                    env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
-                    env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
                 }
             }
         }
