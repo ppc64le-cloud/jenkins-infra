@@ -23,9 +23,9 @@ pipeline {
         OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
         //Env constants
-        HARDWARE_CHOSE = "P10"
+        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p10_pvm"
+        AVAILABILITY_ZONE = "p9"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
@@ -41,7 +41,7 @@ pipeline {
         // ODF Variables
         PLATFORM = "powervm"
         ODF_VERSION = "4.12"
-        TIER_TEST = "2"
+        TIER_TEST = "4c"
         ENABLE_FIPS = false
         ENABLE_VAULT = true
        // OCS_REGISTRY_IMAGE="quay.io/rhceph-dev/ocs-registry:latest-stable-4.11.0"

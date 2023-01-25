@@ -8,66 +8,58 @@ pipeline {
             label 'jump-vpc-x86_64'
         }
     }
-    environment {
+     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         OS_USERNAME = credentials('OS_USERNAME')
         OS_PASSWORD = credentials('OS_PASSWORD')
         DOCKER_USER = credentials('DOCKER_USER')
         ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
         ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-        PULL_SECRET = credentials('PULL_SECRET')
+        PULL_SECRET = credentials('ODF_PULL_SECRET')
         OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
         //Env constants
-        HARDWARE_CHOSE = "P10"
+        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p10_pvm"
-        OCP_RELEASE="4.13"
-        TARGET = "deploy-openshift4-powervc"
-        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        AVAILABILITY_ZONE = "p9"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
         REDHAT_RELEASE = "8.6"
+        OCP_RELEASE = "4.12"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
 
-        //E2e and Scale specific variables
-        ENABLE_E2E_TEST="true"
-        ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.18.6.linux-ppc64le.tar.gz"
+        TARGET = "deploy-openshift4-powervc"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
-        // Type of configuration
-         CONFIG_TYPE="min"
+        // ODF Variables
+        PLATFORM = "powervm"
+        ODF_VERSION = "4.12"
+        TIER_TEST = "2"
+        ENABLE_FIPS = false
+        ENABLE_VAULT = true
+       // OCS_REGISTRY_IMAGE="quay.io/rhceph-dev/ocs-registry:latest-stable-4.11.0"
+        CONFIG_TYPE = "odf"
+
 	 }
-
     stages {
-        stage('Clone ansible extra') {
-            steps {
-                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
-            }
-        }
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
-                }
             }
         }
         stage('pull artifact') {
             steps {
-                script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
-                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
-                    getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
-                }
+                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
             }
         }
         //Checkout the installer git repo
@@ -79,9 +71,10 @@ pipeline {
                     }
                     try
                     {
-                        gbToMb()
                         pullSecret()
+                        gbToMb()
                         env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
                         if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
                             env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
@@ -97,7 +90,7 @@ pipeline {
                             env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
                         }
                         else {
-                            echo "cicd-rhcos-${OCP_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
@@ -109,12 +102,6 @@ pipeline {
                             echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
-                        if (env.DEPLOY_MASTER == "false")
-                        {
-                            echo "Cluster cant deploy without master"
-                            throw err
-                        }
-
                         createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
@@ -144,36 +131,71 @@ pipeline {
                 deployCluster()
             }
         }
-        stage('Run crontab script for capturing outputs of multiple commands') {
-            steps {
-                crontabCommandCaptureScript()
-            }
-        }
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Setup and run ansible extra') {
+        stage('Run ODF Setup script') {
             steps {
-               setupAndRunE2e()
+                odfAuthYaml()
+                odfRunSetupScript()
             }
         }
-        stage('Gather pprof and prometheus data') {
+        stage('Run ODF deploy script') {
             steps {
-                //gatherPrometheusData()
-                echo "gatherPrometheusData() is skipped for now"
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-odf-deploy.sh
+                            ./run-odf-deploy.sh
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ODF deploy script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
             }
+        }
+        stage('Capture output of multiple commands to verify ODF deployment') {
+            steps {
+                odfRunCommands()
+            }
+        }
+        stage('Run ODF tier tests') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-tier-tests.sh
+                            ./run-tier-tests.sh
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! Tier test script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                 }
+             }
         }
     }
     post {
         always {
-            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt")
             cleanupOcp4Cluster()
             checkInfraError()
-            processE2eResults()
-            dbDashboardUpdateE2e()
+            odfProcessTierTestResults()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
