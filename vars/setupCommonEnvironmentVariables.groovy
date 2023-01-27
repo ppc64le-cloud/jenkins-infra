@@ -38,10 +38,7 @@ def call() {
                 //E2e Variables
                 env.E2E_GIT = "https://github.com/openshift/origin"
                 env.E2E_BRANCH="release-${env.OCP_RELEASE}"
-                if (OCP_RELEASE == "4.5" || OCP_RELEASE == "4.6" ) {
-                    env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
-                }
-                else if (OCP_RELEASE == "4.12") {
+                else if (env.OCP_RELEASE == "4.12" || env.OCP_RELEASE == "4.13") {
                     env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
                     env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list_OVNKubernetes.txt"
                 }
@@ -112,7 +109,7 @@ def call() {
                 env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
                 env.ENABLE_E2E_UPGRADE="false"
             }
-            if ( env.OCP_RELEASE == "4.12" ) {
+            if ( env.OCP_RELEASE == "4.12" || env.OCP_RELEASE == "4.13") {
                 env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
                 env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list_OVNKubernetes.txt"
             }

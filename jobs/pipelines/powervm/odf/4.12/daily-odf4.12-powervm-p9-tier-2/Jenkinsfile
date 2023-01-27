@@ -25,7 +25,7 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9"
+        AVAILABILITY_ZONE = "p9_pvm"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
@@ -53,6 +53,9 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    env.SCG_ID = "35eb7843-2e40-4839-a1e3-dead98259dde"
+                }
             }
         }
         stage('pull artifact') {
