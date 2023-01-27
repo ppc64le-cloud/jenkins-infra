@@ -23,9 +23,9 @@ pipeline {
         OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
         //Env constants
-        HARDWARE_CHOSE = "P8"
+        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p8_pvm"
+        AVAILABILITY_ZONE = "p9"
         OCP_RELEASE="4.13"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"

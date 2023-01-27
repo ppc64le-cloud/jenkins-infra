@@ -25,7 +25,7 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9_pvm"
+        AVAILABILITY_ZONE = "p9"
         OCP_RELEASE="4.13"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
@@ -56,14 +56,6 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    //Set SRIOV network
-                    env.NETWORK_TYPE = "SRIOV"
-                    env.OS_NETWORK = "icp_network2"
-                    env.OS_PRIVATE_NETWORK = "icp_network2"
-                    //Issue-2277 Remove scg id when npiv issue is resolved
-                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
-                }
             }
         }
         stage('pull artifact') {
@@ -137,6 +129,9 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment()
+                script {
+                    env.NETWORK_TYPE = "SRIOV"
+                }
             }
         }
         stage('Setup Terraform Plugin') {

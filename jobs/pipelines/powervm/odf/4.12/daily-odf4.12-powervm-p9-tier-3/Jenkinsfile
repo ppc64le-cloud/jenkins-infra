@@ -53,9 +53,6 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    env.SCG_ID = "35eb7843-2e40-4839-a1e3-dead98259dde"
-                }
             }
         }
         stage('pull artifact') {
