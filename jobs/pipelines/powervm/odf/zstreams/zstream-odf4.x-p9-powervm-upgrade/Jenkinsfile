@@ -46,9 +46,9 @@ pipeline {
         TIMEOUT = "${params.KeepFor}"
 
         //Env constants
-        HARDWARE_CHOSE = "P8"
+        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p8_pvm"
+        AVAILABILITY_ZONE = "p9_pvm"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
