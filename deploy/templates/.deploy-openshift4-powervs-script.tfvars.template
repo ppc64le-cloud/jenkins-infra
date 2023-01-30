@@ -39,9 +39,6 @@ ocp_release_tag            = "__OCP_RELEASE_TAG__"
 
 cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
-helpernode_repo             = "__HELPERNODE_REPO__"
-install_playbook_repo       = "__INSTALL_PLAYBOOK_REPO__"
-
 installer_log_level         = "info"
 ansible_extra_options       = "-v"
 pull_secret_file            = "__PULL_SECRET_FILE__"

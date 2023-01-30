@@ -21,8 +21,8 @@ def call() {
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             //Upgrade variables
             env.UPGRADE_IMAGE = ""
-            env.UPGRADE_PAUSE_TIME = ""
-            env.UPGRADE_DELAY_TIME = ""
+            env.UPGRADE_PAUSE_TIME = "90"
+            env.UPGRADE_DELAY_TIME = "600"
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
@@ -82,6 +82,11 @@ def call() {
             env.BASTION_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"bas"
             env.RHEL_USERNAME = "root"
             env.OS_INSECURE = true
+
+            //Upgrade variables
+            env.UPGRADE_IMAGE = ""
+            env.UPGRADE_PAUSE_TIME = "90"
+            env.UPGRADE_DELAY_TIME = "600"
 
             // Pull secrets
             env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
