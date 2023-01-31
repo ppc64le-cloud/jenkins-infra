@@ -77,9 +77,6 @@ upgrade_pause_time = "__UPGRADE_PAUSE_TIME__"
 
 upgrade_delay_time = "__UPGRADE_DELAY_TIME__"
 
-helpernode_repo             = "__HELPERNODE_REPO__"
-install_playbook_repo       = "__INSTALL_PLAYBOOK_REPO__"
-
 chrony_config = "__CHRONY_CONFIG__"
 
 ocp4_extras_playbook_tag = "335a0dc1b329c3f05e3b48409441d9eb1420c27b"
