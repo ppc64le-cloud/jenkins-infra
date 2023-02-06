@@ -37,15 +37,18 @@ pipeline {
         TIMEOUT = "${params.KeepFor}"
         ENABLE_E2E_TEST="true"
 
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
+
         //Env constants
         HARDWARE_CHOSE = "P8"
-        AVAILABILITY_ZONE = "zstream"
+        AVAILABILITY_ZONE = "p8_pvm"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        TERRAFORM_VER = "1.2.0"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "0"
-        REDHAT_RELEASE = "8.4"
         ENABLE_SCALE_TEST="false"
     }
 
@@ -63,7 +66,6 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         env.INSTANCE_NAME = "rdr-zscurst"
                     }
-                    env.TERRAFORM_VER = "1.2.0"
                     env.OS_TENANT_NAME="icp-test"
                     env.OS_NETWORK = "workload"
                     env.OS_PRIVATE_NETWORK = "workload"
@@ -74,15 +76,17 @@ pipeline {
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
                     env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_RELEASE}-powervm/ocp${env.UPGRADE_RELEASE}_power_exclude_list.txt"
-                    env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"
-                    if ( env.UPGRADE_RELEASE == "4.6"||env.UPGRADE_RELEASE == "4.7")  {
-                        env.GOLANG_TARBALL = "https://dl.google.com/go/go1.15.2.linux-ppc64le.tar.gz"
-                    }
-                    else if (env.UPGRADE_RELEASE == "4.8" || env.UPGRADE_RELEASE == "4.9"){
+                    if (env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9"){
+                        env.REDHAT_RELEASE = "8.4"
                         env.GOLANG_TARBALL = "https://dl.google.com/go/go1.16.5.linux-ppc64le.tar.gz"
                     }
-                    else{
+                    else if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                        env.REDHAT_RELEASE = "8.5"
                         env.GOLANG_TARBALL = "https://dl.google.com/go/go1.17.6.linux-ppc64le.tar.gz"
+                    }
+                    else {
+                        env.REDHAT_RELEASE = "8.6"
+                        env.GOLANG_TARBALL = "https://golang.org/dl/go1.18.6.linux-ppc64le.tar.gz"
                     }
                 }
             }
@@ -142,15 +146,7 @@ pipeline {
                                 '''
                             }
                             else {
-                                def OCP_VERSION_PATTERN = ~/[0-9]{1}\.[0-9]{1,2}\.[0-9]{1,2}/
-                                def OCP_UPGRADE_VERSION = (env.UPGRADE_BUILD =~ OCP_VERSION_PATTERN)
-                                if (env.UPGRADE_RELEASE == "4.6" && OCP_UPGRADE_VERSION.find()) {
-                                    env.UPGRADE_CHANNEL = "fast-4.6"
-                                    env.UPGRADE_VERSION = OCP_UPGRADE_VERSION[0]
-                                }
-                                else{
-                                    env.UPGRADE_IMAGE = env.UPGRADE_BUILD
-                                }
+                                env.UPGRADE_IMAGE = env.UPGRADE_BUILD
                             }
                         }
                         else{
