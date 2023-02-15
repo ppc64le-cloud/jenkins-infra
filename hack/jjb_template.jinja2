@@ -26,6 +26,12 @@
         {% elif 'daily-odf4.12-powervm-p9-tier-2' in JOB_NAME %}"00 14 * * 1,4,7 "
         {% elif 'daily-odf4.12-powervm-p9-tier-4b' in JOB_NAME %}"00 05 * * 2,5 "
 
+        {% elif 'daily-odf4.13-powervm-p9-tier-1' in JOB_NAME %}"00 01 * * 1,4,7 "
+        {% elif 'daily-odf4.13-powervm-p9-tier-3' in JOB_NAME %}"00 03 * * 1,4,7 "
+        {% elif 'daily-odf4.13-powervm-p9-tier-4c' in JOB_NAME %}"00 11 * * 1,4,7 "
+        {% elif 'daily-odf4.13-powervm-p9-tier-2' in JOB_NAME %}"00 14 * * 1,4,7 "
+        {% elif 'daily-odf4.13-powervm-p9-tier-4b' in JOB_NAME %}"00 05 * * 2,5 "
+
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
