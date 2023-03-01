@@ -24,8 +24,8 @@ pipeline {
 
         BASTION_IMAGE = "rhel-86"
         RHCOS_IMAGE = "rhcos-412"
-        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
-        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-svenkat-ocp-storage-lon06-odf-411.txt"
+        BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-storage-lon06-odf.txt"
+        RHCOS_IMAGE_FILE = "latest-${RHCOS_IMAGE}-rdr-ocp-storage-lon06-odf.txt"
         OCP_RELEASE = "4.12"
 
         TARGET = "deploy-openshift4-powervs-script"
