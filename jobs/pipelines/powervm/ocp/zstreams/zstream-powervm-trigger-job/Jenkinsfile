@@ -10,7 +10,7 @@ pipeline {
     }
 
     stages {
-        stage('Pull Artifact OCP Builds') {
+        stage('Copy OCP version artifacts') {
             steps {
                 script {
                     // Copy the builds of OCP releases from last successful job
@@ -18,7 +18,7 @@ pipeline {
                 }
             }
         }
-        stage("Identify newer Zstreams and Trigger Jenkins Jobs") {
+        stage("Identify newer Z streams and trigger Jenkins jobs") {
             steps {
                 script {
                     def version_exists = "true"
@@ -65,7 +65,7 @@ def getChangedFilesList() {
         then
             mkdir  "versions"
         fi
-        for x in 8 9 10 11 12
+        for x in 8 9 10 11
         do
             VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${x}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
             if [ "$VERSION" = "" ] && [ ! -f versions/4.$x.txt ];
