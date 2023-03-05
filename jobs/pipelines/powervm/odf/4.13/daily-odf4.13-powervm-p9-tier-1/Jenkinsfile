@@ -25,7 +25,7 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9"
+        AVAILABILITY_ZONE = "p9_odf"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
@@ -122,8 +122,8 @@ pipeline {
                 script {
                     env.OS_PRIVATE_NETWORK="icp_network2"
                     env.OS_NETWORK="icp_network2"
-                    //env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
-                    //env.NETWORK_TYPE = "SRIOV"
+                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
+                    env.NETWORK_TYPE = "SRIOV"
                     env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
                 }
             }

@@ -40,8 +40,8 @@ def call(String config, String noOfWorkers="2"){
             env.BOOTSTRAP_VCPUS = "2"
 
             env.NUM_OF_MASTERS = "3"
-            env.MASTER_PROCESSORS = "1.25"
-            env.MASTER_MEMORY = "32"
+            env.MASTER_PROCESSORS = ".5"
+            env.MASTER_MEMORY = "16"
             env.MASTER_VCPUS = "2"
 
             env.NUM_OF_WORKERS = 3
@@ -51,6 +51,10 @@ def call(String config, String noOfWorkers="2"){
 
             env.DATA_VOLUME_SIZE = 500
             env.DATA_VOLUME_COUNT = 1
+
+            if (env.PLATFORM == "powervm") {
+                env.WORKER_PROCESSORS = "1"
+            }
         }
         //Max Config
         else{

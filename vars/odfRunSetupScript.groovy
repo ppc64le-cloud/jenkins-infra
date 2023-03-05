@@ -25,7 +25,7 @@ def call(){
                scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' env_vars.sh root@${BASTION_IP}:/root/
                if [ "${ODF_VERSION}" = "4.13" ]; then
                    ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "git clone https://github.com/ocp-power-automation/ocs-upi-kvm.git"
-               else 
+               else
                    ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "git clone -b v4.12.0 https://github.com/ocp-power-automation/ocs-upi-kvm.git"
                fi
                ssh -o 'StrictHostKeyChecking=no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cd /root/ocs-upi-kvm; git submodule update --init;"

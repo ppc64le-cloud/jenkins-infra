@@ -48,7 +48,7 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9_odf"
+        AVAILABILITY_ZONE = "p9"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
@@ -171,8 +171,8 @@ pipeline {
                 script {
                     env.OS_PRIVATE_NETWORK="icp_network2"
                     env.OS_NETWORK="icp_network2"
-                    env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
-                    env.NETWORK_TYPE = "SRIOV"
+                    //env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
+                    //env.NETWORK_TYPE = "SRIOV"
                     env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
                 }
             }
@@ -260,12 +260,10 @@ pipeline {
                     }
                     try {
                         sh '''
-                            ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "pip3 install yq"
-                            ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} 'source env_vars.sh; export OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; export OCS_CSV_CHANNEL=stable-$OCS_VERSION; yq -y -i ".DEPLOYMENT.ocs_csv_channel |= env.OCS_CSV_CHANNEL" /root/ocs-ci-conf.yaml; yq -y -i ".ENV_DATA.ocs_version |= env.OCS_VERSION" /root/ocs-ci-conf.yaml'
-                            ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "cat /root/ocs-ci-conf.yaml"
-                            ssh -o 'StrictHostKeyChecking no' -i ${WORKSPACE}/deploy/id_rsa root@${BASTION_IP} "source env_vars.sh; CURRENT_OCS_VERSION=`echo ${UPGRADE_OCS_VERSION} | cut -d "." -f 1-2`; sed -i 's|export OCS_VERSION='${OCS_VERSION}'|export OCS_VERSION='${CURRENT_OCS_VERSION}'|g' "env_vars.sh""
                             cd ${WORKSPACE}/scripts/odf
                             chmod +x run-tier-tests.sh
+                            chmod +x fix-config.sh
+                            ./fix-config.sh
                             ./run-tier-tests.sh
                         '''
                     }
