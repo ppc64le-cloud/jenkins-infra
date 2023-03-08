@@ -8,15 +8,23 @@ pipeline {
     }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
-        IBMCLOUD_API_KEY = credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+        PULL_SECRET = credentials('PULL_SECRET')
         GITHUB_USER = credentials('GITHUB_USER')
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
-        PULL_SECRET = credentials('PULL_SECRET')
         IBMID="ltccci@in.ibm.com"
-        IBMCLOUD_OCCMICCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
-        IBMCLOUD_OIOCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
-        IBMCLOUD_OMAPCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
-        IBMCLOUD_OCCDIPCCC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+        IBMCLOUD_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+        IC_API_KEY=credentials('IBMCLOUD_UPSTREAM_CI_API_KEY_1')
+
+        // Cloud Controller Manager API Key
+        IBMCLOUD_OCCMICCC_API_KEY=credentials('IBMCLOUD_OCCMICCC_API_KEY')
+        // Ingress Operator API Key
+        IBMCLOUD_OIOCCC_API_KEY=credentials('IBMCLOUD_OIOCCC_API_KEY')
+        // Machine API Key
+        IBMCLOUD_OMAPCC_API_KEY=credentials('IBMCLOUD_OMAPCC_API_KEY')
+        // CSI Driver API key
+        IBMCLOUD_OCCDIPCCC_API_KEY=credentials('IBMCLOUD_OCCDIPCCC_API_KEY')
+        // Storage Operator API key
+        IBMCLOUD_OIRICCC_API_KEY=credentials('IBMCLOUD_OIRICCC_API_KEY')
 
         //PowerVS specific variables
         POWERVS_REGION = "lon"
@@ -31,8 +39,8 @@ pipeline {
         OCP_RELEASE = "4.13"
         CLUSTER_NAME="rdr-cicd-lon06-413"
         CLUSTER_DIR="./ipi-install"
-        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-4.13/openshift-client-linux-amd64.tar.gz"
-        OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-4.13/openshift-install-linux-amd64.tar.gz"
+        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.13.0-ec.4/openshift-client-linux-amd64.tar.gz"
+        OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.13.0-ec.4/openshift-install-linux-amd64.tar.gz"
         POWERVS = true
 	 }
     stages {
