@@ -43,7 +43,7 @@ pipeline {
         ODF_VERSION = "4.13"
         TIER_TEST = "2"
         ENABLE_FIPS = false
-        ENABLE_VAULT = false
+        ENABLE_VAULT = true
        // OCS_REGISTRY_IMAGE="quay.io/rhceph-dev/ocs-registry:latest-stable-4.11.0"
         CONFIG_TYPE = "odf"
 
