@@ -39,8 +39,7 @@ pipeline {
         CLUSTER_NAME="rdr-cicd-syd05-413"
         CLUSTER_DIR="./ipi-install"
         OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.13.0-ec.4/openshift-client-linux-amd64.tar.gz"
-        OPENSHIFT_INSTALLER_URL="https://github.com/mjturek/installer/releases/download/4.13/openshift-install"
-      //  OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.13.0-ec.4/openshift-install-linux-amd64.tar.gz"
+        OPENSHIFT_INSTALLER_URL="https://openshift-release-artifacts-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/4.13.0-0.nightly-ppc64le-2023-03-14-173649/openshift-install-linux-amd64-4.13.0-0.nightly-ppc64le-2023-03-14-173649.tar.gz"
         POWERVS = true
 	 }
     stages {
@@ -78,11 +77,8 @@ pipeline {
                                 echo ${PULL_SECRET} > ~/.pullSecret
                                 cp -rf ${WORKSPACE}/deploy/id_rsa.pub ~/.ssh/id_installer_rsa.pub
                                 git clone https://github.com/hamzy/powervs-hack.git
-                                curl -L "${OPENSHIFT_INSTALLER_URL}" > openshift-install
-                                cp   openshift-install /usr/local/bin
-                                chmod +x /usr/local/bin/openshift-install
-                               # curl -L "${OPENSHIFT_INSTALLER_URL}" > openshift-install-linux.tar.gz
-                               # tar -xvf openshift-install-linux.tar.gz  -C /usr/local/bin
+                                curl -L "${OPENSHIFT_INSTALLER_URL}" > openshift-install-linux.tar.gz
+                                tar -xvf openshift-install-linux.tar.gz  -C /usr/local/bin
                                  # setup oc client
                                 if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
                                     wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
