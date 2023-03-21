@@ -239,7 +239,7 @@ pipeline {
                 try{
                     archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
                         "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
-                    cleanupOcp4Cluster()
+                    storeMustGatherLogs()
                     checkInfraError()
                     processE2eResults()
                     notifyBySlack(currentBuild.result, env.MESSAGE)
@@ -248,6 +248,7 @@ pipeline {
                     echo 'Error ! Always block failed!' 
                 }
                 finally{
+                    cleanupOcp4Cluster()
                     cleanupPowerVSResources()
                     cleanWs()
                 }

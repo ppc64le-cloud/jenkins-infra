@@ -29,6 +29,9 @@ pipeline {
         PULL_SECRET = credentials('PULL_SECRET')
         OS_AUTH_URL=credentials('URL_SCNLPOWERCLOUD')
 
+        //IBM Cloud API key is used for uploading must-gather logs to IBM COS
+        IBMCLOUD_API_KEY = credentials('IBM_PCLOUD_QE_API_KEY')
+
         //Parameters
         OCP_RELEASE="${params.Release}"
         UPGRADE_RELEASE="${params.UpgradeRelease}"
@@ -245,7 +248,7 @@ pipeline {
             script {
                 try{
                     archiveAllArtifacts("deploy/vars.tfvars", "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
-                    cleanupOcp4Cluster()
+                    storeMustGatherLogs()
                     checkInfraError()
                     notifyBySlack(currentBuild.result, env.MESSAGE)
                 }
@@ -253,6 +256,7 @@ pipeline {
                     echo 'Error ! Always block failed!'
                 }
                 finally{
+                    cleanupOcp4Cluster()
                     cleanWs()
                 }
             }
