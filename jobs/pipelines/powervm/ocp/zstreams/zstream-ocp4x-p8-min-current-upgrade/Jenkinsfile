@@ -111,13 +111,12 @@ pipeline {
                         gbToMb()
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        sh(returnStdout: false, script: "apt update && apt install docker docker.io jq -y")
                         if (env.CURRENT_BUILD?.trim()) {
                             if (!env.CURRENT_BUILD.contains('quay')) {
                                 env.OPENSHIFT_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.CURRENT_BUILD}"
                                 sh '''
-                                    docker login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-                                    docker pull ${OPENSHIFT_IMAGE}
+                                    nerdctl login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                                    nerdctl pull ${OPENSHIFT_IMAGE}
                                     if [ $? -ne 0 ]; then
                                         echo "${OPENSHIFT_IMAGE} not found"
                                         exit 1
@@ -137,8 +136,8 @@ pipeline {
                             if (!env.UPGRADE_BUILD.contains('quay')) {
                                 env.UPGRADE_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.UPGRADE_BUILD}"
                                 sh '''
-                                    docker login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-                                    docker pull ${UPGRADE_IMAGE}
+                                    nerdctl login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                                    nerdctl pull ${UPGRADE_IMAGE}
                                     if [ $? -ne 0 ]; then
                                         echo "${UPGRADE_IMAGE} not found"
                                         exit 1
@@ -256,7 +255,7 @@ pipeline {
             script {
                 try{
                     archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                        "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+                        "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
                     cleanupOcp4Cluster()
                     checkInfraError()
                     processE2eResults()
