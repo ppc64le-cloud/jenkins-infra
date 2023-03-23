@@ -38,8 +38,8 @@ pipeline {
         OCP_RELEASE = "4.13"
         CLUSTER_NAME="rdr-cicd-mon01-413"
         CLUSTER_DIR="./ipi-install"
-        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.13.0-ec.4/openshift-client-linux-amd64.tar.gz"
-        OPENSHIFT_INSTALLER_URL="https://openshift-release-artifacts-ppc64le.apps.ci.l2s4.p1.openshiftapps.com/4.13.0-0.nightly-ppc64le-2023-03-14-173649/openshift-install-linux-amd64-4.13.0-0.nightly-ppc64le-2023-03-14-173649.tar.gz"
+        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.0/openshift-client-linux-amd64.tar.gz"
+        OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.0/openshift-install-linux-amd64.tar.gz"
         POWERVS = true
 	 }
     stages {
@@ -88,7 +88,6 @@ pipeline {
                                 sed -i "s|\\.Payload\\.cloudConnections\\[\\]|\\.cloudConnections\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|\\.Payload\\.jobs\\[\\]|\\.jobs\\[\\]|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE.*$|export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=\\"${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}\\"|g" ./powervs-hack/scripts/create-cluster.sh
-                                sed -i "s|export OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE.*$|export OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE=rhcos-powervs-images-${VPCREGION}/rhcos-413-86-202212131234-0-ppc64le-powervs.ova.gz|g" ./powervs-hack/scripts/create-cluster.sh
                                 sed -i "s|platform: {}|platform: \\n    powervs:\\n      processors: \\"0.5\\"\\n      sysType: e980|g" ./powervs-hack/scripts/create-cluster.sh
                             '''
                     }
