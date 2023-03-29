@@ -45,6 +45,7 @@ if [ ! -z "${BASTION_IP}" ]; then
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/results.html ${WORKSPACE}/
         ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/ocs-upi-kvm/scripts/helper/vault-setup.log ~/ocs-upi-kvm/scripts/helper/kustomize.log ~/odf-commands.txt  ~/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ~/odf-full-build.txt ~/logs-ocs-ci/${ODF_VERSION}/test_results_tier*.xml ~/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/results.tar.gz ${WORKSPACE}/
+        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/cro_e2e_output.txt .
 
     else
         echo 'Unable to access Bastion. You may delete the VMs manually'
