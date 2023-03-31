@@ -148,9 +148,18 @@ def call() {
             env.MASTER_MEMORY_MB=""
             env.BASTION_MEMORY_MB=""
             env.BOOTSTRAP_MEMORY_MB=''
-            env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
-            env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
-            env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
+            //Need to use latest build when 4.13 releases
+            if (env.OCP_RELEASE == "4.13") {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.2/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.2/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.0-rc.2/openshift-client-linux.tar.gz"
+
+            }
+            else {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz
+            }
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
