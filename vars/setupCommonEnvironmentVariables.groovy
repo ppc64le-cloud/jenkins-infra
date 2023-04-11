@@ -67,7 +67,7 @@ def call() {
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
                 env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${OCP_RELEASE}/openshift-client-linux.tar.gz"
             }
         else {
             //PowerVC ENV Variables
