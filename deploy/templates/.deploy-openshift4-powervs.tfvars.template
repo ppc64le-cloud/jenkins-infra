@@ -42,6 +42,8 @@ ocp_release_tag            = "__OCP_RELEASE_TAG__"
 
 cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
+fips_compliant = "__FIPS_COMPLIANT__"
+
 installer_log_level         = "info"
 ansible_extra_options       = "-v"
 pull_secret_file            = "__PULL_SECRET_FILE__"

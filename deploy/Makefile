@@ -85,7 +85,7 @@ keys\:clean:
 deploy-openshift4-powervc: %deploy-openshift4-powervc:
 	@$(shell sed -e "s|__OS_AUTH_URL__|$(OS_AUTH_URL)|g" -e "s|__OS_TENANT_NAME__|$(OS_TENANT_NAME)|g" \
         -e "s|__AVAILABILITY_ZONE__|$(AVAILABILITY_ZONE)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" -e "s|__NETWORK_TYPE__|$(NETWORK_TYPE)|g" \
-        -e "s|__OS_IMAGE__|$(OS_IMAGE)|g" -e "s|__OS_NETWORK__|$(OS_NETWORK)|g" \
+        -e "s|__OS_IMAGE__|$(OS_IMAGE)|g" -e "s|__OS_NETWORK__|$(OS_NETWORK)|g" -e "s|__FIPS_COMPLIANT__|$(FIPS_COMPLIANT)|g" \
 		-e "s|__NUM_OF_WORKERS__|$(NUM_OF_WORKERS)|g" -e "s|__WORKER_TEMPLATE__|$(WORKER_TEMPLATE)|g"  \
 		-e "s|__NUM_OF_MASTERS__|$(NUM_OF_MASTERS)|g" -e "s|__MASTER_TEMPLATE__|$(MASTER_TEMPLATE)|g" \
 		-e "s|__SCG_ID__|$(SCG_ID)|g" -e "s|__VOLUME_STORAGE_TEMPLATE__|$(VOLUME_STORAGE_TEMPLATE)|g" \
@@ -153,7 +153,7 @@ deploy-openshift4-powervs-script: %deploy-openshift4-powervs-script:
 		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(INSTALL_PLAYBOOK_REPO)|g" \
 		-e "s|__INSTALL_PLAYBOOK_TAG__|$(INSTALL_PLAYBOOK_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
 		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \
-		-e "s|__STORAGE_TYPE__|$(STORAGE_TYPE)|g" \
+		-e "s|__STORAGE_TYPE__|$(STORAGE_TYPE)|g" -e "s|__FIPS_COMPLIANT__|$(FIPS_COMPLIANT)|g" \
         -e "s|__RHEL_SMT__|$(RHEL_SMT)|g" -e "s|__CNI_NETWORK_PROVIDER__|$(CNI_NETWORK_PROVIDER)|g" \
         -e "s|__SERVICE_INSTANCE_ID__|$(SERVICE_INSTANCE_ID)|g" templates/$(TERRAFORM_VARS_FILE).template > $(TERRAFORM_VARS_FILE))
 
@@ -191,7 +191,7 @@ deploy-openshift4-powervs: %deploy-openshift4-powervs:
 		-e "s|__OPENSHIFT_CLIENT_TARBALL__|$(OPENSHIFT_CLIENT_TARBALL)|g" -e "s|__SETUP_SQUID_PROXY__|$(SETUP_SQUID_PROXY)|g" \
 		-e "s|__OPENSHIFT_IMAGE__|$(OPENSHIFT_IMAGE)|g" -e "s|__CLUSTER_DOMAIN__|$(CLUSTER_DOMAIN)|g" -e "s|__INSTANCE_NAME__|$(INSTANCE_NAME)|g" \
 		-e "s|__ENABLE_LOCAL_REGISTRY__|$(ENABLE_LOCAL_REGISTRY)|g" -e "s|__LOCAL_REGISTRY_IMAGE__|$(LOCAL_REGISTRY_IMAGE)|g" \
-		-e "s|__OCP_RELEASE_TAG__|$(OCP_RELEASE_TAG)|g" -e "s|__HELPERNODE_REPO__|$(HELPERNODE_REPO)|g" \
+		-e "s|__OCP_RELEASE_TAG__|$(OCP_RELEASE_TAG)|g" -e "s|__HELPERNODE_REPO__|$(HELPERNODE_REPO)|g" -e "s|__FIPS_COMPLIANT__|$(FIPS_COMPLIANT)|g" \
 		-e "s|__HELPERNODE_TAG__|$(HELPERNODE_TAG)|g" -e "s|__INSTALL_PLAYBOOK_REPO__|$(INSTALL_PLAYBOOK_REPO)|g" \
 		-e "s|__INSTALL_PLAYBOOK_TAG__|$(INSTALL_PLAYBOOK_TAG)|g" -e "s|__UPGRADE_IMAGE__|$(UPGRADE_IMAGE)|g" \
 		-e "s|__UPGRADE_PAUSE_TIME__|$(UPGRADE_PAUSE_TIME)|g" -e "s|__UPGRADE_DELAY_TIME__|$(UPGRADE_DELAY_TIME)|g" \

@@ -23,6 +23,7 @@ def call() {
             env.UPGRADE_IMAGE = ""
             env.UPGRADE_PAUSE_TIME = "90"
             env.UPGRADE_DELAY_TIME = "600"
+            env.FIPS_COMPLIANT = "false"
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
@@ -111,6 +112,7 @@ def call() {
             env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
             env.CONNECTION_TIME_OUT = "30"
             env.STORAGE_TYPE = "nfs"
+            env.FIPS_COMPLIANT = "false"
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
