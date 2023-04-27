@@ -11,9 +11,9 @@ pipeline {
         IBMCLOUD_API_KEY = credentials('PLCLOUD_HYPERSHIFT_CI_API_KEY')
         PULL_SECRET_CRED = credentials('PULL_SECRET')
         MANAGEMENT_CLUSTER = "hyp-ci-1"
-        REGION = "syd"
-        ZONE = "syd04"
-        VPC_REGION = "au-syd"
+        REGION = "tok"
+        ZONE = "tok04"
+        VPC_REGION = "jp-tok"
         RESOURCE_GROUP = "ibm-hypershift-dev"
         BASEDOMAIN = "hypershift-ppc64le.com"
         PROC_TYPE = "dedicated"
