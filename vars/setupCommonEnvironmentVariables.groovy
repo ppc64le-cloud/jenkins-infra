@@ -30,6 +30,7 @@ def call() {
                 env.STORAGE_TYPE = "notnfs"
                 env.SYSTEM_TYPE = "e980"
                 env.RERUN_TIER_TEST = "3"
+                env.PRE_KERNEL_OPTIONS='\\"rd.multipath=0\\", \\"loglevel=7\\"'
             }
             else {
                 env.INSTANCE_NAME = "rdr-cicd"
