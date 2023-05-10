@@ -42,11 +42,14 @@ ocp_release_tag            = "__OCP_RELEASE_TAG__"
 
 cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
+fips_compliant = "__FIPS_COMPLIANT__"
+
 installer_log_level         = "info"
 ansible_extra_options       = "-v"
 pull_secret_file            = "__PULL_SECRET_FILE__"
 dns_forwarders              = "1.1.1.1; 9.9.9.9"
 rhcos_kernel_options        = []
+rhcos_pre_kernel_options    = [__PRE_KERNEL_OPTIONS__]
 
 ## Uncomment any one of the below formats to use proxy. Default 'port' will be 3128 if not specified. Not authenticated if 'user' is not specified.
 #proxy = {}

@@ -45,6 +45,8 @@ cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
 connection_timeout = "__CONNECTION_TIME_OUT__"
 
+fips_compliant = "__FIPS_COMPLIANT__"
+
 e2e_tests_git = "__E2E_GIT__"
 
 e2e_tests_git_branch = "__E2E_BRANCH__"

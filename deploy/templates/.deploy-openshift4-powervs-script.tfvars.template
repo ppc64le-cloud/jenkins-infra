@@ -27,6 +27,7 @@ openshift_client_tarball = "__OPENSHIFT_CLIENT_TARBALL__"
 
 release_image_override = "__OPENSHIFT_IMAGE__"
 
+fips_compliant = "__FIPS_COMPLIANT__"
 
 cluster_domain = "__CLUSTER_DOMAIN__"
 cluster_id_prefix = "__INSTANCE_NAME__"
@@ -44,6 +45,7 @@ ansible_extra_options       = "-v"
 pull_secret_file            = "__PULL_SECRET_FILE__"
 dns_forwarders              = "1.1.1.1; 9.9.9.9"
 rhcos_kernel_options        = []
+rhcos_pre_kernel_options    = [__PRE_KERNEL_OPTIONS__]
 
 ## Uncomment any one of the below formats to use proxy. Default 'port' will be 3128 if not specified. Not authenticated if 'user' is not specified.
 #proxy = {}
