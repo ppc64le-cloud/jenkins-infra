@@ -41,12 +41,12 @@ if [ ! -z "${BASTION_IP}" ]; then
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/stability-check.log .
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/success.txt ./successful_tests_cni_ovn_validation.txt
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/failed.txt ./failed_tests_cni_ovn_validation.txt
-        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/test_results_tier${TIER_TEST}_1.xml ${WORKSPACE}/
-        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:/root/logs-ocs-ci/${ODF_VERSION}/results.html ${WORKSPACE}/
-        ssh -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP} tar -czf ~/results.tar.gz ~/ocs-upi-kvm/scripts/tier*.log ~/ocs-upi-kvm/scripts/deploy-ocs-ci.log ~/ocs-upi-kvm/scripts/setup-ocs-ci.log ~/ocs-upi-kvm/scripts/helper/vault-setup.log ~/ocs-upi-kvm/scripts/helper/kustomize.log ~/odf-commands.txt  ~/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ~/odf-full-build.txt ~/logs-ocs-ci/${ODF_VERSION}/test_results_tier*.xml ~/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
-        scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/results.tar.gz ${WORKSPACE}/
+        cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results_tier${TIER_TEST}_1.xml ${WORKSPACE}/
+        cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/results.html ${WORKSPACE}/
+        tar -czf ${WORKSPACE}/results.tar.gz ${WORKSPACE}/ocs-upi-kvm/scripts/tier*.log ${WORKSPACE}/logs-ocs-ci ${WORKSPACE}/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}/ocs-upi-kvm/scripts/setup-ocs-ci.log ${WORKSPACE}/ocs-upi-kvm/scripts/helper/vault-setup.log ${WORKSPACE}/ocs-upi-kvm/scripts/helper/kustomize.log ${WORKSPACE}/odf-commands.txt  ${WORKSPACE}/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ${WORKSPACE}/odf-full-build.txt ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results_tier*.xml ${WORKSPACE}/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/cro_e2e_output.txt .
-
+        # Restoring resolv.conf
+        cp -rf /etc/resolv.conf.tmp /etc/resolv.conf || true
     else
         echo 'Unable to access Bastion. You may delete the VMs manually'
     fi
