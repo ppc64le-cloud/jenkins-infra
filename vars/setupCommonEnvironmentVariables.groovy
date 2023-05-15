@@ -110,7 +110,7 @@ def call() {
             env.CHRONY_CONFIG="true"
             env.SCG_ID = "c2663d7f-2e81-4698-abc4-dca631220f7d"
             env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
-            env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
+            env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
             env.CONNECTION_TIME_OUT = "30"
             env.STORAGE_TYPE = "nfs"
             env.FIPS_COMPLIANT = "false"
@@ -123,11 +123,12 @@ def call() {
             if ( env.ENABLE_E2E_TEST ) {
                 env.E2E_GIT="https://github.com/openshift/origin"
                 env.E2E_BRANCH="release-${env.OCP_RELEASE}"
-                env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
                 env.ENABLE_E2E_UPGRADE="false"
             }
-            if ( env.OCP_RELEASE == "4.12" || env.OCP_RELEASE == "4.13") {
-                env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
+            if ( env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9" || env.OCP_RELEASE == "4.10" ||  env.OCP_RELEASE == "4.11" ) {
+                env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
+                env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"     
+            } else {
                 env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list_OVNKubernetes.txt"
             }
 
@@ -160,11 +161,11 @@ def call() {
             env.MASTER_MEMORY_MB=""
             env.BASTION_MEMORY_MB=""
             env.BOOTSTRAP_MEMORY_MB=''
-            //Need to use latest build when 4.13 releases
-            if (env.OCP_RELEASE == "4.13") {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.2/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/4.13.0-rc.2/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.0-rc.2/openshift-client-linux.tar.gz"
+            //Need to use latest build when 4.14 releases
+            if (env.OCP_RELEASE == "4.14") {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.0/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.0/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/4.14.0-ec.0/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
