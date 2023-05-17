@@ -21,7 +21,7 @@ pipeline {
         PULL_SECRET_FILE="${WORKSPACE}/pull_secret.txt"
         PULL_SECRET="${PULL_SECRET_FILE}"
         DUMP_DIR="${WORKSPACE}/hypershift-e2e"
-        GO_VERSION="1.18"
+        GO_VERSION="1.19"
     }
 
     stages {
