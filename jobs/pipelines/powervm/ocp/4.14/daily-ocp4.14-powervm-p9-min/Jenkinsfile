@@ -1,4 +1,4 @@
-@Library('poorna-library@pvc-14') _
+@Library('jenkins-upstream-library') _
 
 pipeline {
     agent {
