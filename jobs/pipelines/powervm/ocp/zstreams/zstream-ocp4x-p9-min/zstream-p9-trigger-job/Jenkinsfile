@@ -1,0 +1,191 @@
+@Library('jenkins-upstream-library') _
+
+pipeline {
+    agent {
+        docker {
+            image 'quay.io/powercloud/inbound-agent:4.10-3.3'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'jump-vpc-x86_64'
+        }
+    }
+
+    stages {
+        stage('Copy OCP version artifacts') {
+            steps {
+                script {
+                    // Copy the builds of OCP releases from last successful job
+                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-p9-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
+                }
+            }
+        }
+        stage("Identify newer Z streams and trigger Jenkins jobs") {
+            steps {
+                script {
+                    def version_exists = "true"
+                    if(!fileExists("versions/")){
+                        version_exists = "false"
+                        echo "Job has triggered for first time! Initializing the versions!"
+                        echo "Not triggering any Jobs for first time!"
+                    }
+                    filenames = getChangedFilesList()
+                    if(filenames != null && version_exists == "true"){
+                        filenames = filenames.toSet()
+                        for (int i = 0; i < filenames.size(); i++) {
+                            filename = filenames[i].trim()
+                            
+                            //Fetching release files information
+                            (release, next_release, next_release_file) = getReleases(filename)
+                            latestBuild   = readFile(filename).readLines()
+                            latestBuild   = latestBuild[0].trim()
+                            
+                            if (latestBuild != "" && latestBuild != null){
+                                currentStableBuild_url  = getStableBuild(latestBuild)
+                                nextStableBuild_url     = next_release_builds(next_release_file)
+                                triggerBuild(release, latestBuild, currentStableBuild_url, nextStableBuild_url, next_release)
+                            }
+                        }
+                    }    
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveAllArtifacts("versions/*")
+            cleanWs()
+        }
+    }
+}
+
+def getChangedFilesList() {
+    //Tracks the newer zstream releases 
+    changedFiles = sh returnStdout:true, script: '''
+        if [ ! -d "versions" ];
+        then
+            mkdir "versions"
+        fi
+
+        # Checking if new builds are available for OCP 4.12 and 4.13
+        for ocp_version in 12 13
+        do
+            VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${ocp_version}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
+            if [ "$VERSION" = "" ] && [ ! -f versions/4.$ocp_version.txt ];
+            then
+                # Checking the quay pages for new builds
+                for i in 2 3 4 5 6 7 8 9 10 11 12
+                do
+                    VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100&page=$i" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${ocp_version}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
+                    if [ "$VERSION" != "" ] ;
+                    then
+                        break
+                    fi
+                done
+            fi
+
+            # Comparing the builds from quay and artifacts, updating the artifcats with lastest builds
+            if [ "$(cat versions/4.$ocp_version.txt | grep ppc64le)" != "$VERSION" ] && [ "$VERSION" != "" ];
+            then
+                echo $VERSION > versions/4.$ocp_version.txt
+                echo -n $(date +%Y-%m-%d) >> versions/4.$ocp_version.txt 
+                echo "versions/4.$ocp_version.txt"
+            fi
+        done
+    '''
+    if(changedFiles != null){
+        changedFiles=changedFiles.trim().tokenize("\n")
+    }
+    return changedFiles
+}
+
+def getReleases(filename){
+  // Generates the details like current ocp release, next ocp release and next release filename
+  currentRelease = filename.substring(filename.indexOf("/")+1,filename.indexOf(".txt"))
+  def version = currentRelease.substring(currentRelease.indexOf(".")+1,currentRelease.size())
+  nextRelease = currentRelease.replace("."+version, "."+(version.toInteger()+1).toString())
+  nextReleaseFile = filename.replace(currentRelease,nextRelease.toString())
+  return [currentRelease, nextRelease, nextReleaseFile]
+}
+
+def getStableBuild(ocp_build){
+    // Generates the older version of ocp build (stable build) from current version 
+    version = ocp_build.substring(ocp_build.indexOf(".",3)+1, ocp_build.indexOf("-"))
+    if (version != "0"){
+        build         = (version.toInteger()-1).toString() + "-ppc64le"
+        stableBuild   = ocp_build.replace(version + '-ppc64le', build)
+    }else{
+        stableBuild = ocp_build
+    }
+    return 'quay.io/openshift-release-dev/ocp-release:' + stableBuild
+}
+
+def next_release_builds(release_file){
+    // Used to find next release's stable builds
+    if (fileExists(release_file)){
+        nextbuild     = readFile(release_file).readLines()
+        nextbuild     = nextbuild[0].trim()
+        if (nextbuild != "" && nextbuild != null){
+            env.newer_release_file = release_file
+            
+            //Check if the file has been updated in the same week
+            isNewFile = sh(returnStdout:true, script: '''
+                #!/bin/bash
+                if [ $(date +%s -d "$(cat ${newer_release_file} | grep -v ppc64le)") -ge $(date +%s -d "$(date -dlast-monday +%Y%m%d)") ]; then 
+                    echo "yes"
+                fi
+            ''').trim()
+            
+            if (isNewFile == "yes"){
+                //if file has updated in the same week pick the last ocp build
+                nextbuild = getStableBuild(nextbuild)                 
+            }else {
+                //if file has not updated in the same week pick the latest ocp build 
+                nextbuild = 'quay.io/openshift-release-dev/ocp-release:' + nextbuild
+            }
+        }
+    }else{
+        // if next release file does not exists
+        nextbuild = "NA"
+    }
+    return nextbuild      
+}
+
+void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, next_release){
+    keepfor = "720"
+    latestBuild = "quay.io/openshift-release-dev/ocp-release:${latestBuild}"
+    
+    //Direct deployment Job Trigger
+    if (release != "4.12") {
+        echo "Latest Build: $latestBuild"
+        build job: 'zstream-ocp4x-p9-min-direct-deploy', wait: false,parameters: [
+            string(name: 'Release', value: "${release}"),
+            string(name: 'Build', value: "${latestBuild}"),
+            string(name: 'KeepFor', value: "${keepfor}")
+        ]
+    }
+    
+    // Upgrade Job Trigger for same OCP release from last stable to latest build
+    if (latestBuild != currentStableBuild && release != "4.12"){
+     echo "Current Release Stable Build: $currentStableBuild"
+     sleep 840
+     build job: 'zstream-ocp4x-p9-min-current-upgrade', wait: false,parameters: [
+         string(name: 'Release', value: "${release}"),
+         string(name: 'CurrentBuild', value: "${currentStableBuild}"),
+         string(name: 'UpgradeBuild', value: "${latestBuild}"),
+         string(name: 'KeepFor', value: "${keepfor}")
+     ]
+    }
+    
+    //Upgrade Job Trigger for current release ocp build to next release's stable ocp build
+    if (nextStableBuild != "NA"){
+        echo "Next Release Stable Build: ${nextStableBuild}"
+        sleep 840
+        build job: 'zstream-ocp4x-p9-min-next-upgrade', wait: false,parameters: [
+            string(name: 'Release', value: "${release}"),
+            string(name: 'UpgradeRelease', value: "${next_release}"),
+            string(name: 'CurrentBuild', value: "${latestBuild}"),
+            string(name: 'UpgradeBuild', value: "${nextStableBuild}"),
+            string(name: 'KeepFor', value: "${keepfor}")
+        ]
+    }
+}
