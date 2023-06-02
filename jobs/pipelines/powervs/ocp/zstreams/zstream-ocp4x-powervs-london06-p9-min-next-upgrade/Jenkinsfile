@@ -74,13 +74,16 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         env.INSTANCE_NAME = "rdr-qe-ocp-upi"
                    }
-                    if (env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9"){
-                        env.BASTION_IMAGE = "rhel-84"
-                    } else if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                    if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
                         env.BASTION_IMAGE = "rhel-85"
-                    } else {
+                    } else if (env.OCP_RELEASE == "4.12") {
                         env.BASTION_IMAGE = "rhel-86"
+                    } else {
+                        env.BASTION_IMAGE = "rhel-92"
                     }
+                    env.BASTION_VCPUS = "1"
+                    env.BOOTSTRAP_VCPUS = "1"
+                    env.BOOTSTRAP_MEMORY = "8"
                     env.UPGRADE_DELAY_TIME = "600"
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SYSTEM_TYPE = "e980"
