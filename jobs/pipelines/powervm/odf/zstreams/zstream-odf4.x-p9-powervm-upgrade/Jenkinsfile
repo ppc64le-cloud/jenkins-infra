@@ -83,7 +83,7 @@ pipeline {
                             env.REDHAT_RELEASE = "8.3"
                             break
                         case "4.8":
-                            env.REDHAT_RELEASE ="8.3"
+                            env.REDHAT_RELEASE = "8.3"
                             break
                         case "4.9":
                             env.REDHAT_RELEASE = "8.4"
@@ -97,8 +97,11 @@ pipeline {
                         case "4.12":
                             env.REDHAT_RELEASE = "8.6"
                             break
+                        case "4.13":
+                            env.REDHAT_RELEASE = "9.0"
+                            break
                         default:
-                             env.REDHAT_RELEASE = "9.0"
+                            env.REDHAT_RELEASE = "9.2"
                     }
                 }
             }
