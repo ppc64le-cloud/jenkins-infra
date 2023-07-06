@@ -94,9 +94,13 @@ pipeline {
                             env.BASTION_IMAGE = "rhel-86"
                             env.RHCOS_IMAGE = "rhcos-412"
                             break
+                        case "4.13":
+                            env.BASTION_IMAGE = "rhel-9"
+                            env.RHCOS_IMAGE = "rhcos-413"
+                            break
                         default:
-                             env.BASTION_IMAGE = "rhel-9"
-                             env.RHCOS_IMAGE = "rhcos-413"
+                             env.BASTION_IMAGE = "rhel-92"
+                             env.RHCOS_IMAGE = "rhcos-414"
                     }
 
                     BASTION_IMAGE_FILE = "latest-${BASTION_IMAGE}-rdr-ocp-storage-syd05-odf.txt"
