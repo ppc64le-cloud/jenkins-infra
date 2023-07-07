@@ -13,6 +13,7 @@
         {% elif 'daily-ocp4.12-powervs-sydney04-hypershift-e2e' in JOB_NAME %}"0 00 * * 2,4 "
 
         {% elif 'daily-ocp4.14-powervm-p9-min' in JOB_NAME %}"00 03 * * * "
+        {% elif 'weekly-ocp4.13-powervm-p9-min' in JOB_NAME %}"00 00 * * 2 "
         {% elif 'daily-ocp4.12-to-4.13-powervm-p9-min-upgrade' in JOB_NAME %}"00 04 * * 1 "
         {% elif 'weekly-ocp4.14-powervm-p9-verification' in JOB_NAME %}"00 04 * * 2 "
         {% elif 'weekly-ocp4.14-powervm-p9-sriov' in JOB_NAME %}"00 05 * * 3 "
