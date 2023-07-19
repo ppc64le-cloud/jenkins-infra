@@ -16,7 +16,12 @@ def call() {
             // Bellow 4 variables are not used. Disabled in template
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
             env.HELPERNODE_TAG = ""
-            env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+            if (env.OCP_RELEASE == "4.14") {
+                env.INSTALL_PLAYBOOK_REPO = "https://github.com/Neha-dot-Yadav/ocp4-playbooks"
+            }
+            else {
+                env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+            }
             env.INSTALL_PLAYBOOK_TAG = ""
             env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
             //Upgrade variables
@@ -153,7 +158,12 @@ def call() {
 
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
             env.HELPERNODE_TAG = ""
-            env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+            if (env.OCP_RELEASE == "4.14") {
+                env.INSTALL_PLAYBOOK_REPO = "https://github.com/Neha-dot-Yadav/ocp4-playbooks"
+            }
+            else {
+                env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
+            }
             env.INSTALL_PLAYBOOK_TAG = ""
 
             // Compute Template Variables
