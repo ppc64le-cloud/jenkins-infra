@@ -25,6 +25,8 @@ rhel_subscription_password = "__REDHAT_PASSWORD__"
 openshift_install_tarball =  "__OPENSHIFT_INSTALL_TARBALL__"
 openshift_client_tarball = "__OPENSHIFT_CLIENT_TARBALL__"
 
+install_playbook_repo = "__INSTALL_PLAYBOOK_REPO__"
+
 release_image_override = "__OPENSHIFT_IMAGE__"
 
 fips_compliant = "__FIPS_COMPLIANT__"
