@@ -33,13 +33,13 @@ pipeline {
         RESOURCE_GROUP="ibm-internal-cicd-resource-group"
         SERVICE_INSTANCE="rdr-ipi-cicd-sydney05"
 
-        BASEDOMAIN="cicd-ibm-ppc64le.com"
+        BASEDOMAIN="ppc64le-cloud.cis.ibm.net"
         JENKINS_TOKEN="***REMOVED***"
         OCP_RELEASE = "4.14"
         CLUSTER_NAME="rdr-cicd-syd05-414"
         CLUSTER_DIR="./ipi-install"
-        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.1/openshift-client-linux-amd64.tar.gz"
-        OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.1/openshift-install-linux-amd64.tar.gz"
+        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-client-linux-amd64.tar.gz"
+        OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-install-linux-amd64.tar.gz"
         POWERVS = true
 	 }
     stages {
