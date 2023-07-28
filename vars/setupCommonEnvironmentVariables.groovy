@@ -159,7 +159,7 @@ def call() {
             env.HELPERNODE_REPO = "https://github.com/RedHatOfficial/ocp4-helpernode"
             env.HELPERNODE_TAG = ""
             if (env.OCP_RELEASE == "4.14") {
-                env.INSTALL_PLAYBOOK_REPO = "https://github.com/Neha-dot-Yadav/ocp4-playbooks"
+                env.INSTALL_PLAYBOOK_REPO = "https://github.com/sudeeshjohn/ocp4-playbooks.git"
             }
             else {
                 env.INSTALL_PLAYBOOK_REPO = "https://github.com/ocp-power-automation/ocp4-playbooks"
@@ -173,9 +173,9 @@ def call() {
             env.BOOTSTRAP_MEMORY_MB=''
             //Need to use latest build when 4.14 releases
             if (env.OCP_RELEASE == "4.14") {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/4.14.0-ec.3/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.14/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.14/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/candidate-4.14/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
