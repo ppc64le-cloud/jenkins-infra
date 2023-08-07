@@ -6,7 +6,11 @@ def call() {
         if (fileExists('deploy/summary.txt')) {
             e2e_summary = readFile 'deploy/summary.txt'
             if (e2e_summary?.trim()){
-                if (e2e_summary.contains('fail')) {
+                if (!e2e_summary.contains(',') && !e2e_summary.contains('skip') ) {
+                    currentBuild.result = 'UNSTABLE'
+                    e2e_summary = "Failed to run e2e tests"
+                }
+                else if (e2e_summary.contains('fail')) {
                     e2e_summary = e2e_summary.trim()
                     STR = e2e_summary.split(',')
                     FAILS = STR[0].split()
