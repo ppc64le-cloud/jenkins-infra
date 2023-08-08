@@ -3,7 +3,7 @@
 This project contains scripts and infra configuration files for Jenkins CD Pipelines for OpenShift on IBM Power
 It includes pipelines that create openshift clusters in PowerVS and PowerVC environment
 
-Jenkins Url: https://jenkins.ppc64le-cloud.org/
+Jenkins Url: https://jenkins.ppc64le-cloud.cis.ibm.net/
 
 ## Jenkins Architecture
 ![Architectural Diagram](icons/JenkinsArchitecture.png)
