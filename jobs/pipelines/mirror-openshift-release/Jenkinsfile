@@ -80,6 +80,7 @@ pipeline {
                     cat all-4.11-builds.txt | grep -v 'nightly\\|-rc\\|-fc\\|-ec' > all-4.11-stable-builds.txt
                     cat all-4.12-builds.txt | grep -v 'nightly\\|-rc\\|-fc\\|-ec' > all-4.12-stable-builds.txt
                     cat all-4.13-builds.txt | grep -v 'nightly\\|-rc\\|-fc\\|-ec' > all-4.13-stable-builds.txt
+                    cat all-4.14-builds.txt | grep '\\-ec' > all-4.14-ec-builds.txt
 
 
                     #Latest stable build
@@ -89,6 +90,7 @@ pipeline {
                     cat all-4.11-stable-builds.txt |head -n 1|awk '{print $1}' > latest-4.11-stable-build.txt
                     cat all-4.12-stable-builds.txt |head -n 1|awk '{print $1}' > latest-4.12-stable-build.txt
                     cat all-4.13-stable-builds.txt |head -n 1|awk '{print $1}' > latest-4.13-stable-build.txt
+                    cat all-4.14-ec-builds.txt |head -n 1|awk '{print $1}' > latest-4.14-ec-build.txt
                     '''
                     }
                     catch (err)
@@ -108,9 +110,9 @@ pipeline {
                                   "latest-4.8-build.txt", "latest-4.9-build.txt","latest-4.10-build.txt",
                                   "latest-4.11-build.txt","latest-4.12-build.txt", "latest-4.13-build.txt", "latest-4.14-build.txt",
                                   "all-4.8-stable-builds.txt", "all-4.9-stable-builds.txt","all-4.10-stable-builds.txt",
-                                  "all-4.11-stable-builds.txt","all-4.12-stable-builds.txt","all-4.13-stable-builds.txt",
+                                  "all-4.11-stable-builds.txt","all-4.12-stable-builds.txt","all-4.13-stable-builds.txt", "all-4.14-ec-builds.txt",
                                   "latest-4.8-stable-build.txt", "latest-4.9-stable-build.txt", "latest-4.10-stable-build.txt",
-                                  "latest-4.11-stable-build.txt", "latest-4.12-stable-build.txt","latest-4.13-stable-build.txt")
+                                  "latest-4.11-stable-build.txt", "latest-4.12-stable-build.txt","latest-4.13-stable-build.txt", "latest-4.14-ec-build.txt")
             cleanWs()
         }
     }
