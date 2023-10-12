@@ -4,7 +4,7 @@
 # Added 4hrs to 24hrs if any delay in imagestream creation
 compare_time=$(date -d  "1128 hour ago" +%s)
 public_repo=$(./oc get is release-ppc64le -n ocp-ppc64le -o=json | jq -r -c '.status.publicDockerImageRepository')
-target_repo="sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le"
+target_repo="${DOCKER_REGISTRY}/ocp-ppc64le/release-ppc64le"
 
 echo here is the public repo: $public_repo
 for annotation in $(./oc get is release-ppc64le -n ocp-ppc64le -o=json | jq -c '.spec.tags[]'); do
