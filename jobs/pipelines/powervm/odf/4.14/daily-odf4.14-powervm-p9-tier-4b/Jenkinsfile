@@ -19,7 +19,7 @@ pipeline {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
-        PULL_SECRET = credentials('ODF_PULL_SECRET')
+        PULL_SECRET = credentials('PULL_SECRET')
         OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
         //Env constants
