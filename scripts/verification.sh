@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ansible-galaxy collection install community.general #[temp fix]The Ansible playbook fails when a role requires the `make` module or when running all playbooks using `playbooks/main.yaml`
 echo "Setting up htpasswd"
 git clone https://github.com/ocp-power-automation/ocp4-playbooks-extras
 cd ocp4-playbooks-extras
