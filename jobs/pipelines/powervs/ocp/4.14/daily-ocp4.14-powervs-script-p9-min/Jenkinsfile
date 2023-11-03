@@ -169,7 +169,7 @@ pipeline {
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
-            dbDashboardUpdateE2e()
+            //dbDashboardUpdateE2e()
             cleanupPowerVSResources()
             script {
                 if (fileExists("deploy/kdump.tar.gz")) {

@@ -180,7 +180,7 @@ pipeline {
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
-            dbDashboardUpdateE2e()
+            //dbDashboardUpdateE2e()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
