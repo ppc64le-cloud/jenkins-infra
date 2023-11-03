@@ -31,6 +31,8 @@ release_image_override = "__OPENSHIFT_IMAGE__"
 
 fips_compliant = "__FIPS_COMPLIANT__"
 
+kdump_enable = "__KDUMP_ENABLE__"
+
 cluster_domain = "__CLUSTER_DOMAIN__"
 cluster_id_prefix = "__INSTANCE_NAME__"
 
