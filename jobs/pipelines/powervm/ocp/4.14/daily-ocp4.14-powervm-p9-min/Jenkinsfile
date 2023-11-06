@@ -178,7 +178,7 @@ pipeline {
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
-            dbDashboardUpdateE2e()
+            //dbDashboardUpdateE2e()
             script {
                 if (fileExists("deploy/kdump.tar.gz")) {
                     env.MESSAGE+=", Found Kdump Crash logs :e2e-unstable:"
