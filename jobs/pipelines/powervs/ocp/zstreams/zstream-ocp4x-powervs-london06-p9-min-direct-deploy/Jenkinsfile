@@ -70,7 +70,7 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         env.INSTANCE_NAME = "rdr-qe-ocp-upi"
                    }
-                    if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                    if (env.OCP_RELEASE == "4.11"){
                         env.BASTION_IMAGE = "rhel-85"
                         env.GOLANG_TARBALL = "https://golang.org/dl/go1.17.6.linux-ppc64le.tar.gz"
                     } else if (env.OCP_RELEASE == "4.12") {
@@ -78,7 +78,7 @@ pipeline {
                         env.GOLANG_TARBALL = "https://golang.org/dl/go1.18.6.linux-ppc64le.tar.gz"
                     } else {
                         env.BASTION_IMAGE = "rhel-92"
-                        env.GOLANG_TARBALL = "https://golang.org/dl/go1.19.6.linux-ppc64le.tar.gz"
+                        env.GOLANG_TARBALL = "https://golang.org/dl/go1.20.8.linux-ppc64le.tar.gz"
                     }
                     env.BASTION_VCPUS = "1"
                     env.BOOTSTRAP_VCPUS = "1"

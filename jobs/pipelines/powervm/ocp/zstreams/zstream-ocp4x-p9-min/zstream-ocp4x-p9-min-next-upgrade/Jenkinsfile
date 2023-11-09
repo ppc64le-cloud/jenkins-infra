@@ -76,7 +76,7 @@ pipeline {
                     env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
 
-                    if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                    if (env.OCP_RELEASE == "4.11"){
                         env.REDHAT_RELEASE = "8.5"
                     }
                     else if (env.OCP_RELEASE == "4.12"){
