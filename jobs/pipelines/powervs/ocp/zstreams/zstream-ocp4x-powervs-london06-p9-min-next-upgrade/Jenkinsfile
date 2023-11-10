@@ -74,7 +74,7 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         env.INSTANCE_NAME = "rdr-qe-ocp-upi"
                    }
-                    if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
+                    if (env.OCP_RELEASE == "4.11"){
                         env.BASTION_IMAGE = "rhel-85"
                     } else if (env.OCP_RELEASE == "4.12") {
                         env.BASTION_IMAGE = "rhel-86"
