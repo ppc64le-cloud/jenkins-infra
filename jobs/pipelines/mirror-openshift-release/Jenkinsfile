@@ -1,9 +1,11 @@
 @Library('jenkins-upstream-library') _
 pipeline {
     agent {
-        kubernetes {
-            inheritFrom 'jenkins-agent'
-        }
+        docker {
+            image 'quay.io/powercloud/inbound-agent:4.10-3.3'
+            args '-v /etc/resolv.conf:/etc/resolv.conf -v /var/run/docker.sock:/var/run/docker.sock:rw'
+            label 'jump-vpc-x86_64'
+        }    
     }
     options {
         copyArtifactPermission('*');
@@ -26,7 +28,9 @@ pipeline {
                     {
                     sh '''
                         cd ${WORKSPACE}/scripts
-                        nerdctl login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} ${DOCKER_REGISTRY}
+                        apt update
+                        apt install docker docker.io jq -y
+                        docker login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} ${DOCKER_REGISTRY}
                         wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.3/linux/oc.tar.gz -O /tmp/oc.tar.gz
                         tar zvxf /tmp/oc.tar.gz
                         chmod +x oc

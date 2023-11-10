@@ -20,16 +20,16 @@ for annotation in $(./oc get is release-ppc64le -n ocp-ppc64le -o=json | jq -c '
     if [ ${creation_timestamp} -gt ${compare_time} ]; then
         tag=$(_jq '.name')
         echo $creation_time
-        nerdctl pull ${public_repo}:${tag}
-        nerdctl tag ${public_repo}:${tag} ${target_repo}:${tag}
-        nerdctl push ${target_repo}:${tag}
+        docker pull ${public_repo}:${tag}
+        docker tag ${public_repo}:${tag} ${target_repo}:${tag}
+        docker push ${target_repo}:${tag}
     fi
 done
 
 # Pulling EC builds
 curl https://ppc64le.ocp.releases.ci.openshift.org/api/v1/releasestream/4-dev-preview-ppc64le/latest > build.txt
 ec_build=$(jq ".pullSpec"  build.txt |tr -d '"')
-nerdctl pull $ec_build
+docker pull $ec_build
 ec_tag=$(jq ".name"  build.txt |tr -d '"')
-nerdctl tag $ec_build ${target_repo}:$ec_tag
-nerdctl push ${target_repo}:$ec_tag
+docker tag $ec_build ${target_repo}:$ec_tag
+docker push ${target_repo}:$ec_tag
