@@ -54,6 +54,8 @@ pipeline {
        PLATFORM = "powervs"
        CONFIG_TYPE = "odf"
 
+       // kdump Configuration
+       KDUMP_ENABLE="false" 
 	}
     stages {
         stage('Setup Common Environment Variables') {

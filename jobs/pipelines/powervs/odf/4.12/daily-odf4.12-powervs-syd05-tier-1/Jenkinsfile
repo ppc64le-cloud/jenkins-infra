@@ -42,6 +42,9 @@ pipeline {
         ENABLE_VAULT = true
         CONFIG_TYPE = "odf"
 
+        // kdump Configuration
+        KDUMP_ENABLE="false" 
+
 	 }
     
     stages {
