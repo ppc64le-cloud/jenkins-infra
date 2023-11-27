@@ -45,7 +45,7 @@ pipeline {
         // Type of configuration
         CONFIG_TYPE="min"
 
-        //enable kdump
+        // kdump Configuration
         KDUMP_ENABLE="true"
 	 }
 
