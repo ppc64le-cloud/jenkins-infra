@@ -53,6 +53,8 @@ pipeline {
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "0"
         ENABLE_SCALE_TEST="false"
+        // kdump Configuration
+        KDUMP_ENABLE="false" 
     }
 
     stages {

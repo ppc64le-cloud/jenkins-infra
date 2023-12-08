@@ -44,6 +44,9 @@ pipeline {
 
         // Type of configuration
          CONFIG_TYPE="max"
+        
+        // kdump Configuration
+        KDUMP_ENABLE="false"
 	 }
 
     stages {

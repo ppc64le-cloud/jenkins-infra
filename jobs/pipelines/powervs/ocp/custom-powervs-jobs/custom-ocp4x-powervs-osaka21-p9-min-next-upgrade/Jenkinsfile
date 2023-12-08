@@ -59,6 +59,9 @@ pipeline {
 
         // Type of configuration
         CONFIG_TYPE = "min"
+
+        // kdump Configuration
+        KDUMP_ENABLE="false" 
 	 }
 
     stages {
