@@ -3,12 +3,8 @@
     name: {{ JOB_NAME }}
     project-type: pipeline
     triggers:
-      - timed: {% if 'daily-ipi4.14-powervs-montreal01' in JOB_NAME %}"0 0,12 * * * "
-        {% elif 'daily-ipi4.14-powervs-sydney05' in JOB_NAME %}"0 2,14 * * * "
-        {% elif 'daily-ipi4.14-powervs-london06' in JOB_NAME %}"0 4,16 * * * "
-        {% elif 'daily-ipi4.14-powervs-osaka21' in JOB_NAME %}"0 6,18 * * *  "
-
-        {% elif 'daily-ocp4.14-powervs-script-p9-min' in JOB_NAME %}"0 00 * * 1,3,5 "
+      - timed: 
+        {% if 'daily-ocp4.14-powervs-script-p9-min' in JOB_NAME %}"0 00 * * 1,3,5 "
 
 
         {% elif 'daily-ocp4.14-powervm-p9-min' in JOB_NAME %}"00 03 * * * "

@@ -97,10 +97,10 @@ pipeline {
                         env.OPENSHIFT_IMAGE = ""
                         if (env.BUILD?.trim()) {
                             if (!env.BUILD.contains('quay')) {
-                                env.OPENSHIFT_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.BUILD}"
+                                env.OPENSHIFT_IMAGE  = "docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local/ocp-ppc64le/release-ppc64le:${env.BUILD}"
                                 sh '''
-                                    nerdctl login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} sys-powercloud-docker-local.artifactory.swg-devops.com
-                                    nerdctl pull ${OPENSHIFT_IMAGE}
+                                    docker login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local
+                                    docker pull ${OPENSHIFT_IMAGE}
                                     if [ $? -ne 0 ]; then
                                         echo "${OPENSHIFT_IMAGE}  not found"
                                         exit 1
