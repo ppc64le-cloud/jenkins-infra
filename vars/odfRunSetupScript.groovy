@@ -26,17 +26,17 @@ def call(){
                [ ! -z "$UPGRADE_OCS_REGISTRY" ] && echo "export UPGRADE_OCS_REGISTRY=${UPGRADE_OCS_REGISTRY}" >> env_vars.sh
                [ ! -z "$OCS_REGISTRY_IMAGE" ] && echo "export OCS_REGISTRY_IMAGE=${OCS_REGISTRY_IMAGE}" >> env_vars.sh
                [ ! -z "$RERUN_TIER_TEST" ] && echo "export RERUN_TIER_TEST=${RERUN_TIER_TEST}" >> env_vars.sh
-               if [ "${ODF_VERSION}" = "4.14" ]; then
+               if [ "${ODF_VERSION}" = "4.15" ]; then
                    git clone https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
-               elif [ "${ODF_VERSION}" = "4.13" ]; then
-                   git clone -b v4.13.0 https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
+               elif [ "${ODF_VERSION}" = "4.14" ] || [ "${ODF_VERSION}" = "4.13" ] ; then
+                   git clone -b v"${ODF_VERSION}".0 https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
                else
                    git clone -b v4.12.0 https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
                fi
                cd ${WORKSPACE}/ocs-upi-kvm; git submodule update --init;
                scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/openstack-upi/metadata.json ${WORKSPACE}/
                chmod 0755 ${WORKSPACE}/env_vars.sh; . ${WORKSPACE}/env_vars.sh; cd ${WORKSPACE}/ocs-upi-kvm/scripts/helper; /bin/bash ./kustomize.sh > kustomize.log 2>&1
-               [ "$ENABLE_VAULT" = "true" ] && cd ${WORKSPACE}/ocs-upi-kvm/scripts/helper; /bin/bash ./vault-setup.sh > vault-setup.log 2>&1
+               [ "$ENABLE_VAULT" = "true" ] && cd ${WORKSPACE}/ocs-upi-kvm/scripts/helper && /bin/bash ./vault-setup.sh > vault-setup.log 2>&1
                . ${WORKSPACE}/env_vars.sh; cd ${WORKSPACE}/ocs-upi-kvm/scripts; /bin/bash ./setup-ocs-ci.sh > setup-ocs-ci.log 2>&1
             '''
         }
