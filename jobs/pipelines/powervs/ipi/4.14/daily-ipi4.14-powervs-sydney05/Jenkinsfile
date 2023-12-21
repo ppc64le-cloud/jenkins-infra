@@ -34,7 +34,6 @@ pipeline {
         SERVICE_INSTANCE="rdr-ipi-cicd-sydney05"
 
         BASEDOMAIN="ppc64le-cloud.cis.ibm.net"
-        JENKINS_TOKEN="***REMOVED***"
         OCP_RELEASE = "4.14"
         CLUSTER_NAME="rdr-cicd-syd05-414"
         CLUSTER_DIR="./ipi-install"
