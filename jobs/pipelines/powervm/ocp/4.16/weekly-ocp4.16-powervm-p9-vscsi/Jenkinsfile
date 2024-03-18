@@ -24,9 +24,9 @@ pipeline {
 
         //Env constants
         HARDWARE_CHOSE = "P9"
-        TERRAFORM_VER = "1.7.2"
+        TERRAFORM_VER = "1.2.0"
         AVAILABILITY_ZONE = "p9_ocp"
-        OCP_RELEASE="4.15"
+        OCP_RELEASE="4.16"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
@@ -43,10 +43,10 @@ pipeline {
         GOLANG_TARBALL="https://dl.google.com/go/go1.22.0.linux-ppc64le.tar.gz"
 
         // Type of configuration
-        CONFIG_TYPE="min"
+         CONFIG_TYPE="min"
 
-        //enable kdump
-        KDUMP_ENABLE="true"
+        // kdump Configuration
+        KDUMP_ENABLE="false"
 	 }
 
     stages {
@@ -165,25 +165,15 @@ pipeline {
                 echo "gatherPrometheusData() is skipped for now"
             }
         }
-        stage('Gather kdump logs if any') {
-            steps {
-                gatherKdumpLogs()
-            }
-        }
     }
     post {
         always {
             archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz", "deploy/kdump.tar.gz")
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
             processE2eResults()
             //dbDashboardUpdateE2e()
-            script {
-                if (fileExists("deploy/kdump.tar.gz")) {
-                    env.MESSAGE+=", Found Kdump Crash logs :e2e-unstable:"
-                }
-            }
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
