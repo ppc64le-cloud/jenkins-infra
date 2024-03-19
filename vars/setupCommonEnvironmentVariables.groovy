@@ -60,11 +60,10 @@ def call() {
             //Pull Secret
             env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
             //Need to use latest build when 4.14 releases
-            if (env.OCP_RELEASE == "4.14") {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.14.0-ec.3/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/4.14.0-ec.3/openshift-client-linux.tar.gz"
-                
+            if (env.OCP_RELEASE == "4.16") {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.16/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.16/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/candidate-4.16/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
@@ -108,7 +107,7 @@ def call() {
             env.INSTANCE_NAME = "rdr-cicd"
             env.MOUNT_ETCD_RAMDISK="true"
             env.CHRONY_CONFIG="true"
-            env.SCG_ID = "c2663d7f-2e81-4698-abc4-dca631220f7d"
+            env.SCG_ID = "665ffd95-7177-4e29-b2c8-9d8413fb7b0f"
             env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
             env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
             env.CONNECTION_TIME_OUT = "30"
@@ -162,15 +161,10 @@ def call() {
             env.BASTION_MEMORY_MB=""
             env.BOOTSTRAP_MEMORY_MB=''
             //Need to use latest build when 4.15 releases
-            if (env.OCP_RELEASE == "4.15") {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.15.0-ec.0/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/4.15.0-ec.0/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/4.15.0-ec.0/openshift-client-linux.tar.gz"
-            }
-            else if (env.OCP_RELEASE == "4.14") {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.14/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.14/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/candidate-4.14/openshift-client-linux.tar.gz"
+            if (env.OCP_RELEASE == "4.16") {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.16/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp-dev-preview/candidate-4.16/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/candidate-4.16/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-${OCP_RELEASE}/openshift-install-linux.tar.gz"
