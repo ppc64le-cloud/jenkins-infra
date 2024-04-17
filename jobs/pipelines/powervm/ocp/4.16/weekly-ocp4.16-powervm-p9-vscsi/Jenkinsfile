@@ -133,7 +133,7 @@ pipeline {
             steps {
                 initializeEnvironment()
                 script {
-                    env.SCG_ID = "9b0d66a9-2339-4e73-97e3-04c844a86ec7"
+                    env.SCG_ID = "6c9e720d-52d6-4426-8af1-6187f18bd36a"
                 }
             }
         }
