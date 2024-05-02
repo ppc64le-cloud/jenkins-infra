@@ -24,15 +24,15 @@ pipeline {
 
         //Env constants
         HARDWARE_CHOSE = "P9"
-        TERRAFORM_VER = "1.2.0"
+        TERRAFORM_VER = "1.7.2"
         AVAILABILITY_ZONE = "p9_ocp"
-        OCP_RELEASE="4.12"
+        OCP_RELEASE="4.16"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
-        REDHAT_RELEASE = "9.0"
+        REDHAT_RELEASE = "9.3"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
@@ -40,7 +40,8 @@ pipeline {
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"
         ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.19.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.22.0.linux-ppc64le.tar.gz"
+        PRE_KERNEL_OPTIONS='\\"rd.multipath=default\\", \\"root=/dev/disk/by-label/dm-mpath-root\\"'
 
         // Type of configuration
         CONFIG_TYPE="min"
@@ -59,19 +60,12 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    env.UPGRADE_OCP_RELEASE="4.13"
-                    env.MOUNT_ETCD_RAMDISK="false"
-                    env.E2E_BRANCH="release-${env.UPGRADE_OCP_RELEASE}"
-                    env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_OCP_RELEASE}-powervm/ocp${env.UPGRADE_OCP_RELEASE}_power_exclude_list.txt"
-                }
             }
         }
         stage('pull artifact') {
             steps {
                 script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
-                    getArtifacts("mirror-openshift-release", "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
@@ -89,22 +83,13 @@ pipeline {
                         gbToMb()
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt")) {
-                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt"
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
                         else {
-                            echo "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
-                            throw err
-                        }
-                        env.UPGRADE_IMAGE  = ""
-                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
-                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
-                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
-                        }
-                        else {
-                            echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
@@ -148,6 +133,9 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment()
+                script {
+                    env.SCG_ID = "6c9e720d-52d6-4426-8af1-6187f18bd36a"
+                }
             }
         }
         stage('Setup Terraform Plugin') {
@@ -160,29 +148,17 @@ pipeline {
                 deployCluster()
             }
         }
-        stage('Run crontab script for capturing outputs of multiple commands') {
-            steps {
-                crontabCommandCaptureScript()
-            }
-        }
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Setup and run ansible extra') {
-            steps {
-               setupAndRunE2e()
-            }
-        }
     }
     post {
         always {
-            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+            archiveAllArtifacts("deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
-            processE2eResults()
             //dbDashboardUpdateE2e()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
