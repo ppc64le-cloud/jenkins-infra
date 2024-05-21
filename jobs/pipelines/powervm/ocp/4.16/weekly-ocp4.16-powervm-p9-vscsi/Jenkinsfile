@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.10-3.3'
+            image 'quay.io/powercloud/inbound-agent:3107.v665000b_51092-14-jdk17.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf'
             label 'jump-vpc-x86_64'
         }
@@ -20,12 +20,11 @@ pipeline {
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('PULL_SECRET')
-        OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
+
 
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9_ocp"
         OCP_RELEASE="4.16"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
@@ -47,6 +46,8 @@ pipeline {
 
         // kdump Configuration
         KDUMP_ENABLE="false"
+
+
 	 }
 
     stages {

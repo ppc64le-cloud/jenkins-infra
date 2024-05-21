@@ -26,8 +26,8 @@ def call(String region="us-south",resource_group="ibm-internal-cicd-resource-gro
             fi
             # Setting oc client
 	    if [ ${OPENSHIFT_CLIENT_TARBALL_AMD64} ]; then
-	 	wget --quiet "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
-		cp kubectl oc /usr/bin/
+	        wget --quiet --no-check-certificate "${OPENSHIFT_CLIENT_TARBALL_AMD64}" -O - | tar -xz
+	        cp kubectl oc /usr/bin/
 	    fi
            '''
       }

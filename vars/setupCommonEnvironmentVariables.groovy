@@ -1,5 +1,26 @@
+import jenkins.*
+import jenkins.model.*
+import hudson.*
+import hudson.model.*
 def call() {
     script {
+        def jenkinsCredentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+           com.cloudbees.plugins.credentials.Credentials.class,
+           Jenkins.instance,
+           null,
+           null
+        );
+        for (creds in jenkinsCredentials) {
+           if(creds.id == "URL_SCNLONPREM"){
+             url_scnlonprem = creds.secret
+
+           }
+           if(creds.id == "URL_SCNLCICDPOWERVC"){
+             url_scnlcicd = creds.secret
+
+           }
+        }
+
         //Failed stage
         env.FAILED_STAGE=""
         //VMs setup
@@ -73,25 +94,64 @@ def call() {
         }
         else {
             //PowerVC ENV Variables
-            env.OS="linux"
-            env.OS_IDENTITY_API_VERSION="3"
-            env.OS_REGION_NAME="RegionOne"
-            env.OS_PROJECT_DOMAIN_NAME="Default"
-            env.OS_PROJECT_NAME="ibm-default"
-            env.OS_TENANT_NAME="ibm-default"
-            env.OS_USER_DOMAIN_NAME="Default"
-            env.OS_COMPUTE_API_VERSION="2.46"
-            env.OS_NETWORK_API_VERSION="2.0"
-            env.OS_IMAGE_API_VERSION="2"
-            env.OS_VOLUME_API_VERSION="3"
-            env.OS_NETWORK="icp_network4"
-            env.OS_PRIVATE_NETWORK="icp_network4"
+            if (env.POWERVC_CLOUD == "scnlcicd") {
+                env.OS="linux"
+                env.OS_IDENTITY_API_VERSION="3"
+                env.OS_REGION_NAME="RegionOne"
+                env.OS_PROJECT_DOMAIN_NAME="Default"
+                env.OS_PROJECT_NAME="ibm-default"
+                env.OS_TENANT_NAME="ibm-default"
+                env.OS_USER_DOMAIN_NAME="Default"
+                env.OS_COMPUTE_API_VERSION="2.46"
+                env.OS_NETWORK_API_VERSION="2.0"
+                env.OS_IMAGE_API_VERSION="2"
+                env.OS_VOLUME_API_VERSION="3"
+                env.OS_NETWORK="icp_network4"
+                env.OS_PRIVATE_NETWORK="icp_network4"
+                env.SCG_ID = "213343ac-cd7f-47b7-a466-7a8c65ed8985"
+                env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
+                env.OS_INSECURE = true
+                env.DNS_FORWARDERS = "1.1.1.1; 9.9.9.9"
+                env.OS_AUTH_URL= "${url_scnlcicd}"
+                env.CHRONY_SERVERS = '{server = \\"0.centos.pool.ntp.org\\", options = \\"iburst\\"}, {server = \\"1.centos.pool.ntp.org\\", options = \\"iburst\\"}'
+                if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
+                    env.AVAILABILITY_ZONE = "p9_odf"
+                }
+                else
+                {
+                    env.AVAILABILITY_ZONE = "p9_ocp"
+                }
+
+            }
+            if (env.POWERVC_CLOUD == "scnlonprem") {
+                env.OS="linux"
+                env.OS_IDENTITY_API_VERSION="3"
+                env.OS_REGION_NAME="RegionOne"
+                env.OS_PROJECT_DOMAIN_NAME="Default"
+                env.OS_USER_DOMAIN_NAME="Default"
+                env.OS_COMPUTE_API_VERSION="2.46"
+                env.OS_NETWORK_API_VERSION="2.0"
+                env.OS_IMAGE_API_VERSION="2"
+                env.OS_VOLUME_API_VERSION="3"
+                env.OS_NETWORK="vlan1337"
+                env.OS_PRIVATE_NETWORK="vlan1337"
+                env.SCG_ID = "ba9df88e-d1ba-41ec-a8d9-ec0fd7af7594"
+                env.VOLUME_STORAGE_TEMPLATE = "ltc10u20-fs9100 base template"
+                env.OS_INSECURE = true
+                env.DNS_FORWARDERS = "10.0.10.4; 10.0.10.5"
+                env.CHRONY_SERVERS = '{server = \\"10.0.10.4\\", options = \\"iburst\\"}, {server = \\"10.0.10.5\\", options = \\"iburst\\"}'
+                env.AVAILABILITY_ZONE = "e980"
+                env.OS_PROJECT_NAME="cicd"
+                env.OS_TENANT_NAME="cicd"
+                env.OS_AUTH_URL= "${url_scnlonprem}"
+            }
+
             env.MASTER_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"mas"
             env.WORKER_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"wor"
             env.BOOTSTRAP_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"boo"
             env.BASTION_TEMPLATE="${JOB_BASE_NAME}"+"-"+"${BUILD_NUMBER}"+"-"+"bas"
             env.RHEL_USERNAME = "root"
-            env.OS_INSECURE = true
+
 
             //Upgrade variables
             env.UPGRADE_IMAGE = ""
@@ -107,8 +167,7 @@ def call() {
             env.INSTANCE_NAME = "rdr-cicd"
             env.MOUNT_ETCD_RAMDISK="true"
             env.CHRONY_CONFIG="true"
-            env.SCG_ID = "213343ac-cd7f-47b7-a466-7a8c65ed8985"
-            env.VOLUME_STORAGE_TEMPLATE = "c340f1_v7k base template"
+
             env.CNI_NETWORK_PROVIDER = "OVNKubernetes"
             env.CONNECTION_TIME_OUT = "30"
             env.STORAGE_TYPE = "nfs"

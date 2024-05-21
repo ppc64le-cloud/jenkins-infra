@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.10-3.3'
+            image 'quay.io/powercloud/inbound-agent:3107.v665000b_51092-14-jdk17.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf -v /var/run/docker.sock:/var/run/docker.sock'
             label 'jump-vpc-x86_64'
         }

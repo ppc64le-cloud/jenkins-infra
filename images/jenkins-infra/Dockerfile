@@ -1,10 +1,13 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV JENKINS_URI localhost
 ENV JENKINS_USER admin
 ENV JENKINS_PASSWORD passw0rd
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/pvm.crt
+RUN mkdir -p /etc/ssl/certs/
+RUN chmod 755 /etc/ssl/certs/
 
-RUN apt-get update -y && apt-get install -y curl python3 python3-pip libyaml-dev git crudini python3-dev python3-setuptools libffi-dev libssl-dev \
+RUN apt-get update -y && apt-get install -y curl python3 python3-pip libyaml-dev git crudini python3-dev python3-setuptools libffi-dev libssl-dev  \
     && python3 -m pip install --upgrade  pip \
     && pip3 install typing \
     && pip3 install stevedore \
@@ -12,6 +15,7 @@ RUN apt-get update -y && apt-get install -y curl python3 python3-pip libyaml-dev
     && cd jenkins-job-builder && pip3 install -r requirements.txt && python3 setup.py install \
     && pip3 install jinja2-cli
 
+COPY pvm.crt /etc/ssl/certs/pvm.crt
 COPY jenkins_jobs.ini /etc/jenkins_jobs/
 COPY entrypoint.sh /entrypoint.sh
 

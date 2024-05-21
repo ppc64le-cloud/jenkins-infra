@@ -3,7 +3,7 @@
 pipeline {
     agent {
         docker {
-            image 'quay.io/powercloud/inbound-agent:4.10-3.3'
+            image 'quay.io/powercloud/inbound-agent:3107.v665000b_51092-14-jdk17.2'
             args '-v /etc/resolv.conf:/etc/resolv.conf.tmp '
             label 'jump-vpc-x86_64'
         }
@@ -31,7 +31,6 @@ pipeline {
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('ODF_PULL_SECRET')
-        OS_AUTH_URL=credentials('URL_SCNLCICDPOWERVC')
 
 
         // Parameters
@@ -48,7 +47,6 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.2.0"
-        AVAILABILITY_ZONE = "p9"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
@@ -66,6 +64,8 @@ pipeline {
 
         // kdump Configuration
         KDUMP_ENABLE="false"
+
+
 
 	 }
     stages {
@@ -98,13 +98,13 @@ pipeline {
                             env.REDHAT_RELEASE = "8.5"
                             break
                         case "4.12":
-                            env.REDHAT_RELEASE = "8.6"
+                            env.REDHAT_RELEASE = "9.3"
                             break
                         case "4.13":
-                            env.REDHAT_RELEASE = "9.0"
+                            env.REDHAT_RELEASE = "9.3"
                             break
                         default:
-                            env.REDHAT_RELEASE = "9.2"
+                            env.REDHAT_RELEASE = "9.4"
                     }
                 }
             }
@@ -174,13 +174,6 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment()
-                script {
-                    env.OS_PRIVATE_NETWORK="icp_network2"
-                    env.OS_NETWORK="icp_network2"
-                    //env.SCG_ID = "8a5ff38d-0e88-40bd-8bc3-2d1434789461"
-                    //env.NETWORK_TYPE = "SRIOV"
-                    //env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
-                }
             }
         }
         stage('Setup Terraform Plugin') {
@@ -201,6 +194,20 @@ pipeline {
         stage('Run ODF Setup script') {
             steps {
                 odfAuthYaml()
+                script {
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x odf-rescan-scsi.sh
+                            ./odf-rescan-scsi.sh
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ODF deploy script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
                 odfRunSetupScript()
             }
         }
@@ -227,15 +234,39 @@ pipeline {
         }
         stage('Capture output of multiple commands to verify before ODF upgrade') {
             steps {
-                odfRunCommands()
+                odfRunCommands("Before Upgrade")
+            }
+        }
+        stage('Run setup script again after odf deployment') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    if ( ! params.ocsUpgradeVersion.isEmpty()) {
+                        try {
+                            sh '''
+                               cd ${WORKSPACE}/scripts/odf
+                               chmod +x odf-setup-for-upgrade.sh
+                               ./odf-setup-for-upgrade.sh
+                               '''
+                        }
+                        catch (err) {
+                            echo 'Error ! Running setup script, odf-setup-for-upgrade.sh, post ODF deployment failed!'
+                            env.FAILED_STAGE=env.STAGE_NAME
+                            throw err
+                        }
+                    }
+                }
             }
         }
         stage('Upgrading ODF') {
             steps {
                 script {
-                        ansiColor('xterm') {
-                            echo ""
-                        }
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    if ( ! params.ocsUpgradeVersion.isEmpty()) {
                         try {
                             sh '''
                                cd ${WORKSPACE}/scripts/odf
@@ -250,12 +281,13 @@ pipeline {
                             env.FAILED_STAGE=env.STAGE_NAME
                             throw err
                         }
+                    }
                 }
             }
         }
         stage('Capture output of multiple commands to verify after ODF upgrade') {
             steps {
-                odfRunCommands()
+               odfRunCommands("After Upgrade and before Tier ${TIER_TEST}")
             }
         }
         stage('Run ODF tier tests') {
@@ -269,7 +301,7 @@ pipeline {
                             cd ${WORKSPACE}/scripts/odf
                             chmod +x run-tier-tests.sh
                             chmod +x fix-config.sh
-                            ./fix-config.sh
+                            [ ! -z "$UPGRADE_OCS_VERSION" ] && ./fix-config.sh ;
                             ./run-tier-tests.sh
                         '''
                     }
@@ -280,6 +312,11 @@ pipeline {
                     }
                  }
              }
+        }
+        stage('Capture cluster information after the test') {
+            steps {
+                odfRunCommands("After Tier ${TIER_TEST}")
+            }
         }
         stage('Waiting to timeout') {
             steps {
@@ -307,7 +344,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
