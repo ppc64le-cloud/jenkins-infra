@@ -23,7 +23,7 @@ if [ $? -ne 0 ]; then
    else
       ibmcloud login -a cloud.ibm.com -r us-south -g ibm-internal-cicd-resource-group -q --apikey=${IBMCLOUD_API_KEY}
    fi
-   ibmcloud pi service-target "${CRN}"
+   ibmcloud pi workspace target "${CRN}"
 fi
 
 if [ -n "$service_name" ]; then

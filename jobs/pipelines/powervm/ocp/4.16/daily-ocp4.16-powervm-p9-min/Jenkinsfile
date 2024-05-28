@@ -24,7 +24,7 @@ pipeline {
 
         //Env constants
         HARDWARE_CHOSE = "P9"
-        TERRAFORM_VER = "1.7.2"
+        TERRAFORM_VER = "1.8.4"
 
         OCP_RELEASE="4.16"
         TARGET = "deploy-openshift4-powervc"
@@ -32,7 +32,7 @@ pipeline {
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
-        REDHAT_RELEASE = "9.3"
+        REDHAT_RELEASE = "9.4"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
