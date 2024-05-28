@@ -17,9 +17,10 @@ def call()
         sh (returnStdout: false, script: "cd ${WORKSPACE}/deploy && make $TARGET:clean || true")
         sh (returnStdout: false, script: "cd ${WORKSPACE}/deploy && make $TARGET:clean || true")
         sh (returnStdout: false, script: "cd ${WORKSPACE}/deploy && make $TARGET:clean || true")
-        sh(returnStatus: false, returnStdout: false, script: "openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.MASTER_TEMPLATE}")
-        sh(returnStatus: false, returnStdout: false, script: "openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.WORKER_TEMPLATE}")
-        sh(returnStatus: false, returnStdout: false, script: "openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.BOOTSTRAP_TEMPLATE}")
-        sh(returnStatus: false, returnStdout: false, script: "openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.BASTION_TEMPLATE}")
+        echo "Deleting Compute Templates"
+        sh(returnStatus: false, returnStdout: false, script: "set +x ; openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.MASTER_TEMPLATE}")
+        sh(returnStatus: false, returnStdout: false, script: "set +x ; openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.WORKER_TEMPLATE}")
+        sh(returnStatus: false, returnStdout: false, script: "set +x ; openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.BOOTSTRAP_TEMPLATE}")
+        sh(returnStatus: false, returnStdout: false, script: "set +x ; openstack  --os-auth-url \"${env.OS_AUTH_URL}\" --insecure flavor delete ${env.BASTION_TEMPLATE}")
     }
 }
