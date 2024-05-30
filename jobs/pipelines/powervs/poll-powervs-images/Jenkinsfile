@@ -2,10 +2,6 @@
 //Define Global variable
 def INSTANCE_NAME_LIST = [
                     "rdr-ocp-cicd-montreal01",
-                    "rdr-ocp-cicd-osaka21",
-                    "rdr-ocp-cicd-sydney05",
-                    "rdr-ocp-cicd-toronto01",
-                    "rdr-ocp-cicd-london06",
                     "rdr-ocp-upi-validation-osa21",
                     "rdr-ocp-upi-validation-tor01",
                     "rdr-ocp-storage-sao01-odf",
@@ -56,6 +52,7 @@ pipeline {
                             cat images_all_'${item}'.txt | grep 'rhel-9'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-9-[[:alnum:]]*-tier1'|xargs > latest-rhel-9-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhel-92'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-92-[[:alnum:]]*-tier1'|xargs > latest-rhel-92-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhel-93'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-93-[[:alnum:]]*-tier1'|xargs > latest-rhel-93-'${item}'.txt || true
+                            cat images_all_'${item}'.txt | grep 'rhel-94'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-94-[[:alnum:]]*-tier1'|xargs > latest-rhel-94-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-46' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-46-[[:alnum:]]*-tier1'|xargs > latest-rhcos-46-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-47' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-47-[[:alnum:]]*-tier1'|xargs > latest-rhcos-47-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-48' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-48-[[:alnum:]]*-tier1'|xargs > latest-rhcos-48-'${item}'.txt || true
@@ -85,6 +82,7 @@ pipeline {
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-9-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-92-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-93-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-94-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-46-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-47-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-48-${item}.txt", fingerprint: true, onlyIfSuccessful: false
