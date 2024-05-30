@@ -40,7 +40,7 @@ pipeline {
         OCP_RELEASE = "4.15"
         CLUSTER_NAME="rdr-cicd-mad04-415"
         CLUSTER_DIR="./ipi-install"
-        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/4.15.0-rc.8/openshift-client-linux.tar.gz"
+        OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest-4.15/openshift-client-linux-amd64.tar.gz"
         //OPENSHIFT_INSTALLER_URL="https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/4.15.0-rc.8/openshift-install-linux.tar.gz"
         POWERVS = true
 	 }
@@ -198,12 +198,12 @@ pipeline {
                 done
                 #Get connections
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
-                cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
-                echo "$cons"| while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
+                cons=$(ibmcloud pi cloud-connection ls| grep "cloud-con-rdr-cicd"|awk '{print $1}')
+                echo "$cons"| while IFS= read -r line ; do ibmcloud pi cloud-connection delete $line; done || true
                 #Get DHCP
                 ./powervs-hack/scripts/get-dhcp.sh || true
                 dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
-                ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || ibmcloud pi ind $dhcp_id || true
+                ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || ibmcloud pi ins delete $dhcp_id || true
                 '''
             }
             notifyBySlack(currentBuild.result, env.MESSAGE)

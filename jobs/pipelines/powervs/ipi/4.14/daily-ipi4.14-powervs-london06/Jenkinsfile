@@ -189,12 +189,12 @@ pipeline {
                 done
                 #Get connections
                 ibmcloud login -a cloud.ibm.com -r ${VPCREGION} -g ${RESOURCE_GROUP} -q --apikey=${IBMCLOUD_API_KEY}
-                cons=$(ibmcloud pi cons| grep "cloud-con-rdr-cicd"|awk '{print $1}')
-                echo "$cons"| while IFS= read -r line ; do ibmcloud pi connection-delete $line; done || true
+                cons=$(ibmcloud pi cloud-connection ls| grep "cloud-con-rdr-cicd"|awk '{print $1}')
+                echo "$cons"| while IFS= read -r line ; do ibmcloud pi cloud-connection delete $line; done || true
                 #Get DHCP
                 ./powervs-hack/scripts/get-dhcp.sh || true
                 dhcp_id=$(./powervs-hack/scripts/get-dhcp.sh | awk 'FNR == 4 {print $1}')
-                ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || true
+                ./powervs-hack/scripts/get-dhcp.sh $dhcp_id -d || ibmcloud pi ins delete $dhcp_id || true
                 '''
             }
             notifyBySlack(currentBuild.result, env.MESSAGE)

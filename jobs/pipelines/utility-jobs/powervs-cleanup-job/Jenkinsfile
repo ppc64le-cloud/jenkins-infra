@@ -33,7 +33,7 @@ pipeline {
 				sh '''
 				    echo "IBM cloud login"
 				    ibmcloud login -a cloud.ibm.com -r us-south -g ocp-cicd-resource-group -q --apikey=${IBMCLOUD_API_KEY}
-				    ibmcloud pi service-target ${CRN}
+				    ibmcloud pi workspace target ${CRN}
 				    chmod +x ./scripts/cleanup-powervs-resources.sh
 				'''
 	             INSTANCE_NAME_LIST.each { item ->
