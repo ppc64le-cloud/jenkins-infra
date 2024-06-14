@@ -8,13 +8,13 @@ pipeline {
             label 'jump-vpc-x86_64'
         }
     }
-
+    options { disableConcurrentBuilds() }
     stages {
         stage('Copy OCP version artifacts') {
             steps {
                 script {
                     // Copy the builds of OCP releases from last successful job
-                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-powervm-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
+                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-p8-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline {
                     def version_exists = "true"
                     if(!fileExists("versions/")){
                         version_exists = "false"
-                        echo "First Time Job Triggered! Initializing the versions!"
+                        echo "Job has triggered for first time! Initializing the versions!"
                         echo "Not triggering any Jobs for first time!"
                     }
                     filenames = getChangedFilesList()
@@ -63,27 +63,32 @@ def getChangedFilesList() {
     changedFiles = sh returnStdout:true, script: '''
         if [ ! -d "versions" ];
         then
-            mkdir  "versions"
+            mkdir "versions"
         fi
-        for x in 8 9 10 11
+
+        # Checking if new builds are available for OCP 4.12, 4.13, 4.14, 4.15 and 4.16
+        for ocp_version in 8 9 10 11
         do
-            VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${x}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
-            if [ "$VERSION" = "" ] && [ ! -f versions/4.$x.txt ];
+            VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${ocp_version}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
+            if [ "$VERSION" = "" ] && [ ! -f versions/4.$ocp_version.txt ];
             then
+                # Checking the quay pages for new builds
                 for i in 2 3 4 5 6 7 8 9 10 11 12
                 do
-                    VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100&page=$i" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${x}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
+                    VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100&page=$i" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${ocp_version}.*ppc64le" | grep -v "multi\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
                     if [ "$VERSION" != "" ] ;
                     then
                         break
                     fi
                 done
-            fi      
-            if [ "$(cat versions/4.$x.txt | grep ppc64le)" != "$VERSION" ] && [ "$VERSION" != "" ];
+            fi
+
+            # Comparing the builds from quay and artifacts, updating the artifcats with lastest builds
+            if [ "$(cat versions/4.$ocp_version.txt | grep ppc64le)" != "$VERSION" ] && [ "$VERSION" != "" ];
             then
-                echo $VERSION > versions/4.$x.txt
-                echo -n $(date +%Y-%m-%d) >> versions/4.$x.txt 
-                echo "versions/4.$x.txt"
+                echo $VERSION > versions/4.$ocp_version.txt
+                echo -n $(date +%Y-%m-%d) >> versions/4.$ocp_version.txt 
+                echo "versions/4.$ocp_version.txt"
             fi
         done
     '''

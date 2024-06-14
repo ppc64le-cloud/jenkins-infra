@@ -8,12 +8,14 @@ pipeline {
             label 'jump-vpc-x86_64'
         }
     }
+    options { disableConcurrentBuilds() }
     parameters {
-        string(defaultValue: '', description: 'Build(quay image or build number)', name: 'Build')
-        string(defaultValue: '', description: 'Build Release', name: 'Release')
+        string(defaultValue: '', description: 'Current Build(quay image or build number)', name: 'CurrentBuild')
+        string(defaultValue: '', description: 'Upgrade Build(quay image or build number)', name: 'UpgradeBuild')
+        string(defaultValue: '', description: 'Current Build Release', name: 'Release')
+        string(defaultValue: '', description: 'Upgrade Build Release', name: 'UpgradeRelease')
         string(defaultValue: '720', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
     }
-
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
@@ -22,21 +24,21 @@ pipeline {
         OS_PASSWORD = credentials('OS_PASSWORD')
         DOCKER_USER = credentials('DOCKER_USER')
         ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
-        DOCKER_PASSWORD = credentials('ARTIFACTORY_TOKEN')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('PULL_SECRET')
-        OS_AUTH_URL=credentials('URL_SCNLPOWERCLOUD')
 
         //IBM Cloud API key is used for uploading must-gather logs to IBM COS
         IBMCLOUD_API_KEY = credentials('IBM_PCLOUD_QE_API_KEY')
 
         //Parameters
         OCP_RELEASE="${params.Release}"
+        UPGRADE_RELEASE="${params.UpgradeRelease}"
         CONFIG_TYPE="min"
-        BUILD="${params.Build}"
+        CURRENT_BUILD="${params.CurrentBuild}"
+        UPGRADE_BUILD="${params.UpgradeBuild}"
         TIMEOUT = "${params.KeepFor}"
-        ENABLE_E2E_TEST="true"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
@@ -56,36 +58,31 @@ pipeline {
     }
 
     stages {
-        stage('Clone ansible extra') {
-            steps {
-                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
-            }
-        }
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
                     wrap([$class: 'BuildUser']) {
-                        env.INSTANCE_NAME = "rdr-zstream"
+                        env.INSTANCE_NAME = "rdr-zsnxt"
                     }
                     env.OS_TENANT_NAME="icp-test"
                     env.OS_NETWORK = "workload"
                     env.OS_PRIVATE_NETWORK = "workload"
                     env.SCG_ID = "4366c1e2-bb4f-4c3d-98a2-06cc39bbc58d"
                     env.MOUNT_ETCD_RAMDISK = "false"
+                    env.UPGRADE_DELAY_TIME = "600"
+                    env.UPGRADE_PAUSE_TIME = "90"
                     env.SETUP_SQUID_PROXY = "true"
+
                     if (env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9"){
                         env.REDHAT_RELEASE = "8.4"
-                        env.GOLANG_TARBALL = "https://dl.google.com/go/go1.16.5.linux-ppc64le.tar.gz"
                     }
                     else if (env.OCP_RELEASE == "4.10" || env.OCP_RELEASE == "4.11"){
                         env.REDHAT_RELEASE = "8.5"
-                        env.GOLANG_TARBALL = "https://dl.google.com/go/go1.17.6.linux-ppc64le.tar.gz"
                     }
                     else {
                         env.REDHAT_RELEASE = "8.6"
-                        env.GOLANG_TARBALL = "https://golang.org/dl/go1.18.6.linux-ppc64le.tar.gz"
                     }
                 }
             }
@@ -110,24 +107,46 @@ pipeline {
                         gbToMb()
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        if (env.BUILD?.trim()) {
-                            if (!env.BUILD.contains('quay')) {
-                                env.OPENSHIFT_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.BUILD}"
+                        if (env.CURRENT_BUILD?.trim()) {
+                            if (!env.CURRENT_BUILD.contains('quay')) {
+                                env.OPENSHIFT_IMAGE  = "docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local/ocp-ppc64le/release-ppc64le:${env.CURRENT_BUILD}"
                                 sh '''
-                                    nerdctl login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                                    nerdctl login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local
                                     nerdctl pull ${OPENSHIFT_IMAGE}
                                     if [ $? -ne 0 ]; then
-                                        echo "${OPENSHIFT_IMAGE}  not found"
+                                        echo "${OPENSHIFT_IMAGE} not found"
+                                        exit 1
+                                    fi
+                                    nerdctl rmi ${OPENSHIFT_IMAGE}
+                                '''
+                            }
+                            else {
+                               env.OPENSHIFT_IMAGE=env.CURRENT_BUILD
+                            }
+                        }
+                        else {
+                            echo "CURRENT build is empty"
+                            throw err
+                        }
+                        env.UPGRADE_IMAGE = ""
+                        if (env.UPGRADE_BUILD?.trim()) {
+                            if (!env.UPGRADE_BUILD.contains('quay')) {
+                                env.UPGRADE_IMAGE  = "sys-powercloud-docker-local.artifactory.swg-devops.com/ocp-ppc64le/release-ppc64le:${env.UPGRADE_BUILD}"
+                                sh '''
+                                    nerdctl login sys-powercloud-docker-local.artifactory.swg-devops.com -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                                    nerdctl pull ${UPGRADE_IMAGE}
+                                    if [ $? -ne 0 ]; then
+                                        echo "${UPGRADE_IMAGE} not found"
                                         exit 1
                                     fi
                                 '''
                             }
                             else {
-                               env.OPENSHIFT_IMAGE=env.BUILD
+                               env.UPGRADE_IMAGE=env.UPGRADE_BUILD
                             }
                         }
-                        else {
-                            echo "CURRENT build is empty"
+                        else{
+                            echo "Upgrade build is empty"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/rhcos-${OCP_RELEASE}-powercloud-latest.txt")) {
@@ -193,10 +212,9 @@ pipeline {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Setup and run ansible extra') {
+        stage('Validate CO status') {
             steps {
-               setupAndRunE2e()
-               notifyBySlack(currentBuild.result, "E2E has completed !!")
+                validateCoStatus()
             }
         }
         stage('Gather pprof and prometheus data') {
@@ -232,15 +250,13 @@ pipeline {
         always {
             script {
                 try{
-                    archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                        "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
+                    archiveAllArtifacts("deploy/vars.tfvars", "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log")
                     storeMustGatherLogs()
                     checkInfraError()
-                    processE2eResults()
                     notifyBySlack(currentBuild.result, env.MESSAGE)
                 }
                 catch (err){
-                    echo 'Error ! Always block failed!' 
+                    echo 'Error ! Always block failed!'
                 }
                 finally{
                     cleanupOcp4Cluster()
