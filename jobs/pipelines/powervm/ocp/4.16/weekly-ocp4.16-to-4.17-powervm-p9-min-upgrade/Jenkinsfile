@@ -25,13 +25,14 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.8.4"
-        OCP_RELEASE="4.14"
+
+        OCP_RELEASE="4.16"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
-        REDHAT_RELEASE = "9.2"
+        REDHAT_RELEASE = "9.4"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
@@ -39,14 +40,13 @@ pipeline {
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"
         ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.20.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.22.0.linux-ppc64le.tar.gz"
 
         // Type of configuration
         CONFIG_TYPE="min"
 
         // kdump Configuration
         KDUMP_ENABLE="false"
-
 
 
 
@@ -63,8 +63,10 @@ pipeline {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
                 script {
-                    env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
-                    env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
+                    env.UPGRADE_OCP_RELEASE="4.17"
+                    env.MOUNT_ETCD_RAMDISK="false"
+                    env.E2E_BRANCH="release-${env.UPGRADE_OCP_RELEASE}"
+                    env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_OCP_RELEASE}-powervm/ocp${env.UPGRADE_OCP_RELEASE}_power_exclude_list.txt"
                 }
             }
         }
@@ -72,6 +74,7 @@ pipeline {
             steps {
                 script {
                     getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${UPGRADE_OCP_RELEASE}-ec-build.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
@@ -96,6 +99,15 @@ pipeline {
                         }
                         else {
                             echo "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                            throw err
+                        }
+                        env.UPGRADE_IMAGE  = ""
+                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-ec-build.txt")) {
+                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-ec-build.txt"
+                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
+                        }
+                        else {
+                            echo "latest-${UPGRADE_OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
@@ -164,12 +176,6 @@ pipeline {
         stage('Setup and run ansible extra') {
             steps {
                setupAndRunE2e()
-            }
-        }
-        stage('Gather pprof and prometheus data') {
-            steps {
-                //gatherPrometheusData()
-                echo "gatherPrometheusData() is skipped for now"
             }
         }
     }

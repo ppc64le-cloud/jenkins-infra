@@ -152,7 +152,7 @@ pipeline {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Gather pprof and prometheus data') {
+        stage('Setup And Run Verification tests') {
             steps {
                 script {
                      ansiColor('xterm') {
