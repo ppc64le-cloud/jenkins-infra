@@ -40,8 +40,15 @@ def call() {
         }
         if ( fileExists('deploy/junit_e2e.xml')) {
             sh '''
-                sed -i 's|^<testsuite |<testsuite errors="0"  |' deploy/junit_e2e.xml
-                sed  -i  's|<property name=.*property>||'  deploy/junit_e2e.xml
+                if [ -d "deploy/junit_e2e.xml" ]; then
+                    LATEST_FILE=$(ls deploy/junit_e2e.xml/junit_e2e_*.xml | sort -t'_' -k3,3 -k4,4 | tail -n 1)
+                    cp -rp "$LATEST_FILE" deploy/junit_e2e_latest.xml
+                    rm -rf deploy/junit_e2e.xml && mv deploy/junit_e2e_latest.xml deploy/junit_e2e.xml
+                fi
+                if [ -f "deploy/junit_e2e.xml" ]; then
+                    sed -i 's|^<testsuite |<testsuite errors="0" |' deploy/junit_e2e.xml
+                    sed -i 's|<property name=.*property>||' deploy/junit_e2e.xml
+                fi
             '''
             step([$class: 'XUnitPublisher', thresholds: [[$class: 'FailedThreshold', failureThreshold: fails_per_threshold.toString(), unstableThreshold: '10' ]], tools: [[$class: 'JUnitType', pattern: 'deploy/junit_e2e.xml']]])
         }
