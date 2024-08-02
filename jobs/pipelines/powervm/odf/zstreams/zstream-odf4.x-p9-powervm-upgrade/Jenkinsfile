@@ -16,7 +16,7 @@ pipeline {
         string(defaultValue: '', description: 'rhceph-dev/ocs-registry image of upgraded ocs version', name: 'ocsUpgradeRegistryImage')
         booleanParam(defaultValue: false, description: 'Enable/Disable Vault', name: 'Vault')
         booleanParam(defaultValue: false, description: 'Enable/Disable Fips', name: 'Fips')
-        choice(choices: ['1', '2', '3', '4a', '4b','4c' ],name: 'TierTest')
+        choice(choices: ['None','1', '2', '3', '4a', '4b','4c' ],name: 'TierTest')
         string(defaultValue: '720', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
     }
      environment {
@@ -291,6 +291,9 @@ pipeline {
             }
         }
         stage('Run ODF tier tests') {
+            when {
+                expression { env.TIER_TEST != 'None' }
+            }
             steps {
                 script {
                     ansiColor('xterm') {
@@ -314,6 +317,9 @@ pipeline {
              }
         }
         stage('Capture cluster information after the test') {
+            when {
+                expression { env.TIER_TEST != 'None' }
+            }
             steps {
                 odfRunCommands("After Tier ${TIER_TEST}")
             }
