@@ -34,6 +34,7 @@
         {% elif 'daily-ipi4.16-powervs-london06' in JOB_NAME %}"0 8 * * * "
         {% elif 'daily-ipi4.16-powervs-osaka21' in JOB_NAME %}"0 8 * * * "
         {% elif 'daily-ipi4.16-powervs-sydney04' in JOB_NAME %}"0 10 * * * "
+        {% elif 'powervs-ipi-cleanup-job' in JOB_NAME %}"0 13,20 * * * "
 
         {% elif 'mirror-openshift-release' in JOB_NAME %}"@hourly"
         {% elif 'poll-powervc-images' in JOB_NAME %}"@daily"
