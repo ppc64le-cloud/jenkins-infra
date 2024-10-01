@@ -105,6 +105,7 @@ pipeline {
                             echo "${RHCOS_IMAGE_FILE} file does not exist. Please check poll-powervs-job"
                             throw err
                         }
+                        currentBuild.description = "OCP Build: ${env.OCP_RELEASE_TAG}"
                     }
                     catch (err)
                     {

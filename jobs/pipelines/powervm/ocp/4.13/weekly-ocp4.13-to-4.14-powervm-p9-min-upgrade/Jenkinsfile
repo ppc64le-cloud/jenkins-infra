@@ -105,6 +105,7 @@ pipeline {
                         if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
                             env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
                             env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
+                            env.OCP_UPGRADE_RELEASE_TAG = env.UPGRADE_IMAGE.split(":")[1].trim()
                         }
                         else {
                             echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
@@ -133,7 +134,7 @@ pipeline {
                             echo "Cluster cant deploy without master"
                             throw err
                         }
-
+                        currentBuild.description = "Upgrade OCP: ${env.OCP_RELEASE_TAG}-${env.OCP_UPGRADE_RELEASE_TAG}"
                         createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
