@@ -18,7 +18,9 @@ pipeline {
         booleanParam(defaultValue: false, name: 'RunCroE2e', description: 'Select if you want to run CRO e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunMetallbE2e', description: 'Select if you want to run Metallb e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunCoE2e', description: 'Select if you want to run Compliance operator e2e tests. E2e runs after cluster Deployed')
-        string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImage')
+        booleanParam(defaultValue: false, name: 'RunFioE2e', description: 'Select if you want to run Fio operator e2e tests. E2e runs after cluster Deployed')
+        string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImageCo')
+        string(defaultValue: '', description: 'Enter index image if you want to run the FIO e2e', name: 'IndexImagefio')
     } 
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
@@ -53,7 +55,10 @@ pipeline {
         ENABLE_METALLB_E2E_TEST = "${params.RunMetallbE2e}"
         //Compliance Operator e2e
         ENABLE_CO_E2E_TEST = "${params.RunCoE2e}"
-        COMPLIANCE_CATALOGSOURCE_IMAGE = "${params.IndexImage}"
+        COMPLIANCE_CATALOGSOURCE_IMAGE = "${params.IndexImageCo}"
+        //FIO Operator e2e
+        ENABLE_FIO_E2E_TEST = "${params.RunFioE2e}"
+        FIO_CATALOGSOURCE_IMAGE = "${params.IndexImagefio}"
         //Ip address for metallb Operators E2E
         L2_ADDRESS1="10.20.182.101"
         L2_ADDRESS2="10.20.182.102"
@@ -79,6 +84,9 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    env.BASTION_MEMORY = "16"
+                }
             }
         }
         stage('pull artifact') {
@@ -124,8 +132,6 @@ pipeline {
                             if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
                                 env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                                 env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
-                                env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
-                                env.BUILD = env.OCP_RELEASE_TAG
                             }
                             else {
                                 echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
@@ -153,6 +159,8 @@ pipeline {
                             echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
+                        env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        env.BUILD = env.OCP_RELEASE_TAG
                         currentBuild.description = "OCP Build: ${OCP_RELEASE_TAG}"
                         createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
@@ -260,6 +268,26 @@ pipeline {
                         }
                     }
                 }
+                stage('FIO operator tests'){
+                    when { expression { return env.ENABLE_FIO_E2E_TEST == "true"; } }
+                    steps{
+                        script{
+                            ansiColor('xterm') {
+                            echo ""
+                            }
+                            try {
+                                sh '''
+                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/fio_operator.sh && ./scripts/operator/fio_operator.sh
+                                '''
+                            }
+                            catch(err) {
+                                echo 'Running FIO_operator script failed!'
+                                failedStages.add(env.STAGE_NAME)
+                                throw err
+                            }
+                        }
+                    }
+                }
             }
         }
         stage('Waiting to timeout') {
@@ -288,7 +316,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/croo_e2e_output_*.txt", "deploy/e2e-metallb-repo-logs.txt", "deploy/e2e-metallb-private-logs.txt", "deploy/e2e-output.txt", "deploy/e2e-re-run-output-*.txt", "deploy/vars.tfvars")
+            archiveAllArtifacts("deploy/croo_e2e_output_*.txt", "deploy/e2e-metallb-repo-logs.txt", "deploy/e2e-metallb-private-logs.txt", "deploy/e2e-output.txt", "deploy/e2e-re-run-output-*.txt", "deploy/fio-e2e-*.txt", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
             script{
@@ -297,7 +325,7 @@ pipeline {
                     env.MESSAGE = "OCP4 Build: `${BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}`, Failed Stage: `${FAILED_STAGE}`"
                 }
             }
-            notifyBySlack(currentBuild.result, env.MESSAGE)
+            //notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
     }
