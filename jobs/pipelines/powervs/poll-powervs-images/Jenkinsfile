@@ -53,6 +53,7 @@ pipeline {
                             cat images_all_'${item}'.txt | grep 'rhel-92'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-92-[[:alnum:]]*-tier1'|xargs > latest-rhel-92-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhel-93'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-93-[[:alnum:]]*-tier1'|xargs > latest-rhel-93-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhel-94'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-94-[[:alnum:]]*-tier1'|xargs > latest-rhel-94-'${item}'.txt || true
+                            cat images_all_'${item}'.txt | grep 'rhel-95'  |sort -t'|' -k5 -r|head -1|grep -o 'rhel-95-[[:alnum:]]*-tier1'|xargs > latest-rhel-95-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-411' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-411-[[:alnum:]]*-tier1'|xargs > latest-rhcos-411-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-412' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-412-[[:alnum:]]*-tier1'|xargs > latest-rhcos-412-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-413' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-413-[[:alnum:]]*-tier1'|xargs > latest-rhcos-413-'${item}'.txt || true
@@ -61,6 +62,7 @@ pipeline {
                             cat images_all_'${item}'.txt | grep 'rhcos-416' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-416-[[:alnum:]]*-tier1'|xargs > latest-rhcos-416-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-417' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-417-[[:alnum:]]*-tier1'|xargs > latest-rhcos-417-'${item}'.txt || true
                             cat images_all_'${item}'.txt | grep 'rhcos-418' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-418-[[:alnum:]]*-tier1'|xargs > latest-rhcos-418-'${item}'.txt || true
+                            cat images_all_'${item}'.txt | grep 'rhcos-419' |sort -t'|' -k5 -r|head -1|grep -o 'rhcos-419-[[:alnum:]]*-tier1'|xargs > latest-rhcos-419-'${item}'.txt || true
                         """
                     }
                 }
@@ -80,6 +82,7 @@ pipeline {
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-92-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-93-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-94-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhel-95-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-411-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-412-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-413-${item}.txt", fingerprint: true, onlyIfSuccessful: false
@@ -88,6 +91,7 @@ pipeline {
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-416-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-417-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-418-${item}.txt", fingerprint: true, onlyIfSuccessful: false
+                    archiveArtifacts allowEmptyArchive: true, artifacts: "latest-rhcos-419-${item}.txt", fingerprint: true, onlyIfSuccessful: false
                 }
             }
             cleanWs()
