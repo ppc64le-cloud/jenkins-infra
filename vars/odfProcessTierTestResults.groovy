@@ -16,7 +16,7 @@ def call() {
         else {
             env.MESSAGE = "   OCP Build: `${OCP4_BUILD}`, ODF Build: `${env.ODF_BUILD}` , Tier: `${env.TIER_TEST}` , Summary: `${slacksummary}` "
         }
-        if ( fileExists("test_results_tier${TIER_TEST}_1.xml")) {
+        if (fileExists("test_results_tier${env.TIER_TEST}_1.xml") || fileExists("test_results.xml")) {
             step([$class: 'JUnitResultArchiver', skipMarkingBuildUnstable: true, allowEmptyResults: true,  testResults: 'test_results*.xml'])
 
         }
