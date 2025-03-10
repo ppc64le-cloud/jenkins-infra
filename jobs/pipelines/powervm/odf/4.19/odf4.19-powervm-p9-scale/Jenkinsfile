@@ -23,12 +23,12 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "1.8.4"
+        TERRAFORM_VER = "1.9.6"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
-        REDHAT_RELEASE = "9.4"
-        OCP_RELEASE = "4.18"
+        REDHAT_RELEASE = "9.5"
+        OCP_RELEASE = "4.19"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
@@ -38,7 +38,7 @@ pipeline {
 
         // ODF Variables
         PLATFORM = "powervm"
-        ODF_VERSION = "4.18"
+        ODF_VERSION = "4.19"
         TIER_TEST = "scale"
         ENABLE_FIPS = false
         ENABLE_VAULT = false

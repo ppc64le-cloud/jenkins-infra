@@ -43,7 +43,7 @@ if [ ! -z "${BASTION_IP}" ]; then
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/result/failed.txt ./failed_tests_cni_ovn_validation.txt
         cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results_tier${TIER_TEST}_1.xml ${WORKSPACE}/
         cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/results.html ${WORKSPACE}/
-        cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results.xml ${WORKSPACE}/test_results_scale.xml
+        cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results.xml ${WORKSPACE}
         tar -czf ${WORKSPACE}/results.tar.gz ${WORKSPACE}/ocs-upi-kvm/scripts/tier*.log ${WORKSPACE}/logs-ocs-ci ${WORKSPACE}/ocs-upi-kvm/scripts/deploy-ocs-ci.log ${WORKSPACE}/ocs-upi-kvm/scripts/setup-ocs-ci.log ${WORKSPACE}/ocs-upi-kvm/scripts/helper/vault-setup.log ${WORKSPACE}/ocs-upi-kvm/scripts/helper/kustomize.log ${WORKSPACE}/odf-commands.txt  ${WORKSPACE}/ocs-upi-kvm/scripts/upgrade-ocs-ci.log ${WORKSPACE}/odf-full-build.txt ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/test_results_tier*.xml ${WORKSPACE}/ocs-upi-kvm/scripts/tier${TIER_TEST}.log --ignore-failed-read > /dev/null 2>&1
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/cro_e2e_output.txt .
         scp -i id_rsa -o StrictHostKeyChecking=no root@${BASTION_IP}:~/kdump.tar.gz .

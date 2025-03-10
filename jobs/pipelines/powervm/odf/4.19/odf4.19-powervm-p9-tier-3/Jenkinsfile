@@ -23,12 +23,12 @@ pipeline {
 
 
         //Env constants
-        TERRAFORM_VER = "1.8.4"
+        TERRAFORM_VER = "1.9.6"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
-        REDHAT_RELEASE = "9.4"
-        OCP_RELEASE = "4.18"
+        REDHAT_RELEASE = "9.5"
+        OCP_RELEASE = "4.19"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
@@ -38,22 +38,23 @@ pipeline {
 
         // ODF Variables
         PLATFORM = "powervm"
-        ODF_VERSION = "4.18"
-        TIER_TEST = "scale"
+        ODF_VERSION = "4.19"
+        TIER_TEST = "3"
         ENABLE_FIPS = false
         ENABLE_VAULT = false
-        CONFIG_TYPE = "odf-scale"
+      
+        CONFIG_TYPE = "odf"
+
         // kdump Configuration
         KDUMP_ENABLE="false"
-        NUM_OF_WORKERS = "4"
-        WORKER_VOLUME_SIZE = "1T"
+
 
 	 }
     stages {
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
-                setupClusterConfig("${CONFIG_TYPE}","${NUM_OF_WORKERS}")
+                setupClusterConfig("${CONFIG_TYPE}")
             }
         }
         stage('pull artifact') {
@@ -184,10 +185,10 @@ pipeline {
         }
         stage('Capture output of multiple commands to verify ODF deployment') {
             steps {
-                odfRunCommands("Before scale test")
+                odfRunCommands("Before  Tier ${TIER_TEST}")
             }
         }
-        stage('Run ODF scale test') {
+        stage('Run ODF tier tests') {
             steps {
                 script {
                     ansiColor('xterm') {
@@ -198,15 +199,10 @@ pipeline {
                             cd ${WORKSPACE}/scripts/odf
                             chmod +x run-tier-tests.sh
                             ./run-tier-tests.sh
-                            # Check if HTML reports exist and copy to results.html
-                            if ls ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/*.html >/dev/null 2>&1; then
-                                cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/*.html ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/results.html
-                                echo "Converted HTML test report to results.html"
-                            fi
                         '''
                     }
                     catch (err) {
-                        echo 'Error ! scale test script failed!'
+                        echo 'Error ! Tier test script failed!'
                         env.FAILED_STAGE=env.STAGE_NAME
                         throw err
                     }
@@ -215,13 +211,13 @@ pipeline {
         }
         stage('Capture cluster information after the test') {
             steps {
-                odfRunCommands("After scale test")
+                odfRunCommands("After Tier ${TIER_TEST}")
             }
         }
     }
     post {
         always {
-            archiveAllArtifacts("results.tar.gz", "scale-test-summary.txt", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
