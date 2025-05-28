@@ -136,9 +136,6 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment()
-                script {
-                    env.SCG_ID = "ba9df88e-d1ba-41ec-a8d9-ec0fd7af7594"
-                }
             }
         }
         stage('Setup Terraform Plugin') {
