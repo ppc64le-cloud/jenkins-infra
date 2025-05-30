@@ -173,6 +173,9 @@ pipeline {
                             cd ${WORKSPACE}/scripts/odf
                             chmod +x run-odf-deploy.sh
                             ./run-odf-deploy.sh
+                            oc patch storagecluster ocs-storagecluster -n openshift-storage --type json --patch '[{ "op": "replace", "path": "/spec/managedResources/cephCluster/nearFullRatio", "value": 0.95 }]'
+                            oc patch storagecluster ocs-storagecluster -n openshift-storage --type json --patch '[{ "op": "replace", "path": "/spec/managedResources/cephCluster/backfillFullRatio", "value": 0.95 }]'
+                            oc patch storagecluster ocs-storagecluster -n openshift-storage --type json --patch '[{ "op": "replace", "path": "/spec/managedResources/cephCluster/fullRatio", "value": 0.95 }]'
                         '''
                     }
                     catch (err) {
@@ -217,7 +220,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
+            archiveAllArtifacts("results.tar.gz", "tier${TIER_TEST}-summary.txt", "check_crc.txt" , "odf-must-gather.tar.gz", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
             odfProcessTierTestResults()
