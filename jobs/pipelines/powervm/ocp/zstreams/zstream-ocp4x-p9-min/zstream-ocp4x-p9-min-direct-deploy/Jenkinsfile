@@ -103,13 +103,20 @@ pipeline {
                         env.REDHAT_RELEASE = "9.6"
                         env.GOLANG_TARBALL = "https://golang.org/dl/go1.23.4.linux-ppc64le.tar.gz"
                     }
+                    // Added a condition for RHCOS_RELEASE to be set to 4.19 for OCP 4.20
+                    if (env.OCP_RELEASE == "4.20"){
+                        env.RHCOS_RELEASE = "4.19"
+                    }
+                    else {
+                        env.RHCOS_RELEASE = env.OCP_RELEASE
+                    }
                 }
             }
         }
         stage('pull artifact') {
             steps {
                 script {
-                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${OCP_RELEASE}.latest.txt")
+                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
             }
