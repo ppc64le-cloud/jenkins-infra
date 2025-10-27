@@ -107,8 +107,8 @@ pipeline {
                         env.REDHAT_RELEASE = "9.6"
                         env.GOLANG_TARBALL = "https://golang.org/dl/go1.23.4.linux-ppc64le.tar.gz"
                     }
-                    // Added a condition for RHCOS_RELEASE to be set to 4.19 for OCP 4.20
-                    if (env.OCP_RELEASE == "4.20"){
+                    // Added a condition for RHCOS_RELEASE to be set to 4.19 for OCP 4.20/4.21
+                    if (env.OCP_RELEASE == "4.20" || env.OCP_RELEASE == "4.21"){
                         env.RHCOS_RELEASE = "4.19"
                     }
                     else {
@@ -183,13 +183,13 @@ pipeline {
 
                         currentBuild.description = "Upgrade OCP: ${env.OPENSHIFT_IMAGE.split(':')[1].trim()} to ${env.UPGRADE_IMAGE.split(':')[1].trim()}"
 
-                        if (fileExists("deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt")) {
-                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${OCP_RELEASE}.latest.txt"
+                        if (fileExists("deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt")) {
+                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt"
                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
                             env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
                         }
                         else {
-                            echo "cicd-rhcos-${OCP_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            echo "cicd-rhcos-${RHCOS_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
