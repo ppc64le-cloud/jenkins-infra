@@ -6,7 +6,6 @@
       - timed: {% if 'daily-ocp4.21-powervm-p9-min' in JOB_NAME %}"00 00 * * * "
         {% elif 'daily-ocp4.20-powervm-p9-min' in JOB_NAME %}"00 01 * * * "
 
-        {% elif 'weekly-ocp4.15-to-4.16-powervm-p9-min-upgrade' in JOB_NAME %}"00 09 * * 6 "
         {% elif 'weekly-ocp4.16-to-4.17-powervm-p9-min-upgrade' in JOB_NAME %}"00 09 * * 5 "
         {% elif 'weekly-ocp4.17-to-4.18-powervm-p9-min-upgrade' in JOB_NAME %}"00 09 * * 4 "
         {% elif 'weekly-ocp4.18-to-4.19-powervm-p9-min-upgrade' in JOB_NAME %}"00 09 * * 3 "
