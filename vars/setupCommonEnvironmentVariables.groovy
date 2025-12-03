@@ -135,7 +135,7 @@ def call() {
                 env.OS_VOLUME_API_VERSION="3"
                 env.OS_NETWORK="vlan1337"
                 env.OS_PRIVATE_NETWORK="vlan1337"
-                env.SCG_ID = "32f64d13-777c-4029-b470-9f52cfd0fac1"
+                env.SCG_ID = "ba9df88e-d1ba-41ec-a8d9-ec0fd7af7594"
                 env.VOLUME_STORAGE_TEMPLATE = "ltc12u30_fv72k base template"
                 env.OS_INSECURE = true
                 env.DNS_FORWARDERS = "10.0.10.4; 10.0.10.5"
