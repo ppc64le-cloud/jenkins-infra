@@ -27,12 +27,10 @@ def call(){
                [ ! -z "$UPGRADE_OCS_REGISTRY" ] && echo "export UPGRADE_OCS_REGISTRY=${UPGRADE_OCS_REGISTRY}" >> env_vars.sh
                [ ! -z "$OCS_REGISTRY_IMAGE" ] && echo "export OCS_REGISTRY_IMAGE=${OCS_REGISTRY_IMAGE}" >> env_vars.sh
                [ ! -z "$RERUN_TIER_TEST" ] && echo "export RERUN_TIER_TEST=${RERUN_TIER_TEST}" >> env_vars.sh
-               if [ "${ODF_VERSION}" = "4.20" ]; then
-                   git clone https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
-               elif [ "${ODF_VERSION}" = "4.13" ] || [ "${ODF_VERSION}" = "4.14" ]  || [ "${ODF_VERSION}" = "4.15" ] || [ "${ODF_VERSION}" = "4.16" ] || [ "${ODF_VERSION}" = "4.17" ] || [ "${ODF_VERSION}" = "4.18" ] || [ "${ODF_VERSION}" = "4.19" ] ; then
+               if [ "${ODF_VERSION}" = "4.14" ]  || [ "${ODF_VERSION}" = "4.15" ] || [ "${ODF_VERSION}" = "4.16" ] || [ "${ODF_VERSION}" = "4.17" ] || [ "${ODF_VERSION}" = "4.18" ] || [ "${ODF_VERSION}" = "4.19" ] ; then
                    git clone -b v"${ODF_VERSION}".0 https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
                else
-                   git clone -b v4.12.0 https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
+                   git clone https://github.com/ocp-power-automation/ocs-upi-kvm.git ${WORKSPACE}/ocs-upi-kvm
                fi
                cd ${WORKSPACE}/ocs-upi-kvm; git submodule update --init;
                scp -i ${WORKSPACE}/deploy/id_rsa -o 'StrictHostKeyChecking=no' root@${BASTION_IP}:/root/openstack-upi/metadata.json ${WORKSPACE}/
