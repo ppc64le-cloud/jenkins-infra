@@ -8,7 +8,7 @@ def call(String stagee){
             sh '''
                echo "========================  ODF ENV CAPTURED AT STAGE: ${STAGE} ========================" >> ${WORKSPACE}/odf-commands.txt
                ${WORKSPACE}/scripts/odf/odf-build-info.sh >> ${WORKSPACE}/odf-commands.txt
-               grep  -A1 "ODF build" ${WORKSPACE}/odf-commands.txt | tail -1| awk '{print $2}' > odfbuild
+               grep  -A1 "ODF build" ${WORKSPACE}/odf-commands.txt | tail -1| awk '{print $1}' > odfbuild
                echo "========================  Check CRC: ${STAGE} ========================" >> ${WORKSPACE}/check_crc.txt
                chmod +x ${WORKSPACE}/scripts/odf/check_crc.sh 
                ${WORKSPACE}/scripts/odf/check_crc.sh | tee -a ${WORKSPACE}/check_crc.txt
