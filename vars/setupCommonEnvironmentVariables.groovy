@@ -161,7 +161,7 @@ def call() {
             // Pull secrets
             env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
 
-            env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT="https://github.com/sudeeshjohn/ocp4-upi-powervm.git"
+            env.OPENSHIFT_POWERVC_GIT_TF_DEPLOY_PROJECT="https://github.com/ocp-power-automation/ocp4-upi-powervm.git"
             //Cluster and vm details
             env.CLUSTER_DOMAIN="redhat.com"
             env.INSTANCE_NAME = "rdr-cicd-${env.OCP_RELEASE.replaceAll('\\.', '')}"
