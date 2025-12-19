@@ -29,7 +29,7 @@ install_playbook_repo = "__INSTALL_PLAYBOOK_REPO__"
 
 release_image_override = "__OPENSHIFT_IMAGE__"
 
-fips_compliant = "__FIPS_COMPLIANT__"
+fips_compliant = __FIPS_COMPLIANT__
 
 kdump_enable = "__KDUMP_ENABLE__"
 

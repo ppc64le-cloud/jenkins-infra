@@ -47,7 +47,7 @@ cni_network_provider = "__CNI_NETWORK_PROVIDER__"
 
 connection_timeout = "__CONNECTION_TIME_OUT__"
 
-fips_compliant = "__FIPS_COMPLIANT__"
+fips_compliant = __FIPS_COMPLIANT__
 
 kdump_enable = "__KDUMP_ENABLE__"
 
