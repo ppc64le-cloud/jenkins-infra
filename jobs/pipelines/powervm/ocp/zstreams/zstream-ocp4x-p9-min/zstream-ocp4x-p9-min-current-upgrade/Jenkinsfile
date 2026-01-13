@@ -248,6 +248,7 @@ pipeline {
         }
         stage('Setup and run ansible extra') {
             steps {
+               archiveAllArtifacts("deploy/id_rsa")
                setupAndRunE2e()
                notifyBySlack(currentBuild.result, "OCP BUILD: `${OPENSHIFT_IMAGE} to ${UPGRADE_IMAGE}` E2E has completed !!")
             }

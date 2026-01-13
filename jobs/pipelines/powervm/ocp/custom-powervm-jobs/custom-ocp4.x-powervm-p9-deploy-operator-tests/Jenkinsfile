@@ -203,6 +203,7 @@ pipeline {
         }
         stage('Validate CO status') {
             steps {
+                archiveAllArtifacts("deploy/id_rsa")
                 validateCoStatus()
             }
         }
