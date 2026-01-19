@@ -14,11 +14,12 @@ pipeline {
         string(defaultValue: '1.22.4', description: 'Enter the Go Language Version', name: 'GoLangVersion')
         choice(description: 'Select the OpenShift Release', choices: ['4.21','4.20','4.19','4.18','4.17','4.16','4.15','4.14','4.13','4.12'], name: 'Release')
         choice(description: 'Select the RedHat Release Version', choices: ['9.7','9.6','8.10'], name: 'RedHatRelease')
-        choice(description: 'Select the Configuration', choices: ['min','max'], name: 'Config')
+        choice(description: 'Select the Configuration', choices: ['min','max','odf'], name: 'Config')
         booleanParam(defaultValue: false, name: 'RunCroE2e', description: 'Select if you want to run CRO e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunMetallbE2e', description: 'Select if you want to run Metallb e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunCoE2e', description: 'Select if you want to run Compliance operator e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunFioE2e', description: 'Select if you want to run Fio operator e2e tests. E2e runs after cluster Deployed')
+        booleanParam(defaultValue: false, name: 'InstallLSO', description: 'Install Local Storage Operator')
         string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImageCo')
         string(defaultValue: '', description: 'Enter index image if you want to run the FIO e2e', name: 'IndexImagefio')
     } 
@@ -63,6 +64,8 @@ pipeline {
         L2_ADDRESS1="10.20.182.101"
         L2_ADDRESS2="10.20.182.102"
         BGB_ADDRESS1="10.20.182.103"
+        //LSO 
+        ENABLE_LSO_INSTALL = "${params.InstallLSO}"
 
         //Parameters
         REDHAT_RELEASE="${params.RedHatRelease}"
@@ -203,6 +206,7 @@ pipeline {
         }
         stage('Validate CO status') {
             steps {
+                archiveAllArtifacts("deploy/id_rsa")
                 validateCoStatus()
             }
         }
@@ -282,6 +286,26 @@ pipeline {
                             }
                             catch(err) {
                                 echo 'Running FIO_operator script failed!'
+                                failedStages.add(env.STAGE_NAME)
+                                throw err
+                            }
+                        }
+                    }
+                }
+                stage('Install LSO') {
+                    when { expression { return env.ENABLE_LSO_INSTALL == "true"; } }
+                    steps {
+                        script {
+                            ansiColor('xterm') {
+                            echo ""
+                            }
+                            try {
+                                sh '''
+                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/lso_operator.sh && ./scripts/operator/lso_operator.sh
+                                '''
+                            }
+                            catch(err) {
+                                echo 'LSO operator installation failed!'
                                 failedStages.add(env.STAGE_NAME)
                                 throw err
                             }
