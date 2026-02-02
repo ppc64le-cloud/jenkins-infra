@@ -25,8 +25,7 @@ pipeline {
         //Env constants
         HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.14.4"
-
-        OCP_RELEASE="4.20"
+        OCP_RELEASE="4.22"
         RHCOS_RELEASE="4.19"
         TARGET = "deploy-openshift4-powervc"
         TEMPLATE_FILE = ".${TARGET}.tfvars.template"
@@ -41,11 +40,11 @@ pipeline {
         //E2e and Scale specific variables
         ENABLE_E2E_TEST="true"
         ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.23.1.linux-ppc64le.tar.gz"
+        GOLANG_TARBALL="https://dl.google.com/go/go1.23.4.linux-ppc64le.tar.gz"
 
         // Type of configuration
-        CONFIG_TYPE="min"
-
+         CONFIG_TYPE="min"
+                       
         // kdump Configuration
         KDUMP_ENABLE="false"
 
@@ -63,19 +62,12 @@ pipeline {
             steps {
                 setupCommonEnvironmentVariables()
                 setupClusterConfig("${CONFIG_TYPE}")
-                script {
-                    env.UPGRADE_OCP_RELEASE="4.21"
-                    env.MOUNT_ETCD_RAMDISK="false"
-                    env.E2E_BRANCH="release-${env.UPGRADE_OCP_RELEASE}"
-                    env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.UPGRADE_OCP_RELEASE}-powervm/ocp${env.UPGRADE_OCP_RELEASE}_power_exclude_list.txt"
-                }
             }
         }
         stage('pull artifact') {
             steps {
                 script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
-                    getArtifacts("mirror-openshift-release", "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
@@ -93,23 +85,13 @@ pipeline {
                         gbToMb()
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt")) {
-                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt"
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
                         else {
-                            echo "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
-                            throw err
-                        }
-                        env.UPGRADE_IMAGE  = ""
-                        if (fileExists("deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt")) {
-                            env.UPGRADE_IMAGE = readFile "deploy/artifactory/latest-${UPGRADE_OCP_RELEASE}-stable-build.txt"
-                            env.UPGRADE_IMAGE = env.UPGRADE_IMAGE.trim()
-                            env.OCP_UPGRADE_RELEASE_TAG = env.UPGRADE_IMAGE.split(":")[1].trim()
-                        }
-                        else {
-                            echo "latest-${UPGRADE_OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt")) {
@@ -135,7 +117,7 @@ pipeline {
                             echo "Cluster cant deploy without master"
                             throw err
                         }
-                        currentBuild.description = "Upgrade OCP: ${env.OCP_RELEASE_TAG} to ${env.OCP_UPGRADE_RELEASE_TAG}"
+                        currentBuild.description = "OCP Build: ${env.OCP_RELEASE_TAG}"
                         createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
                         createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
@@ -165,30 +147,41 @@ pipeline {
                 deployCluster()
             }
         }
-        stage('Run crontab script for capturing outputs of multiple commands') {
-            steps {
-                crontabCommandCaptureScript()
-            }
-        }
         stage('Setup Kubectl') {
             steps {
                 setupKubeconfigOcp4()
             }
         }
-        stage('Setup and run ansible extra') {
+        stage('Setup And Run Verification tests') {
             steps {
-               setupAndRunE2e()
+                script {
+                     ansiColor('xterm') {
+                     echo ""
+                     }
+                     try {
+                        sh '''
+                            cd ${WORKSPACE}/deploy
+                            scp -o 'StrictHostKeyChecking no' -i id_rsa ${WORKSPACE}/scripts/verification.sh root@${BASTION_IP}:
+                            ssh -o 'StrictHostKeyChecking no' -o 'ServerAliveInterval=5' -o 'ServerAliveCountMax=1200' -i id_rsa root@${BASTION_IP} "chmod 755 verification.sh;
+                                                                                                                                                     ~/verification.sh | tee ~/verification.log 2>&1 ;
+                                                                                                                                                     exit"
+                        '''
+                     }
+                     catch(err) {
+                         echo 'Running Verification script failed!'
+                         env.FAILED_STAGE=env.STAGE_NAME
+                         throw err
+                     }
+                }
             }
         }
     }
     post {
         always {
-            archiveAllArtifacts("deploy/conformance-parallel-out.txt.tar.gz", "deploy/summary.txt", "deploy/vars.tfvars",
-                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz", "deploy/cron.log", "must-gather.tar.gz")
+            archiveAllArtifacts("deploy/vars.tfvars", "deploy/verification.log",
+                "cpu-pre.pprof", "heap-pre.pprof", "prometheus.tar.gz")
             cleanupOcp4Cluster()
             checkInfraError()
-            processE2eResults()
-            //dbDashboardUpdateE2e()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
