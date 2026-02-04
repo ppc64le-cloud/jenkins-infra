@@ -24,7 +24,7 @@ pipeline {
 
         //Env constants
         HARDWARE_CHOSE = "P9"
-        TERRAFORM_VER = "1.11.4"
+        TERRAFORM_VER = "1.14.4"
 
         OCP_RELEASE="4.20"
         RHCOS_RELEASE="4.19"
@@ -69,7 +69,7 @@ pipeline {
         stage('pull artifact') {
             steps {
                 script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
                     getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
                 }
@@ -87,13 +87,13 @@ pipeline {
                         gbToMb()
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
-                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
-                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
                         else {
-                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            echo "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt")) {
