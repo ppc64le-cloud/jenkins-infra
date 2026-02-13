@@ -24,7 +24,7 @@ pipeline {
 
         //Env constants
         HARDWARE_CHOSE = "P9"
-        TERRAFORM_VER = "1.11.4"
+        TERRAFORM_VER = "1.14.4"
 
         OCP_RELEASE="4.21"
         RHCOS_RELEASE="4.19"
