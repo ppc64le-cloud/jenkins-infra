@@ -45,6 +45,7 @@ def call() {
             env.UPGRADE_PAUSE_TIME = "90"
             env.UPGRADE_DELAY_TIME = "600"
             env.FIPS_COMPLIANT = "false"
+            env.QE_ONLY_DISABLE_IMAGE_POLICY = "false"
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
@@ -62,7 +63,7 @@ def call() {
                 env.E2E_GIT = "https://github.com/openshift/origin"
                 env.E2E_BRANCH="release-${env.OCP_RELEASE}"
                 if ( env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9" || env.OCP_RELEASE == "4.10" ||  env.OCP_RELEASE == "4.11" ) {
-                    env.CNI_NETWORK_PROVIDER = "OpenshiftSDN" 
+                    env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
                     env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervs/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
                 }
                 else {
@@ -81,10 +82,10 @@ def call() {
             //Pull Secret
             env.PULL_SECRET_FILE = "${WORKSPACE}/deploy/data/pull-secret.txt"
             //Need to use latest version for the stable release.
-            if ( env.OCP_RELEASE == "4.21" ) {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/ppc64le/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/amd64/openshift-client-linux.tar.gz"
+            if ( env.OCP_RELEASE == "4.22" ) {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/ppc64le/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/amd64/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/latest-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"
@@ -172,6 +173,7 @@ def call() {
             env.CONNECTION_TIME_OUT = "30"
             env.STORAGE_TYPE = "nfs"
             env.FIPS_COMPLIANT = "false"
+            env.QE_ONLY_DISABLE_IMAGE_POLICY = "false"
             if ( env.ODF_VERSION!= null && !env.ODF_VERSION.isEmpty() ) {
                 env.INSTANCE_NAME = "rdr-cicd-odf"
                 env.SETUP_SQUID_PROXY = "false"
@@ -185,7 +187,7 @@ def call() {
             }
             if ( env.OCP_RELEASE == "4.8" || env.OCP_RELEASE == "4.9" || env.OCP_RELEASE == "4.10" ||  env.OCP_RELEASE == "4.11" ) {
                 env.CNI_NETWORK_PROVIDER = "OpenshiftSDN"
-                env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"     
+                env.E2E_EXCLUDE_LIST="https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list.txt"
             } else {
                 env.E2E_EXCLUDE_LIST = "https://raw.github.ibm.com/redstack-power/e2e-exclude-list/${env.OCP_RELEASE}-powervm/ocp${env.OCP_RELEASE}_power_exclude_list_OVNKubernetes.txt"
             }
@@ -219,10 +221,10 @@ def call() {
             env.MASTER_MEMORY_MB=""
             env.BASTION_MEMORY_MB=""
             env.BOOTSTRAP_MEMORY_MB=''
-            if ( env.OCP_RELEASE == "4.21" ) {
-                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/ppc64le/openshift-client-linux.tar.gz"
-                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp-dev-preview/candidate-${OCP_RELEASE}/amd64/openshift-client-linux.tar.gz"
+            if ( env.OCP_RELEASE == "4.22" ) {
+                env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/ppc64le/openshift-client-linux.tar.gz"
+                env.OPENSHIFT_CLIENT_TARBALL_AMD64="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/candidate-${OCP_RELEASE}/amd64/openshift-client-linux.tar.gz"
             }
             else {
                 env.OPENSHIFT_INSTALL_TARBALL="https://mirror.openshift.com/pub/openshift-v4/multi/clients/ocp/latest-${OCP_RELEASE}/ppc64le/openshift-install-linux.tar.gz"

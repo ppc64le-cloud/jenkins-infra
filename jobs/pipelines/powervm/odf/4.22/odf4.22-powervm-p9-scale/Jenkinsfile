@@ -4,74 +4,67 @@ pipeline {
     agent {
         docker {
             image 'quay.io/powercloud/inbound-agent:3256.v88a_f6e922152-2-jdk17.1'
-            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            args '-v /etc/resolv.conf:/etc/resolv.conf.tmp '
             label 'jump-vpc-x86_64'
         }
     }
-    environment {
+     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('GITHUB_USER')
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         OS_USERNAME = credentials('OS_USERNAME')
         OS_PASSWORD = credentials('OS_PASSWORD')
         DOCKER_USER = credentials('DOCKER_USER')
         ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
         ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         REDHAT_USERNAME = credentials('REDHAT_USERNAME')
         REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
         PULL_SECRET = credentials('PULL_SECRET')
 
 
         //Env constants
-        HARDWARE_CHOSE = "P9"
         TERRAFORM_VER = "1.14.4"
-        OCP_RELEASE="4.21"
-        RHCOS_RELEASE="4.19"
-        TARGET = "deploy-openshift4-powervc"
-        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
         POWERVS = false
         SCRIPT_DEPLOYMENT = false
         WAIT_FOR_DEBUG = "1"
         REDHAT_RELEASE = "9.7"
+        OCP_RELEASE = "4.22"
+        RHCOS_RELEASE="9.8"
 
         //Branch
         OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main"//The download branch
 
-        //E2e and Scale specific variables
-        ENABLE_E2E_TEST="true"
-        ENABLE_SCALE_TEST="false"
-        GOLANG_TARBALL="https://dl.google.com/go/go1.23.4.linux-ppc64le.tar.gz"
-        PRE_KERNEL_OPTIONS='\\"rd.multipath=default\\", \\"root=/dev/disk/by-label/dm-mpath-root\\"'
+        TARGET = "deploy-openshift4-powervc"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
 
-        // Type of configuration
-        CONFIG_TYPE="min"
-
+        // ODF Variables
+        PLATFORM = "powervm"
+        ODF_VERSION = "4.22"
+        TIER_TEST = "scale"
+        ENABLE_FIPS = false
+        ENABLE_VAULT = false
+        CONFIG_TYPE = "odf-scale"
         // kdump Configuration
         KDUMP_ENABLE="false"
+        NUM_OF_WORKERS = "4"
+        WORKER_VOLUME_SIZE = "1T"
 
-
+        //QE only disable image policy for OCP 4.22+
+        QE_ONLY_DISABLE_IMAGE_POLICY="true"
 
 	 }
-
     stages {
-        stage('Clone ansible extra') {
-            steps {
-                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
-            }
-        }
         stage('Setup Common Environment Variables') {
             steps {
                 setupCommonEnvironmentVariables()
-                setupClusterConfig("${CONFIG_TYPE}")
+                setupClusterConfig("${CONFIG_TYPE}","${NUM_OF_WORKERS}")
             }
         }
         stage('pull artifact') {
             steps {
-                script {
-                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
-                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
-                    getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
-                }
+                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
+                getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
             }
         }
         //Checkout the installer git repo
@@ -83,9 +76,10 @@ pipeline {
                     }
                     try
                     {
-                        gbToMb()
                         pullSecret()
+                        gbToMb()
                         env.OPENSHIFT_IMAGE = ""
+                        env.OCP_RELEASE_TAG = ""
                         if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
                             env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
@@ -96,9 +90,9 @@ pipeline {
                             throw err
                         }
                         if (fileExists("deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt")) {
-                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt"
-                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
-                            env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
+                             env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt"
+                             env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
+                             env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
                         }
                         else {
                             echo "cicd-rhcos-${RHCOS_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
@@ -111,11 +105,6 @@ pipeline {
                         }
                         else {
                             echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
-                            throw err
-                        }
-                        if (env.DEPLOY_MASTER == "false")
-                        {
-                            echo "Cluster cant deploy without master"
                             throw err
                         }
                         currentBuild.description = "OCP Build: ${env.OCP_RELEASE_TAG}"
@@ -136,6 +125,9 @@ pipeline {
         stage('Initialize Environment') {
             steps {
                 initializeEnvironment()
+                script {
+                    env.RERUN_TIER_TEST = "1"
+                }
             }
         }
         stage('Setup Terraform Plugin') {
@@ -153,13 +145,92 @@ pipeline {
                 setupKubeconfigOcp4()
             }
         }
+        stage('Run ODF Setup script') {
+            steps {
+                odfAuthYaml()
+                script {
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x odf-rescan-scsi.sh
+                            ./odf-rescan-scsi.sh
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ODF deploy script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+                odfRunSetupScript()
+            }
+        }
+        stage('Run ODF deploy script') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-odf-deploy.sh
+                            ./run-odf-deploy.sh
+                            chmod +x buffer_io_disabled.sh
+                            ./buffer_io_disabled.sh
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! ODF deploy script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Capture output of multiple commands to verify ODF deployment') {
+            steps {
+                odfRunCommands("Before scale test")
+            }
+        }
+        stage('Run ODF scale test') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            cd ${WORKSPACE}/scripts/odf
+                            chmod +x run-tier-tests.sh
+                            ./run-tier-tests.sh
+                            # Check if HTML reports exist and copy to results.html
+                            if ls ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/*.html >/dev/null 2>&1; then
+                                cp ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/*.html ${WORKSPACE}/logs-ocs-ci/${ODF_VERSION}/results.html
+                                echo "Converted HTML test report to results.html"
+                            fi
+                        '''
+                    }
+                    catch (err) {
+                        echo 'Error ! scale test script failed!'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                 }
+             }
+        }
+        stage('Capture cluster information after the test') {
+            steps {
+                odfRunCommands("After scale test")
+            }
+        }
     }
     post {
         always {
-            archiveAllArtifacts("deploy/vars.tfvars")
+            archiveAllArtifacts("results.tar.gz","odf-must-gather.tar.gz", "check_crc.txt","scale-test-summary.txt", "odf-commands.txt", "odfbuild", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
-            //dbDashboardUpdateE2e()
+            odfProcessTierTestResults()
             notifyBySlack(currentBuild.result, env.MESSAGE)
             cleanWs()
         }
