@@ -19,12 +19,14 @@ pipeline {
         booleanParam(defaultValue: false, name: 'RunMetallbE2e', description: 'Select if you want to run Metallb e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunCoE2e', description: 'Select if you want to run Compliance operator e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunFioE2e', description: 'Select if you want to run Fio operator e2e tests. E2e runs after cluster Deployed')
+        booleanParam(defaultValue: false, name: 'RunNmstateE2e', description: 'Select if you want to run Nmstate operator e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'InstallLSO', description: 'Install Local Storage Operator')
         string(defaultValue: '', description: 'Enter index image for installing LSO', name: 'IndexImageLSO')
         string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImageCo')
         string(defaultValue: '', description: 'Enter index image if you want to run the FIO e2e', name: 'IndexImagefio')
+        string(defaultValue: '', description: 'Enter index image if you want to run the NMSTATE e2e', name: 'IndexImageNmstate')
         string(defaultValue: '', description: 'Enter index image if you want to run the Metallb e2e', name: 'IndexImageMetallb')
-    } 
+    }
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
         GITHUB_USER = credentials('PUBLIC_GITHUB_USER') 
@@ -63,6 +65,9 @@ pipeline {
         //FIO Operator e2e
         ENABLE_FIO_E2E_TEST = "${params.RunFioE2e}"
         FIO_CATALOGSOURCE_IMAGE = "${params.IndexImagefio}"
+        //NMSTATE Operator e2e
+        ENABLE_NMSTATE_E2E_TEST = "${params.RunNmstateE2e}"
+        NMSTATE_CATALOGSOURCE_IMAGE = "${params.IndexImageNmstate}"
         //Ip address for metallb Operators E2E
         L2_ADDRESS1="10.20.182.101"
         L2_ADDRESS2="10.20.182.102"
@@ -323,6 +328,26 @@ pipeline {
                         }
                     }
                 }
+                stage('NMSTATE operator tests'){
+                    when { expression { return env.ENABLE_NMSTATE_E2E_TEST == "true"; } }
+                    steps{
+                        script{
+                            ansiColor('xterm') {
+                            echo ""
+                            }
+                            try {
+                                sh '''
+                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/nmstate_operator.sh && ./scripts/operator/nmstate_operator.sh
+                                '''
+                            }
+                            catch(err) {
+                                echo 'Running NMSTATE_operator script failed!'
+                                failedStages.add(env.STAGE_NAME)
+                                throw err
+                            }
+                        }
+                    }
+                }
             }
         }
         stage('Waiting to timeout') {
@@ -351,7 +376,7 @@ pipeline {
     }
     post {
         always {
-            archiveAllArtifacts("deploy/croo_e2e_output_*.txt", "deploy/e2e-metallb-repo-logs.txt", "deploy/e2e-metallb-private-logs.txt", "deploy/e2e-output.txt", "deploy/e2e-re-run-output-*.txt", "deploy/fio-e2e-*.txt", "deploy/vars.tfvars")
+            archiveAllArtifacts("deploy/croo_e2e_output_*.txt", "deploy/e2e-metallb-repo-logs.txt", "deploy/e2e-metallb-private-logs.txt", "deploy/e2e-output.txt", "deploy/e2e-re-run-output-*.txt", "deploy/fio-e2e-*.txt","deploy/nmstate-e2e-*.txt", "deploy/vars.tfvars")
             cleanupOcp4Cluster()
             checkInfraError()
             script{
