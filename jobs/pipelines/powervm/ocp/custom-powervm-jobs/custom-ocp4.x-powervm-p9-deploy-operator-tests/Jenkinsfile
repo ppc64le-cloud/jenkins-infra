@@ -20,10 +20,19 @@ pipeline {
         booleanParam(defaultValue: false, name: 'RunCoE2e', description: 'Select if you want to run Compliance operator e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunFioE2e', description: 'Select if you want to run Fio operator e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'InstallLSO', description: 'Install Local Storage Operator')
+        booleanParam(defaultValue: false, name: 'SetupLoggingStack', description: 'Setup Cluster Logging stack')
         string(defaultValue: '', description: 'Enter index image for installing LSO', name: 'IndexImageLSO')
         string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImageCo')
         string(defaultValue: '', description: 'Enter index image if you want to run the FIO e2e', name: 'IndexImagefio')
         string(defaultValue: '', description: 'Enter index image if you want to run the Metallb e2e', name: 'IndexImageMetallb')
+        string(defaultValue: '', description: 'Enter Catalog Source image for installing CLO', name: 'IndexImageCLO')
+        string(defaultValue: '', description: 'Enter Catalog Source image for installing LOKI', name: 'IndexImageLOKI')
+        string(defaultValue: '', description: 'Enter Cluster logging channel', name: 'CloChannel')
+        string(defaultValue: '', description: 'Enter Loki channel', name: 'LokiChannel')
+        string(defaultValue: '', description: 'Enter Elasticsearch URL', name: 'ElasticsearchURL')
+        string(defaultValue: '', description: 'Enter Kafka URL', name: 'KafkaURL')
+        string(defaultValue: '', description: 'Enter Loki URL', name: 'LokiURL')
+        string(defaultValue: '', description: 'Enter Syslog URL', name: 'SyslogURL')
     } 
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
@@ -70,6 +79,21 @@ pipeline {
         //LSO 
         ENABLE_LSO_INSTALL = "${params.InstallLSO}"
         LSO_CATALOGSOURCE_IMAGE = "${params.IndexImageLSO}"
+        //Cluster Logging Stack
+        ENABLE_LOGGING_STACK = "${params.SetupLoggingStack}"
+        CLO_CATALOGSOURCE_IMAGE = "${params.IndexImageCLO}"
+        LOKI_CATALOGSOURCE_IMAGE = "${params.IndexImageLOKI}"
+        CLUSTER_LOGGING_CHANNEL = "${params.CloChannel}"
+        LOKI_CHANNEL = "${params.LokiChannel}"
+        ELASTICSEARCH_URL = "${params.ElasticsearchURL}"
+        KAFKA_URL = "${params.KafkaURL}"
+        LOKI_URL = "${params.LokiURL}"
+        SYSLOG_URL = "${params.SyslogURL}"
+        AWS_ACCESS_KEY_ID= credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY= credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_REGION = credentials('AWS_REGION')
+        COS_STANDARD_KEY= credentials('COS_STANDARD_KEY')
+        COS_STANDARD_SECRET= credentials('COS_STANDARD_SECRET')
 
         //Parameters
         REDHAT_RELEASE="${params.RedHatRelease}"
@@ -84,7 +108,7 @@ pipeline {
     stages {
         stage('Clone ansible extra') {
             steps {
-                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
+                cloneRepo("https://github.com/Jeevaann/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/new-log")
             }
         }
         stage('Setup Common Environment Variables') {
@@ -317,6 +341,26 @@ pipeline {
                             }
                             catch(err) {
                                 echo 'LSO operator installation failed!'
+                                failedStages.add(env.STAGE_NAME)
+                                throw err
+                            }
+                        }
+                    }
+                }
+                stage('Install Logging Stack') {
+                    when { expression { return env.ENABLE_LOGGING_STACK == "true"; } }
+                    steps {
+                        script {
+                            ansiColor('xterm') {
+                            echo ""
+                            }
+                            try {
+                                sh '''
+                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/logging_stack.sh && ./scripts/operator/logging_stack.sh
+                                '''
+                            }
+                            catch(err) {
+                                echo 'Logging Stack setup failed!'
                                 failedStages.add(env.STAGE_NAME)
                                 throw err
                             }
