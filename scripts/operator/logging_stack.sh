@@ -48,13 +48,13 @@ oc create secret generic lokicred-secret \
   --from-literal=access_key_secret=${COS_STANDARD_SECRET} \
   -n openshift-logging \
   --dry-run=client -o yaml | oc apply -f -
-
-oc create secret generic cw-secret \
-  --from-literal=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
-  --from-literal=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
-  -n openshift-logging \
-  --dry-run=client -o yaml | oc apply -f -
 EOF
+# oc create secret generic cw-secret \
+#   --from-literal=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
+#   --from-literal=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
+#   -n openshift-logging \
+#   --dry-run=client -o yaml | oc apply -f -
+# EOF
 
 # Install dependency
 python3 -m pip install --break-system-packages kubernetes openshift
