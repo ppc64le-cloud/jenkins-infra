@@ -89,8 +89,8 @@ pipeline {
         KAFKA_URL = "${params.KafkaURL}"
         LOKI_URL = "${params.LokiURL}"
         SYSLOG_URL = "${params.SyslogURL}"
-        AWS_ACCESS_KEY_ID= credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY= credentials('AWS_SECRET_ACCESS_KEY')
+        // AWS_ACCESS_KEY_ID= credentials('AWS_ACCESS_KEY_ID')
+        // AWS_SECRET_ACCESS_KEY= credentials('AWS_SECRET_ACCESS_KEY')
         // AWS_REGION = credentials('AWS_REGION')
         COS_STANDARD_KEY= credentials('COS_STANDARD_KEY')
         COS_STANDARD_SECRET= credentials('COS_STANDARD_SECRET')
