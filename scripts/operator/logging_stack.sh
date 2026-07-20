@@ -26,7 +26,7 @@ sed -i \
 -e "s|loki_url:.*$|loki_url: \"${LOKI_URL}\"|" \
 -e "s|syslog_url:.*$|syslog_url: \"${SYSLOG_URL}\"|" \
 -e "s|kafka_path:.*$|kafka_path: /usr/local/kafka/bin|g" \
--e "s|aws_region:.*$|aws_region: \"${AWS_REGION}\"|" \
+-e "s|aws_region:.*$|aws_region: \"ap-south-1\"|" \
 -e "s|cloudwatch_secret:.*$|cloudwatch_secret: cw-secret|g" \
 -e "s|kibana_ldap_validation:.*$|kibana_ldap_validation: false|g" \
 -e "s|log_label:.*$|log_label: test-log|g" \
