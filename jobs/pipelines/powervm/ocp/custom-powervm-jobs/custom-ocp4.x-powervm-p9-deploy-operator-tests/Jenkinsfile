@@ -358,7 +358,7 @@ pipeline {
                         }
                     }
                 }
-    stage('Install CSO') {
+    			stage('Install CSO') {
                     when { expression { return params.InstallCSO } }
                     steps {
                         script {
