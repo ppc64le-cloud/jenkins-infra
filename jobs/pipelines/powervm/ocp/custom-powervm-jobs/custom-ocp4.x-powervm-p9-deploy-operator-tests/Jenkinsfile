@@ -28,8 +28,8 @@ pipeline {
         string(defaultValue: '', description: 'Enter index image if you want to run the Metallb e2e', name: 'IndexImageMetallb')
 	    booleanParam(defaultValue: false, name: 'InstallCSO', description: 'Install Container Security Operator')
         string(defaultValue: '', description: 'Enter index image for installing CSO', name: 'IndexImageCSO')
-        choice(description: 'Select the Channel for CSO Operator', choices: ['stable-3.10','stable-3.11','stable-3.12','stable-3.13','stable-3.14','stable-3.15','stable-3.16','stable-3.17','stable-3.18'], name: 'CSO_Channel')
-        text(defaultValue: '', description: 'Paste pull secret JSON', name: 'CSO_PULL_SECRET_INPUT')
+		string(defaultValue: 'stable-3.18', description: 'Enter the CSO Operator channel', name: 'CSO_CHANNEL')
+		text(defaultValue: '', description: 'Paste pull secret JSON', name: 'CSO_PULL_SECRET_INPUT')
         text(defaultValue: '', description: 'Paste icsp yaml', name: 'CSO_ICSP_INPUT')
     } 
     environment {
@@ -82,7 +82,7 @@ pipeline {
         LSO_CATALOGSOURCE_IMAGE = "${params.IndexImageLSO}"
 	    //ContainerSecurityOperator 
 		CSO_CATALOGSOURCE_IMAGE = "${params.IndexImageCSO}"
-		CSO_Channel = "${params.CSO_Channel}"
+		CSO_CHANNEL = "${params.CSO_CHANNEL}"
 		CSO_PULL_SECRET_INPUT = "${params.CSO_PULL_SECRET_INPUT}"
 		CSO_ICSP_INPUT = "${params.CSO_ICSP_INPUT}"
 
