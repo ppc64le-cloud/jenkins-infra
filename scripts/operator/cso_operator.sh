@@ -14,7 +14,7 @@ sed -i "s|cso_enabled:.*$|cso_enabled: true|g" ocp_cso_vars.yaml
 sed -i "s|cso_namespace:.*$|cso_namespace: quay-registry|g" ocp_cso_vars.yaml
 sed -i "s|cso_catalogsource_name:.*$|cso_catalogsource_name: cso-catsrc|g" ocp_cso_vars.yaml
 sed -i "s|cso_catalogsource_image:.*$|cso_catalogsource_image: ${CSO_CATALOGSOURCE_IMAGE}|g" ocp_cso_vars.yaml
-sed -i "s|cso_operator_channel:.*$|cso_operator_channel : ${CSO_Channel}|g" ocp_cso_vars.yaml
+sed -i "s|cso_operator_channel:.*$|cso_operator_channel : ${CSO_CHANNEL}|g" ocp_cso_vars.yaml
 sed -i "s|cso_enable_global_secret:.*$|cso_enable_global_secret: false|g" ocp_cso_vars.yaml
 
 cat <<EOF > /tmp/pull-secret.json
