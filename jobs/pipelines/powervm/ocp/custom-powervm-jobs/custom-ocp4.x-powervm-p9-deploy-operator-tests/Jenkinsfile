@@ -26,6 +26,11 @@ pipeline {
         string(defaultValue: '', description: 'Enter index image if you want to run the CO e2e', name: 'IndexImageCo')
         string(defaultValue: '', description: 'Enter index image if you want to run the FIO e2e', name: 'IndexImagefio')
         string(defaultValue: '', description: 'Enter index image if you want to run the Metallb e2e', name: 'IndexImageMetallb')
+	    booleanParam(defaultValue: false, name: 'InstallCSO', description: 'Install Container Security Operator')
+        string(defaultValue: '', description: 'Enter index image for installing CSO', name: 'IndexImageCSO')
+		string(defaultValue: 'stable-3.18', description: 'Enter the CSO Operator channel', name: 'CSO_CHANNEL')
+		text(defaultValue: '', description: 'Paste pull secret JSON', name: 'CSO_PULL_SECRET_INPUT')
+        text(defaultValue: '', description: 'Paste icsp yaml', name: 'CSO_ICSP_INPUT')
     } 
     environment {
         //users and credentials. All must be defined in Jenkins Credentials
@@ -75,6 +80,11 @@ pipeline {
         //LSO 
         ENABLE_LSO_INSTALL = "${params.InstallLSO}"
         LSO_CATALOGSOURCE_IMAGE = "${params.IndexImageLSO}"
+	    //ContainerSecurityOperator 
+		CSO_CATALOGSOURCE_IMAGE = "${params.IndexImageCSO}"
+		CSO_CHANNEL = "${params.CSO_CHANNEL}"
+		CSO_PULL_SECRET_INPUT = "${params.CSO_PULL_SECRET_INPUT}"
+		CSO_ICSP_INPUT = "${params.CSO_ICSP_INPUT}"
 
         //Parameters
         REDHAT_RELEASE="${params.RedHatRelease}"
@@ -342,6 +352,26 @@ pipeline {
                             }
                             catch(err) {
                                 echo 'Running FIO_operator script failed!'
+                                failedStages.add(env.STAGE_NAME)
+                                throw err
+                            }
+                        }
+                    }
+                }
+    			stage('Install CSO') {
+                    when { expression { return params.InstallCSO } }
+                    steps {
+                        script {
+                            ansiColor('xterm') {
+                            echo ""
+                            }
+                            try {
+                                sh '''
+                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/cso_operator.sh && ./scripts/operator/cso_operator.sh
+                                '''
+                            }
+                            catch(err) {
+                                echo 'CSO operator installation failed!'
                                 failedStages.add(env.STAGE_NAME)
                                 throw err
                             }
