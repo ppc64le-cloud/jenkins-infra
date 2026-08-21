@@ -1,0 +1,508 @@
+@Library('jenkins-upstream-library') _
+def failedStages = []
+pipeline {
+    agent {
+        docker {
+            image 'quay.io/powercloud/inbound-agent:3256.v88a_f6e922152-2-jdk17.1'
+            args '-v /etc/resolv.conf:/etc/resolv.conf -v /run/containerd/containerd.sock:/run/containerd/containerd.sock'
+            label 'jump-vpc-x86_64'
+        }
+    }
+    parameters {
+        string(defaultValue: '', description: 'Build(quay image or build number)', name: 'Build')
+        string(defaultValue: '300', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
+        choice(description: 'Select the OpenShift Release', choices: ['4.22','4.21','4.20','4.19','4.18','4.17','4.16','4.15','4.14','4.13','4.12'], name: 'Release')
+        choice(description: 'Select the RedHat Release Version', choices: ['9.8','9.7','9.6','8.10'], name: 'RedHatRelease')
+        string(defaultValue: '', description: 'Enter index image for installing Quay', name: 'IndexImageQuay')
+        choice(description: 'Select the Channel for Quay Operator', choices: ['stable-3.10','stable-3.11','stable-3.12','stable-3.13','stable-3.14','stable-3.15','stable-3.16','stable-3.17','stable-3.18'], name: 'Channel')
+        text(defaultValue: '', description: 'Paste pull secret JSON', name: 'PULL_SECRET_INPUT')
+        booleanParam(defaultValue: false, description: 'Run Cypress regression tests (API + Smoke) after Quay installation - EXPERIMENTAL, currently unreliable due to shell-launch failures on the regression test agent. Leave off for normal runs; enable only when actively debugging the Cypress stage.', name: 'RUN_REGRESSION_TESTS')
+    }
+    environment {
+        //users and credentials. All must be defined in Jenkins Credentials
+        GITHUB_USER = credentials('PUBLIC_GITHUB_USER')
+        GITHUB_TOKEN = credentials('PUBLIC_GITHUB_TOKEN')
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
+        ARTIFACTORY_USER = credentials('ARTIFACTORY_USER')
+        ARTIFACTORY_TOKEN = credentials('ARTIFACTORY_TOKEN')
+        REDHAT_USERNAME = credentials('REDHAT_USERNAME')
+        REDHAT_PASSWORD = credentials('REDHAT_PASSWORD')
+        PULL_SECRET = credentials('PULL_SECRET')
+
+        //Env constants
+        HARDWARE_CHOSE = "P9"
+        TERRAFORM_VER = "1.9.2"
+        TARGET = "deploy-openshift4-powervc"
+        TEMPLATE_FILE = ".${TARGET}.tfvars.template"
+        POWERVS = false
+        SCRIPT_DEPLOYMENT = false
+        WAIT_FOR_DEBUG = "1"
+
+        //Branch
+        OPENSHIFT_POWERVC_GIT_TF_DEPLOY_BRANCH="main" //The download branch
+
+        //Quay
+        QUAY_CATALOGSOURCE_IMAGE = "${params.IndexImageQuay}"
+        QUAY_OPERATOR_CHANNEL = "${params.Channel}"
+
+        //Parameters
+        REDHAT_RELEASE="${params.RedHatRelease}"
+        OCP_RELEASE="${params.Release}"
+        CONFIG_TYPE="odf"
+        BUILD="${params.Build}"
+        TIMEOUT = "${params.KeepFor}"
+
+        // kdump Configuration
+        KDUMP_ENABLE="false"
+    }
+    stages {
+        stage('Clone ansible extra') {
+            steps {
+                cloneRepo("https://github.com/ocp-power-automation/ocp4-playbooks-extras", "ocp4-playbooks-extras", "*/main")
+            }
+        }
+        stage('Setup Common Environment Variables') {
+            steps {
+                setupCommonEnvironmentVariables()
+                setupClusterConfig("${CONFIG_TYPE}")
+                script {
+                    env.BASTION_MEMORY = "16"
+                    // Added a condition for RHCOS_RELEASE to be set to 4.19 for OCP 4.20/4.21/4.22
+                    if (env.OCP_RELEASE == "4.20" || env.OCP_RELEASE == "4.21" || env.OCP_RELEASE == "4.22"){
+                        env.RHCOS_RELEASE = "4.19"
+                    }
+                    else {
+                        env.RHCOS_RELEASE = env.OCP_RELEASE
+                    }
+
+                    // Derive Quay version from Channel parameter
+                    // e.g. "stable-3.15" → QUAY_VERSION="3.15", QUAY_MINOR_VERSION="15"
+                    def channelStr = params.Channel                        // "stable-3.15"
+                    def versionStr = channelStr.replaceAll('stable-', '')  // "3.15"
+                    env.QUAY_VERSION = versionStr
+                    env.QUAY_MINOR_VERSION = versionStr.split('\\.')[1]    // "15"
+                    echo "Quay version: ${env.QUAY_VERSION} (minor: ${env.QUAY_MINOR_VERSION})"
+                }
+            }
+        }
+        stage('pull artifact') {
+            steps {
+                script {
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt")
+                    getArtifacts("powervm/poll-powervc-images", "cicd-rhcos-${RHCOS_RELEASE}.latest.txt")
+                    getArtifacts("powervm/poll-powervc-images", "cicd-rhel-${REDHAT_RELEASE}.latest.txt")
+                }
+            }
+        }
+        //Checkout the installer git repo
+        stage('Prepare Terraform Template') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try
+                    {
+                        gbToMb()
+                        pullSecret()
+                        env.OPENSHIFT_IMAGE = ""
+                        if (env.BUILD?.trim()) {
+                            if (!env.BUILD.contains('quay')) {
+                                env.OPENSHIFT_IMAGE  = "docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local/ocp-ppc64le/release-ppc64le:${env.BUILD}"
+                                sh '''
+                                    nerdctl login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_TOKEN} docker-na.artifactory.swg-devops.com/sys-powercloud-docker-local
+                                    nerdctl pull ${OPENSHIFT_IMAGE}
+                                    if [ $? -ne 0 ]; then
+                                        echo "${OPENSHIFT_IMAGE}  not found"
+                                        exit 1
+                                    fi
+                                    nerdctl rmi ${OPENSHIFT_IMAGE}
+                                '''
+                            }
+                            else {
+                               env.OPENSHIFT_IMAGE=env.BUILD
+                            }
+                        }
+                        else if ( currentBuild.getBuildCauses('hudson.triggers.TimerTrigger$TimerTriggerCause') ){
+                            // When its cron job
+                            if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
+                                env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                                env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
+                            }
+                            else {
+                                echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                                throw err
+                            }
+                        } else {
+                            echo "CURRENT build is empty"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt")) {
+                            env.RHCOS_IMAGE = readFile "deploy/artifactory/cicd-rhcos-${RHCOS_RELEASE}.latest.txt"
+                            env.RHCOS_IMAGE_NAME = env.RHCOS_IMAGE.split()[0].trim()
+                            env.RHCOS_IMAGE_ID = env.RHCOS_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhcos-${RHCOS_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
+                        }
+                        if (fileExists("deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt")) {
+                            env.BASTION_IMAGE = readFile "deploy/artifactory/cicd-rhel-${REDHAT_RELEASE}.latest.txt"
+                            env.BASTION_IMAGE_NAME = env.BASTION_IMAGE.split()[0].trim()
+                            env.BASTION_IMAGE_ID = env.BASTION_IMAGE.split()[1].trim()
+                        }
+                        else {
+                            echo "cicd-rhel-${REDHAT_RELEASE}.latest.txt file does not exist. Please check poll-powervc-images job"
+                            throw err
+                        }
+                        env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
+                        env.BUILD = env.OCP_RELEASE_TAG
+                        currentBuild.description = "OCP Build: ${OCP_RELEASE_TAG}"
+                        createTemplate(env.OS_AUTH_URL, env.MASTER_VCPUS , "${MASTER_MEMORY_MB}", env.MASTER_PROCESSORS, env.MASTER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.WORKER_VCPUS , "${WORKER_MEMORY_MB}", env.WORKER_PROCESSORS, env.WORKER_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BASTION_VCPUS , "${BASTION_MEMORY_MB}", env.BASTION_PROCESSORS, env.BASTION_TEMPLATE)
+                        createTemplate(env.OS_AUTH_URL, env.BOOTSTRAP_VCPUS , "${BOOTSTRAP_MEMORY_MB}", env.BOOTSTRAP_PROCESSORS, env.BOOTSTRAP_TEMPLATE)
+                    }
+                    catch (err)
+                    {
+                        echo 'Error ! Template preparation failed !'
+                        env.FAILED_STAGE=env.STAGE_NAME
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Initialize Environment') {
+            steps {
+                initializeEnvironment()
+            }
+        }
+        stage('Setup Terraform Plugin') {
+            steps {
+                setupTerraformPlugin()
+            }
+        }
+        stage('Deploy OCP Cluster') {
+            steps {
+                deployCluster()
+            }
+        }
+        stage('Run crontab script for capturing outputs of multiple commands') {
+            steps {
+                crontabCommandCaptureScript()
+            }
+        }
+        stage('Setup Kubectl') {
+            steps {
+                setupKubeconfigOcp4()
+            }
+        }
+        stage('Validate CO status') {
+            steps {
+                archiveAllArtifacts("deploy/id_rsa")
+                validateCoStatus()
+            }
+        }
+        // =====================================================================
+        // Capture kubeadmin password AND kubeconfig as env vars, fetched
+        // directly from the bastion via SSH - the same way cron.sh gets
+        // deployed to the bastion earlier in the pipeline (id_rsa key,
+        // root@<bastion IP>). Neither file ever existed in the Jenkins
+        // workspace itself (that's why guessing local paths, and even a
+        // workspace-wide 'find', kept coming up empty) - they only ever
+        // lived on the bastion under /root/openstack-upi/auth/.
+        //
+        // kubeconfig is base64-encoded before being stashed in env, since
+        // it's multi-line YAML and env vars need to stay single-line-safe
+        // when threaded through later 'sh' blocks.
+        //
+        // Stashing both in env.* (strings) makes them available later
+        // regardless of which node/workspace runs the 'Run Regression
+        // Tests' stage, since that stage declares its own agent and gets
+        // a fresh workspace without deploy/ in it.
+        //
+        // Wrapped in try/catch: a failure here must never abort the whole
+        // pipeline and cascade-skip Quay Installation, Stabilize Quay
+        // Deployment, and the parallel block, the way earlier versions did.
+        // =====================================================================
+        stage('Capture Cluster Credentials') {
+            steps {
+                script {
+                    try {
+                        def kubeadminPassword = sh(
+                            script: '''
+                                cd ${WORKSPACE}/deploy
+                                ssh -o StrictHostKeyChecking=no -i id_rsa root@${BASTION_IP} \
+                                    "cat /root/openstack-upi/auth/kubeadmin-password"
+                            ''',
+                            returnStdout: true
+                        ).trim()
+                        if (kubeadminPassword) {
+                            env.KUBEADMIN_PASSWORD = kubeadminPassword
+                            echo "Captured kubeadmin password from bastion (${env.BASTION_IP})"
+                        } else {
+                            echo "WARNING: kubeadmin password came back empty from bastion. Regression tests will run without OCP credentials."
+                        }
+                    } catch (err) {
+                        echo "WARNING: Failed to capture kubeadmin password from bastion (${err}). Continuing without it."
+                        failedStages.add(env.STAGE_NAME)
+                    }
+
+                    try {
+                        def kubeconfigB64 = sh(
+                            script: '''
+                                cd ${WORKSPACE}/deploy
+                                ssh -o StrictHostKeyChecking=no -i id_rsa root@${BASTION_IP} \
+                                    "cat /root/openstack-upi/auth/kubeconfig" | base64 -w0
+                            ''',
+                            returnStdout: true
+                        ).trim()
+                        if (kubeconfigB64) {
+                            env.KUBECONFIG_B64 = kubeconfigB64
+                            echo "Captured kubeconfig from bastion (${env.BASTION_IP})"
+                        } else {
+                            echo "WARNING: kubeconfig came back empty from bastion. Smoke tests will not have cluster access."
+                        }
+                    } catch (err) {
+                        echo "WARNING: Failed to capture kubeconfig from bastion (${err}). Continuing without it."
+                        failedStages.add(env.STAGE_NAME)
+                    }
+                }
+            }
+        }
+        stage('Quay Installation') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        lock('cluster-pull-secret') {
+                            withEnv(["PULL_SECRET_INPUT=${params.PULL_SECRET_INPUT}"]) {
+                                sh '''
+                                    cd ${WORKSPACE}
+                                    chmod +x ./scripts/operator/quay_operator.sh
+                                    ./scripts/operator/quay_operator.sh
+                                '''
+                            }
+                        }
+                    }
+                    catch(err) {
+                        echo 'Quay operator installation failed!'
+                        failedStages.add(env.STAGE_NAME)
+                        throw err
+                    }
+                }
+            }
+        }
+        stage('Run cronquay script for capturing outputs of multiple commands') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            chmod +x ${WORKSPACE}/scripts/quay/cron_quay.sh
+                            ${WORKSPACE}/scripts/quay/cron_quay.sh 2>&1 | tee ${WORKSPACE}/deploy/cron_quay.log
+                        '''
+                    } catch (err) {
+                        echo 'Running Quay log collection failed!'
+                        failedStages.add(env.STAGE_NAME)
+                        throw err
+                    }
+                }
+                archiveAllArtifacts("deploy/cron_quay.log")
+            }
+        }
+
+        // =====================================================================
+        // NEW: Stabilize the Quay deployment before tests / cluster hold.
+        // quayreg1-quay-app pods were seen flapping (0/1 Running, repeated
+        // restarts) because the startupProbe failureThreshold was too low
+        // for the DB/registry backend to come up in time. Patch it, cycle
+        // the pods, and wait for them to go Ready before moving on.
+        // =====================================================================
+        stage('Stabilize Quay Deployment') {
+            steps {
+                script {
+                    ansiColor('xterm') {
+                        echo ""
+                    }
+                    try {
+                        sh '''
+                            echo "Patching quayreg1-quay-app startupProbe failureThreshold to 20"
+                            oc patch deployment quayreg1-quay-app -n quay-registry --type=json \
+                                -p='[{"op":"replace","path":"/spec/template/spec/containers/0/startupProbe/failureThreshold","value":20}]'
+
+                            echo "Deleting existing quay-app pods so the new probe setting takes effect"
+                            oc get pods -n quay-registry -o name \
+                                | grep '^pod/quayreg1-quay-app-' \
+                                | grep -v upgrade \
+                                | xargs -r oc delete -n quay-registry --ignore-not-found
+
+                            echo "Waiting for quay-app pods to become Ready (up to 10 minutes)"
+                            for i in $(seq 1 30); do
+                                NOT_READY=$(oc get pods -n quay-registry --no-headers \
+                                    | grep 'quayreg1-quay-app-' | grep -v upgrade \
+                                    | grep -vE '1/1|2/2' | wc -l)
+                                if [ "$NOT_READY" -eq 0 ]; then
+                                    echo "All quay-app pods are Ready."
+                                    break
+                                fi
+                                echo "Attempt $i/30: $NOT_READY pod(s) not Ready yet, waiting 20s..."
+                                sleep 20
+                            done
+                            oc get pods -n quay-registry
+                        '''
+                    } catch (err) {
+                        echo 'Warning: Quay stabilization step had issues, continuing anyway'
+                        failedStages.add(env.STAGE_NAME)
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // PARALLEL: Hold cluster + run regression tests simultaneously
+        // =====================================================================
+        stage('Parallel: Timeout & Regression Tests') {
+            parallel {
+
+                // -------------------------------------------------------------
+                // Branch 1: Hold the cluster (unchanged, but TIMEOUT_MIN /
+                // TIMEOUT_SEC now properly scoped with 'def' to avoid the
+                // "did you forget the def keyword" leak warning, and
+                // TIMEOUT_SEC is always initialized so sleep never gets an
+                // undefined value if KeepFor=0 is ever passed).
+                // -------------------------------------------------------------
+                stage('Waiting to timeout') {
+                    steps {
+                        script {
+                            ansiColor('xterm') {
+                                echo ""
+                            }
+                            try {
+                                def TIMEOUT_MIN = TIMEOUT.toInteger()
+                                def TIMEOUT_SEC = 0
+                                if ( TIMEOUT_MIN != 0 ) {
+                                    TIMEOUT_SEC = TIMEOUT_MIN*60
+                                }
+                                echo "HOLDING THE CLUSTER TEAR DOWN FOR ${TIMEOUT_MIN} MINUTES"
+                                sleep TIMEOUT_SEC
+                            }
+                            catch (err) {
+                                echo 'Error ! Timeout stage failed!'
+                                env.FAILED_STAGE=env.STAGE_NAME
+                                throw err
+                            }
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // Branch 2: Cypress Regression Tests (API + Smoke)
+                //
+                // CHANGED AGAIN: no longer runs Cypress directly in this
+                // stage at all - neither via a nested Docker agent nor a
+                // plain label agent. Both were tried across multiple runs
+                // and both hit the identical failure:
+                //
+                //   Warning: JENKINS-30600: special launcher ... will be
+                //   ignored (a typical symptom is the Git executable not
+                //   being run inside a designated container)
+                //   process apparently never started in .../durable-XXXXXXXX
+                //
+                // Same symptom regardless of agent config means this is a
+                // structural Jenkins issue: a stage with its own `agent`,
+                // nested inside a `parallel{}` block, underneath a pipeline
+                // whose top-level agent is a Docker container, doesn't get
+                // a clean shell launcher - it inherits (and gets tripped up
+                // by) the outer pipeline's Docker launcher decoration.
+                //
+                // FIX: run Cypress in a completely separate Jenkins job
+                // (see Jenkinsfile.regression in this repo), which gets its
+                // own clean top-level agent with no inherited decoration.
+                // This stage just triggers that job and waits for its
+                // result, passing along everything it needs: the Quay/OCP
+                // endpoints (derived here from CLUSTER_DOMAIN) and the
+                // credentials captured earlier in 'Capture Cluster
+                // Credentials' (env.KUBEADMIN_PASSWORD, env.KUBECONFIG_B64).
+                //
+                // ONE-TIME SETUP REQUIRED: a Jenkins job named exactly
+                // 'run-quay-regression' must exist, configured as
+                // "Pipeline script from SCM" pointing at this same repo/
+                // branch with script path Jenkinsfile.regression. See the
+                // header comment in that file for details.
+                //
+                // propagate: false means a regression-test failure marks
+                // this pipeline UNSTABLE (via the check below) rather than
+                // FAILURE, matching the previous behavior where Cypress
+                // failures never blocked cluster cleanup.
+                // -------------------------------------------------------------
+                stage('Run Regression Tests') {
+                    when {
+                        expression { return params.RUN_REGRESSION_TESTS == true }
+                    }
+                    steps {
+                        script {
+                            ansiColor('xterm') {
+                                echo ""
+                            }
+                            try {
+                                // Build Quay and OCP hostnames from the cluster domain
+                                // CLUSTER_DOMAIN is set by setupCommonEnvironmentVariables()
+                                // e.g. apps.<cluster-name>.<base-domain>
+                                def quayEndpoint = "quay-registry.${env.CLUSTER_DOMAIN}"
+                                def ocpEndpoint  = "console-openshift-console.${env.CLUSTER_DOMAIN}:6443"
+
+                                def downstream = build(
+                                    job: 'run-quay-regression',
+                                    wait: true,
+                                    propagate: false,
+                                    parameters: [
+                                        string(name: 'QUAY_ENDPOINT', value: quayEndpoint),
+                                        string(name: 'OCP_ENDPOINT', value: ocpEndpoint),
+                                        password(name: 'KUBEADMIN_PASSWORD', value: env.KUBEADMIN_PASSWORD ?: ''),
+                                        text(name: 'KUBECONFIG_B64', value: env.KUBECONFIG_B64 ?: ''),
+                                        string(name: 'QUAY_VERSION', value: env.QUAY_VERSION ?: ''),
+                                        string(name: 'QUAY_MINOR_VERSION', value: env.QUAY_MINOR_VERSION ?: ''),
+                                        string(name: 'OCP_RELEASE', value: env.OCP_RELEASE ?: '')
+                                    ]
+                                )
+
+                                echo "Downstream regression job '${downstream.fullDisplayName}' finished with result: ${downstream.result}"
+                                echo "Full results/artifacts (videos, screenshots, ctrf report): ${downstream.absoluteUrl}"
+
+                                if (downstream.result != 'SUCCESS') {
+                                    failedStages.add(env.STAGE_NAME)
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            } catch (err) {
+                                echo "Failed to trigger or await 'run-quay-regression' job: ${err}"
+                                echo "Confirm the job exists and is named exactly 'run-quay-regression'."
+                                failedStages.add(env.STAGE_NAME)
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
+
+            } // end parallel
+        } // end stage('Parallel: Timeout & Regression Tests')
+
+    }
+    post {
+        always {
+            archiveAllArtifacts("deploy/vars.tfvars")
+            cleanupOcp4Cluster()
+            checkInfraError()
+            script{
+                if ( FAILED_STAGE != "" || !failedStages.isEmpty()  ) {
+                    FAILED_STAGE="${FAILED_STAGE}${failedStages.join(', ')}"
+                    env.MESSAGE = "OCP4 Build: `${BUILD}`, RHCOS: `${env.RHCOS_IMAGE_NAME}`, Failed Stage: `${FAILED_STAGE}`"
+                }
+            }
+            //notifyBySlack(currentBuild.result, env.MESSAGE)
+            cleanWs()
+        }
+    }
+}
