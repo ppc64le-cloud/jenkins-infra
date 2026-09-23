@@ -13,7 +13,7 @@ pipeline {
         string(defaultValue: '30', description: 'Enter time(in Minutes) to retain the cluster', name: 'KeepFor')
         string(defaultValue: '1.22.4', description: 'Enter the Go Language Version', name: 'GoLangVersion')
         choice(description: 'Select the OpenShift Release', choices: ['4.22','4.21','4.20','4.19','4.18','4.17','4.16','4.15','4.14','4.13','4.12'], name: 'Release')
-        choice(description: 'Select the RedHat Release Version', choices: ['9.7','9.6','8.10'], name: 'RedHatRelease')
+        choice(description: 'Select the RedHat Release Version', choices: ['9.8','9.7','9.6','8.10'], name: 'RedHatRelease')
         choice(description: 'Select the Configuration', choices: ['min','max','odf'], name: 'Config')
         booleanParam(defaultValue: false, name: 'RunInfoE2e', description: 'Select if you want to run INFO e2e tests. E2e runs after cluster Deployed')
         booleanParam(defaultValue: false, name: 'RunCroE2e', description: 'Select if you want to run CRO e2e tests. E2e runs after cluster Deployed')
@@ -29,7 +29,6 @@ pipeline {
 	    booleanParam(defaultValue: false, name: 'InstallCSO', description: 'Install Container Security Operator')
         string(defaultValue: '', description: 'Enter index image for installing CSO', name: 'IndexImageCSO')
 		string(defaultValue: 'stable-3.18', description: 'Enter the CSO Operator channel', name: 'CSO_CHANNEL')
-		text(defaultValue: '', description: 'Paste pull secret JSON', name: 'CSO_PULL_SECRET_INPUT')
         text(defaultValue: '', description: 'Paste icsp yaml', name: 'CSO_ICSP_INPUT')
     } 
     environment {
@@ -83,7 +82,6 @@ pipeline {
 	    //ContainerSecurityOperator 
 		CSO_CATALOGSOURCE_IMAGE = "${params.IndexImageCSO}"
 		CSO_CHANNEL = "${params.CSO_CHANNEL}"
-		CSO_PULL_SECRET_INPUT = "${params.CSO_PULL_SECRET_INPUT}"
 		CSO_ICSP_INPUT = "${params.CSO_ICSP_INPUT}"
 
         //Parameters
@@ -95,6 +93,9 @@ pipeline {
 
         // kdump Configuration
         KDUMP_ENABLE="false"
+
+		//QE only disable image policy for OCP 4.22+
+        QE_ONLY_DISABLE_IMAGE_POLICY="true"
     }
     stages {
         stage('Clone ansible extra') {
@@ -365,10 +366,15 @@ pipeline {
                             ansiColor('xterm') {
                             echo ""
                             }
+							// Uses the specific credential key expected in Jenkins
+							def pullSecretId = "pull-secret-${env.CSO_CHANNEL}"
                             try {
-                                sh '''
-                                    cd ${WORKSPACE} && chmod +x ./scripts/operator/cso_operator.sh && ./scripts/operator/cso_operator.sh
-                                '''
+								// Dynamically load pull secret
+								withCredentials([ string(credentialsId: pullSecretId, variable: 'CSO_PULL_SECRET_INPUT')]) {
+									sh '''
+										cd ${WORKSPACE} && chmod +x ./scripts/operator/cso_operator.sh && ./scripts/operator/cso_operator.sh
+									'''
+								}
                             }
                             catch(err) {
                                 echo 'CSO operator installation failed!'
