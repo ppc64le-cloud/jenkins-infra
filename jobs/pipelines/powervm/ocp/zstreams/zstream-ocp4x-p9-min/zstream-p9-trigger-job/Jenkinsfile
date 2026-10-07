@@ -13,8 +13,12 @@ pipeline {
         stage('Copy OCP version artifacts') {
             steps {
                 script {
-                    // Copy the builds of OCP releases from last successful job
-                    step([  $class: 'CopyArtifact', filter: "versions/*", fingerprintArtifacts: true, projectName: 'zstream-p9-trigger-job', target: ".", optional: true, selector: lastSuccessful() ])
+                    // Copy the builds of OCP releases from last successful job of current job
+                    try {
+                        copyArtifacts filter: 'versions/**', optional: true, projectName: env.JOB_NAME, selector: lastSuccessful()
+                    } catch (err) {
+                        echo "CopyArtifact failed or no prior artifacts found for ${JOB_NAME}: ${err.toString()}"
+                    }
                 }
             }
         }
@@ -52,7 +56,7 @@ pipeline {
 
     post {
         always {
-            archiveAllArtifacts("versions/*")
+            archiveArtifacts artifacts: 'versions/*', allowEmptyArchive: true, fingerprint: true
             cleanWs()
         }
     }
@@ -66,8 +70,11 @@ def getChangedFilesList() {
             mkdir "versions"
         fi
 
-        # Checking if new builds are available for OCP 4.15, 4.16, 4.17, 4.18, 4.19 and 4.20
-        for ocp_version in 15 16 17 18 19 20
+        # For testing: simulate an older version for 4.19 so it triggers Jira & child jobs
+        echo "4.19.49-multi" > versions/4.19.txt
+
+        # Checking if new builds are available for OCP 4.15 through 4.22
+        for ocp_version in 15 16 17 18 19 20 21 22
         do
             VERSION=`curl -X GET "https://quay.io/api/v1/repository/openshift-release-dev/ocp-release/tag/?onlyActiveTags=true&limit=100" | jq '.tags | sort_by(.start_ts) | .[].name' | grep "4.${ocp_version}.*multi" | grep -v "multi-\\|rc\\|ec\\|fc" | tail -1 | tr -d '"'`
             if [ "$VERSION" = "" ] && [ ! -f versions/4.$ocp_version.txt ];
@@ -153,7 +160,38 @@ def next_release_builds(release_file){
 
 void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, next_release){
     keepfor = "720"
+    def rawLatestBuild = latestBuild.replace("-multi", "")
+    def rawCurrentStable = currentStableBuild.replace("quay.io/openshift-release-dev/ocp-release:", "").replace("-multi", "")
+    def rawNextStable = nextStableBuild != "NA" ? nextStableBuild.replace("quay.io/openshift-release-dev/ocp-release:", "").replace("-multi", "") : ""
     latestBuild = "quay.io/openshift-release-dev/ocp-release:${latestBuild}"
+
+    // Create Jira task under default Epic (POCPQE-5) directly using Jenkins credential
+    def jiraTicketId = ""
+    try {
+        withCredentials([string(credentialsId: 'JIRA_API_TOKEN', variable: 'JIRA_API_TOKEN')]) {
+            def scriptPath = "${WORKSPACE}/jenkins-infra/scripts/jira-helper.py"
+            if (!fileExists(scriptPath)) {
+                scriptPath = "${WORKSPACE}/scripts/jira-helper.py"
+            }
+            sh """
+                export JIRA_BASE_URL="https://jsw.ibm.com"
+                chmod +x ${scriptPath} || true
+                python3 ${scriptPath} create-task \
+                    --project "POCPQE" \
+                    --epic "POCPQE-5" \
+                    --release "${rawLatestBuild}" \
+                    --current-stable "${rawCurrentStable}" \
+                    --next-stable "${rawNextStable}" \
+                    --output-file "${WORKSPACE}/jira_ticket_id.txt" || true
+            """
+            if (fileExists("${WORKSPACE}/jira_ticket_id.txt")) {
+                jiraTicketId = readFile("${WORKSPACE}/jira_ticket_id.txt").trim()
+            }
+        }
+    } catch (err) {
+        echo "Jira task creation skipped or failed: ${err.toString()}"
+    }
+    echo "Associated Jira Ticket for Release ${release}: ${jiraTicketId}"
     
     //Direct deployment Job Trigger
     if (release != "4.12") {
@@ -161,7 +199,8 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
         build job: 'zstream-ocp4x-p9-min-direct-deploy', wait: false,parameters: [
             string(name: 'Release', value: "${release}"),
             string(name: 'Build', value: "${latestBuild}"),
-            string(name: 'KeepFor', value: "${keepfor}")
+            string(name: 'KeepFor', value: "${keepfor}"),
+            string(name: 'JiraTicketId', value: "${jiraTicketId}")
         ]
     } else {
         echo "Skipping zstream-ocp4x-p9-min-direct-deploy Job for Release: ${release}, Build: ${latestBuild}"
@@ -175,7 +214,8 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
          string(name: 'Release', value: "${release}"),
          string(name: 'CurrentBuild', value: "${currentStableBuild}"),
          string(name: 'UpgradeBuild', value: "${latestBuild}"),
-         string(name: 'KeepFor', value: "${keepfor}")
+         string(name: 'KeepFor', value: "${keepfor}"),
+         string(name: 'JiraTicketId', value: "${jiraTicketId}")
      ]
     } else {
         echo "Skipping zstream-ocp4x-p9-min-direct-current-upgrade Job for Release: ${release}, CurrentBuild: ${currentStableBuild}, UpgradeBuild: ${latestBuild}"
@@ -190,7 +230,8 @@ void triggerBuild(release, latestBuild, currentStableBuild, nextStableBuild, nex
             string(name: 'UpgradeRelease', value: "${next_release}"),
             string(name: 'CurrentBuild', value: "${latestBuild}"),
             string(name: 'UpgradeBuild', value: "${nextStableBuild}"),
-            string(name: 'KeepFor', value: "${keepfor}")
+            string(name: 'KeepFor', value: "${keepfor}"),
+            string(name: 'JiraTicketId', value: "${jiraTicketId}")
         ]
     } else {
         echo "Skipping zstream-ocp4x-p9-min-next-upgrade Job for Release: ${release}, UpgradeRelease: ${next_release}, CurrentBuild: ${latestBuild}, UpgradeBuild: ${nextStableBuild}"
