@@ -1,0 +1,72 @@
+pipeline {
+    agent {
+        docker {
+            image 'quay.io/powercloud/jenkins-infra:0.1'
+            args '-v /etc/resolv.conf:/etc/resolv.conf.tmp'
+            label 'jump-vpc-x86_64'
+        }
+    }
+    triggers {
+        // Poll GitHub every 1 minute — fires only when master has new commits
+        pollSCM('* * * * *')
+    }
+    environment {
+        JENKINS_USER     = credentials('JENKINS_USER')
+        JENKINS_PASSWORD = credentials('JENKINS_PASSWORD')
+        JENKINS_URI      = credentials('JENKINS_URI')
+        // pvm.crt is the on-prem Jenkins SSL certificate.
+        // Stored as a Secret file credential in Jenkins with id 'PVM_CERT'.
+        // Required for jenkins-jobs (REQUESTS_CA_BUNDLE) and curl (CURL_CA_BUNDLE)
+        // to trust the on-prem Jenkins SSL endpoint.
+        CURL_CA_BUNDLE     = credentials('PVM_CERT')
+        REQUESTS_CA_BUNDLE = credentials('PVM_CERT')
+    }
+    stages {
+        stage('Load PowerVC Jenkins Jobs') {
+            steps {
+                sh '''
+                    set -o errexit
+                    echo "Using Jenkins URI: ${JENKINS_URI}"
+                    # WHAT controls which job directories are loaded to the target Jenkins.
+                    # It is a space-separated list of subdirectory names under jobs/pipelines/.
+                    #
+                    # Available directories:
+                    #   powervm               - PowerVC (on-prem) OCP, ODF jobs
+                    #   powervs               - PowerVS (IBM Cloud) OCP, IPI, hypershift jobs
+                    #   utility-jobs          - Backup, restore, cleanup jobs (IKS/kubernetes agent only)
+                    #   mirror-openshift-release - OCP build mirror job (needed by both PowerVC and PowerVS)
+                    #   sync-jenkins-jobs     - Jenkins job sync (NOT loaded to Upstream/prod Jenkins)
+                    #
+                    # Examples:
+                    #   PowerVC Jenkins  → WHAT="powervm mirror-openshift-release sync-jenkins-jobs"
+                    #   Upstream Jenkins → WHAT="powervs utility-jobs mirror-openshift-release"
+                    #                      NOTE: sync-jenkins-jobs intentionally excluded from Upstream Jenkins
+                    #   All jobs         → leave WHAT unset (empty)
+                    #
+                    # To add a new Jenkins target in future:
+                    #   1. Create a new credential 'JENKINS_URI' on that Jenkins pointing to its URL
+                    #   2. Set WHAT below to the directories that Jenkins should own
+                    #   3. Seed this job once on that Jenkins — it will self-maintain via pollSCM
+                    #
+                    # NOTE: If all jobs (powervs + powervm) are moved to this on-prem Jenkins:
+                    #   - Remove WHAT entirely (or set WHAT="") to load all directories
+                    #   - Remove the Prow post-submit entirely from:
+                    #     test-infra-ppc64le/config/jobs/ppc64le-cloud/jenkins-infra/jenkins-infra-postsummit.yaml
+                    #     (do NOT point it to the on-prem Jenkins — Prow runs in the public network
+                    #      and cannot reach the private on-prem Jenkins due to VPN/network restriction)
+                    #   - sync-jenkins-jobs pollSCM takes over as the sole update mechanism
+                    export WHAT="powervm mirror-openshift-release sync-jenkins-jobs"
+                    ./hack/load-jenkins-pipelines.sh
+                '''
+            }
+        }
+    }
+    post {
+        success {
+            echo "PowerVC Jenkins jobs loaded successfully."
+        }
+        failure {
+            echo "Failed to load PowerVC Jenkins jobs. Check the logs above."
+        }
+    }
+}
