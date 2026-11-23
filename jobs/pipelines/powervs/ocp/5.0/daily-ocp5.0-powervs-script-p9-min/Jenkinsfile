@@ -66,7 +66,7 @@ pipeline {
         }
         stage('pull artifact') {
             steps {
-                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-build.txt" )
+                getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt" )
                 getArtifacts("powervs/poll-powervs-images", "${BASTION_IMAGE_FILE}")
                 getArtifacts("powervs/poll-powervs-images", "${RHCOS_IMAGE_FILE}" )
             }
@@ -83,13 +83,13 @@ pipeline {
                         pullSecret()
                         env.OPENSHIFT_IMAGE = ""
                         env.OCP_RELEASE_TAG = ""
-                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-build.txt")) {
-                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-build.txt"
+                        if (fileExists("deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt")) {
+                            env.OPENSHIFT_IMAGE = readFile "deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt"
                             env.OPENSHIFT_IMAGE = env.OPENSHIFT_IMAGE.trim()
                             env.OCP_RELEASE_TAG = env.OPENSHIFT_IMAGE.split(":")[1].trim()
                         }
                         else {
-                            echo "latest-${OCP_RELEASE}-build.txt file does not exist. Please check mirror-openshift-release job"
+                            echo "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
                             throw err
                         }
                         if (fileExists("deploy/artifactory/${BASTION_IMAGE_FILE}")) {
