@@ -8,10 +8,10 @@ sed -i "s|fio_enabled:.*$|fio_enabled: true|g" ocp_fio_vars.yaml
 sed -i "s|fio_catalogsource_image:.*$|fio_catalogsource_image: ${FIO_CATALOGSOURCE_IMAGE}|g" ocp_fio_vars.yaml
 sed -i "s|fio_golang_tarball:.*$|fio_golang_tarball: ${GOLANG_TARBALL}|g" ocp_fio_vars.yaml
 sed -i "s|fio_e2e:.*$|fio_e2e: true|g" ocp_fio_vars.yaml
-sed -i "s|fio_e2e_git_repository:.*$|fio_e2e_git_repository: https://github.com/openshift/openshift-tests-private.git|g" ocp_fio_vars.yaml
+sed -i "s|fio_e2e_git_repository:.*$|fio_e2e_git_repository: https://github.com/${E2E_TESTS_REPO:-openshift/openshift-tests-private}.git|g" ocp_fio_vars.yaml
 sed -i "s|fio_git_username:.*$|fio_git_username: ${GITHUB_USER}|g" ocp_fio_vars.yaml
 sed -i "s|fio_git_token:.*$|fio_git_token: ${GITHUB_TOKEN}|g" ocp_fio_vars.yaml
-sed -i "s|fio_git_branch:.*$|fio_git_branch: master|g" ocp_fio_vars.yaml
+sed -i "s|fio_git_branch:.*$|fio_git_branch: ${E2E_TESTS_BRANCH:-main}|g" ocp_fio_vars.yaml
 sed -i "s|fio_cleanup:.*$|fio_cleanup: false|g" ocp_fio_vars.yaml
 cat ocp_fio_vars.yaml
 #Inventory Details
