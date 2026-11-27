@@ -1,0 +1,50 @@
+@Library('jenkins-upstream-library') _
+
+pipeline {
+    agent {
+        docker {
+            image 'quay.io/powercloud/inbound-agent:3256.v88a_f6e922152-2-jdk17.1'
+            args '-v /etc/resolv.conf:/etc/resolv.conf'
+            label 'jump-vpc-x86_64'
+        }
+    }
+    options { disableConcurrentBuilds() }
+    environment {
+        OCP_RELEASE = "5.0"
+        KEEP_FOR = "100"
+    }
+    stages {
+        stage('pull artifact') {
+            steps {
+                script {
+                    getArtifacts("mirror-openshift-release", "latest-${OCP_RELEASE}-stable-build.txt")
+                }
+            }
+        }
+        stage('Trigger direct deploy') {
+            steps {
+                script {
+                    def buildFile = "deploy/artifactory/latest-${OCP_RELEASE}-stable-build.txt"
+                    if (!fileExists(buildFile)) {
+                        error "latest-${OCP_RELEASE}-stable-build.txt file does not exist. Please check mirror-openshift-release job"
+                    }
+                    def latestBuild = readFile(buildFile).trim()
+                    if (!latestBuild) {
+                        error "latest-${OCP_RELEASE}-stable-build.txt is empty. Please check mirror-openshift-release job"
+                    }
+                    echo "Latest ${OCP_RELEASE} stable build: ${latestBuild}"
+                    build job: 'zstream-ocp4x-p9-min-direct-deploy', wait: false, parameters: [
+                        string(name: 'Release', value: "${OCP_RELEASE}"),
+                        string(name: 'Build', value: "${latestBuild}"),
+                        string(name: 'KeepFor', value: "${KEEP_FOR}")
+                    ]
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
