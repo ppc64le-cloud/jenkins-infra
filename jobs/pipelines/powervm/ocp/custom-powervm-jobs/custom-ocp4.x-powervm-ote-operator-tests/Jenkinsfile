@@ -12,7 +12,7 @@ pipeline {
     parameters {
         choice(description: 'OpenShift release', choices: ['4.22','4.23','5.0','4.21','4.20'], name: 'Release')
         string(defaultValue: '', description: 'Optional OCP build (quay image). Empty = latest stable build of the release, or latest build if there is no stable yet', name: 'Build')
-        choice(description: 'Operator to test (must exist in scripts/operator/ote/operators.conf)', choices: ['kube-descheduler','compliance'], name: 'Operator')
+        choice(description: 'Operator to test (must exist in scripts/operator/ote/operators.conf)', choices: ['kube-descheduler','compliance','fileintegrity'], name: 'Operator')
         string(defaultValue: '', description: 'Optional operator image (repo:tag or repo@sha256:...). Empty = newest main build of the image in operators.conf', name: 'OperatorImage')
         string(defaultValue: '', description: 'Playbook operators only: catalog source index image. Empty = default redhat-operators catalog', name: 'IndexImage')
         string(defaultValue: '', description: 'Playbook operators only: Go version used to build the e2e tests. Empty = the version openshift-tests-private go.mod asks for', name: 'GoLangVersion')
